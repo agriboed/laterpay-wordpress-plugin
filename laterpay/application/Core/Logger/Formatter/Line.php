@@ -8,83 +8,79 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Logger_Formatter_Line extends LaterPay_Core_Logger_Formatter_Normalizer
-{
-    const SIMPLE_FORMAT = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
+class LaterPay_Core_Logger_Formatter_Line extends LaterPay_Core_Logger_Formatter_Normalizer {
 
-    protected $format;
+	const SIMPLE_FORMAT = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
 
-    /**
-     * @param string $format                     The format of the message
-     * @param string $dateFormat                 The format of the timestamp: one supported by DateTime::format
-     */
-    public function __construct( $format = null, $dateFormat = null )
-    {
-        $this->format = $format ? $format : static::SIMPLE_FORMAT;
-        parent::__construct( $dateFormat );
-    }
+	protected $format;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function format( array $record )
-    {
-        $vars = parent::format( $record );
+	/**
+	 * @param string $format                     The format of the message
+	 * @param string $dateFormat                 The format of the timestamp: one supported by DateTime::format
+	 */
+	public function __construct( $format = null, $dateFormat = null ) {
+		$this->format = $format ? $format : static::SIMPLE_FORMAT;
+		parent::__construct( $dateFormat );
+	}
 
-        $output = $this->format;
+	/**
+	 * {@inheritdoc}
+	 */
+	public function format( array $record ) {
+		$vars = parent::format( $record );
 
-        foreach ( $vars['extra'] as $var => $val ) {
-            if ( false !== strpos( $output, '%extra.' . $var . '%' ) ) {
-                $output = str_replace( '%extra.' . $var . '%', $this->convert_to_string( $val ), $output );
-                unset( $vars['extra'][ $var ] );
-            }
-        }
+		$output = $this->format;
 
-        if ( empty( $vars['context'] ) ) {
-            unset( $vars['context'] );
-            $output = str_replace( '%context%', '', $output );
-        }
+		foreach ( $vars['extra'] as $var => $val ) {
+			if ( false !== strpos( $output, '%extra.' . $var . '%' ) ) {
+				$output = str_replace( '%extra.' . $var . '%', $this->convert_to_string( $val ), $output );
+				unset( $vars['extra'][ $var ] );
+			}
+		}
 
-        if ( empty( $vars['extra'] ) ) {
-            unset( $vars['extra'] );
-            $output = str_replace( '%extra%', '', $output );
-        }
+		if ( empty( $vars['context'] ) ) {
+			unset( $vars['context'] );
+			$output = str_replace( '%context%', '', $output );
+		}
 
-        if ( is_array( $vars ) ) {
-            foreach ( $vars as $var => $val ) {
-                if ( false !== strpos( $output, '%' . $var . '%' ) ) {
-                    $output = str_replace( '%' . $var . '%', $this->convert_to_string( $val ), $output );
-                }
-            }
-        }
+		if ( empty( $vars['extra'] ) ) {
+			unset( $vars['extra'] );
+			$output = str_replace( '%extra%', '', $output );
+		}
 
-        return $output;
-    }
+		if ( is_array( $vars ) ) {
+			foreach ( $vars as $var => $val ) {
+				if ( false !== strpos( $output, '%' . $var . '%' ) ) {
+					$output = str_replace( '%' . $var . '%', $this->convert_to_string( $val ), $output );
+				}
+			}
+		}
 
-    public function format_batch( array $records )
-    {
-        $message = '';
-        foreach ( $records as $record ) {
-            $message .= $this->format( $record );
-        }
+		return $output;
+	}
 
-        return $message;
-    }
+	public function format_batch( array $records ) {
+		$message = '';
+		foreach ( $records as $record ) {
+			$message .= $this->format( $record );
+		}
 
-    protected function convert_to_string( $data )
-    {
-        if ( null === $data || is_bool( $data ) ) {
-            return var_export( $data, true );
-        }
+		return $message;
+	}
 
-        if ( is_scalar( $data ) ) {
-            return (string) $data;
-        }
+	protected function convert_to_string( $data ) {
+		if ( null === $data || is_bool( $data ) ) {
+			return var_export( $data, true );
+		}
 
-        if ( version_compare( PHP_VERSION, '5.4.0', '>=' ) ) {
-            return $this->to_json( $data, true );
-        }
+		if ( is_scalar( $data ) ) {
+			return (string) $data;
+		}
 
-        return str_replace( '\\/', '/', @json_encode( $data ) );
-    }
+		if ( version_compare( PHP_VERSION, '5.4.0', '>=' ) ) {
+			return $this->to_json( $data, true );
+		}
+
+		return str_replace( '\\/', '/', @json_encode( $data ) );
+	}
 }

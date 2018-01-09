@@ -7,238 +7,238 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Bootstrap
-{
+class LaterPay_Core_Bootstrap {
 
-    /**
-     * Contains all controller instances.
-     * @var array
-     */
-    private static $controllers = array();
 
-    /**
-     * Contains all settings for the plugin.
-     *
-     * @var LaterPay_Model_Config
-     */
-    private $config;
+	/**
+	 * Contains all controller instances.
+	 * @var array
+	 */
+	private static $controllers = array();
 
-    /**
-     * @param LaterPay_Model_Config $config
-     *
-     * @return LaterPay_Core_Bootstrap
-     */
-    public function __construct( LaterPay_Model_Config $config ) {
-        $this->config = $config;
+	/**
+	 * Contains all settings for the plugin.
+	 *
+	 * @var LaterPay_Model_Config
+	 */
+	private $config;
 
-        // load the textdomain for 'plugins_loaded', 'register_activation_hook', and 'register_deactivation_hook'
-        $textdomain_dir     = dirname( $this->config->get( 'plugin_base_name' ) );
-        $textdomain_path    = $textdomain_dir . $this->config->get( 'text_domain_path' );
-        load_plugin_textdomain(
-            'laterpay',
-            false,
-            $textdomain_path
-        );
-    }
+	/**
+	 * @param LaterPay_Model_Config $config
+	 *
+	 * @return LaterPay_Core_Bootstrap
+	 */
+	public function __construct( LaterPay_Model_Config $config ) {
+		$this->config = $config;
 
-    /**
-     * Internal function to create and get controllers.
-     *
-     * @param string $name name of the controller without prefix.
-     * @throws LaterPay_Core_Exception
-     *
-     * @return bool|LaterPay_Controller_Base $controller instance of the given controller name
-     */
-    public static function get_controller( $name ) {
-        $class = 'LaterPay_Controller_' . (string) $name;
+		// load the textdomain for 'plugins_loaded', 'register_activation_hook', and 'register_deactivation_hook'
+		$textdomain_dir  = dirname( $this->config->get( 'plugin_base_name' ) );
+		$textdomain_path = $textdomain_dir . $this->config->get( 'text_domain_path' );
+		load_plugin_textdomain(
+			'laterpay',
+			false,
+			$textdomain_path
+		);
+	}
 
-        if ( ! class_exists( $class ) ) {
-            $msg = __( '%s: <code>%s</code> not found', 'laterpay' );
-            $msg = sprintf( $msg, __METHOD__, $class );
-            throw new LaterPay_Core_Exception( $msg );
-        }
+	/**
+	 * Internal function to create and get controllers.
+	 *
+	 * @param string $name name of the controller without prefix.
+	 * @throws LaterPay_Core_Exception
+	 *
+	 * @return bool|LaterPay_Controller_Base $controller instance of the given controller name
+	 */
+	public static function get_controller( $name ) {
+		$class = 'LaterPay_Controller_' . (string) $name;
 
-        if ( ! array_key_exists( $class, self::$controllers ) ) {
-            self::$controllers[ $class ] = new $class( laterpay_get_plugin_config() );
-        }
+		if ( ! class_exists( $class ) ) {
+			$msg = __( '%1$s: <code>%2$s</code> not found', 'laterpay' );
+			$msg = sprintf( $msg, __METHOD__, $class );
+			throw new LaterPay_Core_Exception( $msg );
+		}
 
-        return self::$controllers[ $class ];
-    }
+		if ( ! array_key_exists( $class, self::$controllers ) ) {
+			self::$controllers[ $class ] = new $class( laterpay_get_plugin_config() );
+		}
 
-    /**
-     * Start the plugin on plugins_loaded hook.
-     *
-     * @wp-hook plugins_loaded
-     *
-     * @return void
-     */
-    public function run() {
-        $this->register_wordpress_hooks();
-        $this->register_modules();
+		return self::$controllers[ $class ];
+	}
 
-        $this->register_cache_helper();
-        $this->register_upgrade_checks();
+	/**
+	 * Start the plugin on plugins_loaded hook.
+	 *
+	 * @wp-hook plugins_loaded
+	 *
+	 * @return void
+	 */
+	public function run() {
+		$this->register_wordpress_hooks();
+		$this->register_modules();
 
-        $this->register_admin_actions();
-        $this->register_frontend_actions();
-        $this->register_shortcodes();
+		$this->register_cache_helper();
+		$this->register_upgrade_checks();
 
-        // LaterPay loaded finished. Triggering event for other plugins
-        LaterPay_Hooks::get_instance()->laterpay_ready();
-        laterpay_event_dispatcher()->dispatch( 'laterpay_init_finished' );
-    }
+		$this->register_admin_actions();
+		$this->register_frontend_actions();
+		$this->register_shortcodes();
 
-    /**
-     * Internal function to register global actions for frontend and backend.
-     *
-     * @return void
-     */
-    private function register_frontend_actions() {
-        $post_controller = self::get_controller( 'Frontend_Post' );
-        laterpay_event_dispatcher()->add_subscriber( $post_controller );
+		// LaterPay loaded finished. Triggering event for other plugins
+		LaterPay_Hooks::get_instance()->laterpay_ready();
+		laterpay_event_dispatcher()->dispatch( 'laterpay_init_finished' );
+	}
 
-        // set up unique visitors tracking
-        $preview_mode_controller = self::get_controller( 'Frontend_PreviewMode' );
-        laterpay_event_dispatcher()->add_subscriber( $preview_mode_controller );
+	/**
+	 * Internal function to register global actions for frontend and backend.
+	 *
+	 * @return void
+	 */
+	private function register_frontend_actions() {
+		$post_controller = self::get_controller( 'Frontend_Post' );
+		laterpay_event_dispatcher()->add_subscriber( $post_controller );
 
-        // add custom action to echo the LaterPay invoice indicator
-        $invoice_controller = self::get_controller( 'Frontend_Invoice' );
-        laterpay_event_dispatcher()->add_subscriber( $invoice_controller );
-        // add account links action
-        $account_controller = self::get_controller( 'Frontend_Account' );
-        laterpay_event_dispatcher()->add_subscriber( $account_controller );
-    }
+		// set up unique visitors tracking
+		$preview_mode_controller = self::get_controller( 'Frontend_PreviewMode' );
+		laterpay_event_dispatcher()->add_subscriber( $preview_mode_controller );
 
-    /**
-     * Internal function to register all shortcodes.
-     *
-     * @return void
-     */
-    private function register_shortcodes() {
-        $shortcode_controller = self::get_controller( 'Frontend_Shortcode' );
-        // add 'free to read' shortcodes
-        LaterPay_Hooks::add_wp_shortcode( 'laterpay_premium_download', 'laterpay_shortcode_premium_download' );
-        LaterPay_Hooks::add_wp_shortcode( 'laterpay_box_wrapper', 'laterpay_shortcode_box_wrapper' );
-        LaterPay_Hooks::add_wp_shortcode( 'laterpay', 'laterpay_shortcode_laterpay' );
-        LaterPay_Hooks::add_wp_shortcode( 'laterpay_time_passes', 'laterpay_shortcode_time_passes' );
-        LaterPay_Hooks::add_wp_shortcode( 'laterpay_gift_card', 'laterpay_shortcode_gift_card' );
-        LaterPay_Hooks::add_wp_shortcode( 'laterpay_redeem_voucher', 'laterpay_shortcode_redeem_voucher' );
-        LaterPay_Hooks::add_wp_shortcode( 'laterpay_account_links', 'laterpay_shortcode_account_links' );
+		// add custom action to echo the LaterPay invoice indicator
+		$invoice_controller = self::get_controller( 'Frontend_Invoice' );
+		laterpay_event_dispatcher()->add_subscriber( $invoice_controller );
+		// add account links action
+		$account_controller = self::get_controller( 'Frontend_Account' );
+		laterpay_event_dispatcher()->add_subscriber( $account_controller );
+	}
 
-        laterpay_event_dispatcher()->add_subscriber( $shortcode_controller );
-    }
+	/**
+	 * Internal function to register all shortcodes.
+	 *
+	 * @return void
+	 */
+	private function register_shortcodes() {
+		$shortcode_controller = self::get_controller( 'Frontend_Shortcode' );
+		// add 'free to read' shortcodes
+		LaterPay_Hooks::add_wp_shortcode( 'laterpay_premium_download', 'laterpay_shortcode_premium_download' );
+		LaterPay_Hooks::add_wp_shortcode( 'laterpay_box_wrapper', 'laterpay_shortcode_box_wrapper' );
+		LaterPay_Hooks::add_wp_shortcode( 'laterpay', 'laterpay_shortcode_laterpay' );
+		LaterPay_Hooks::add_wp_shortcode( 'laterpay_time_passes', 'laterpay_shortcode_time_passes' );
+		LaterPay_Hooks::add_wp_shortcode( 'laterpay_gift_card', 'laterpay_shortcode_gift_card' );
+		LaterPay_Hooks::add_wp_shortcode( 'laterpay_redeem_voucher', 'laterpay_shortcode_redeem_voucher' );
+		LaterPay_Hooks::add_wp_shortcode( 'laterpay_account_links', 'laterpay_shortcode_account_links' );
 
-    /**
-     * Internal function to register the admin actions step 2 after the 'plugin_is_working' check.
-     *
-     * @return void
-     */
-    private function register_admin_actions() {
-        // add the admin panel
-        $admin_controller = self::get_controller( 'Admin' );
-        laterpay_event_dispatcher()->add_subscriber( $admin_controller );
+		laterpay_event_dispatcher()->add_subscriber( $shortcode_controller );
+	}
 
-        $settings_controller = self::get_controller( 'Admin_Settings' );
-        laterpay_event_dispatcher()->add_subscriber( $settings_controller );
+	/**
+	 * Internal function to register the admin actions step 2 after the 'plugin_is_working' check.
+	 *
+	 * @return void
+	 */
+	private function register_admin_actions() {
+		// add the admin panel
+		$admin_controller = self::get_controller( 'Admin' );
+		laterpay_event_dispatcher()->add_subscriber( $admin_controller );
 
-        // plugin backend
-        $controller = self::get_controller( 'Admin_Pricing' );
-        laterpay_event_dispatcher()->add_subscriber( $controller );
+		$settings_controller = self::get_controller( 'Admin_Settings' );
+		laterpay_event_dispatcher()->add_subscriber( $settings_controller );
 
-        $controller = self::get_controller( 'Admin_Appearance' );
-        laterpay_event_dispatcher()->add_subscriber( $controller );
+		// plugin backend
+		$controller = self::get_controller( 'Admin_Pricing' );
+		laterpay_event_dispatcher()->add_subscriber( $controller );
 
-        $controller = self::get_controller( 'Admin_Account' );
-        laterpay_event_dispatcher()->add_subscriber( $controller );
+		$controller = self::get_controller( 'Admin_Appearance' );
+		laterpay_event_dispatcher()->add_subscriber( $controller );
 
-        // register callbacks for adding meta_boxes
-        $post_metabox_controller    = self::get_controller( 'Admin_Post_Metabox' );
-        laterpay_event_dispatcher()->add_subscriber( $post_metabox_controller );
+		$controller = self::get_controller( 'Admin_Account' );
+		laterpay_event_dispatcher()->add_subscriber( $controller );
 
-        $column_controller          = self::get_controller( 'Admin_Post_Column' );
-        laterpay_event_dispatcher()->add_subscriber( $column_controller );
-    }
+		// register callbacks for adding meta_boxes
+		$post_metabox_controller = self::get_controller( 'Admin_Post_Metabox' );
+		laterpay_event_dispatcher()->add_subscriber( $post_metabox_controller );
 
-    /**
-     * Internal function to register the cache helper for {update_option_} hooks.
-     *
-     * @return void
-     */
-    private function register_cache_helper() {
-        // cache helper to purge the cache on update_option()
-        $cache_helper = new LaterPay_Helper_Cache();
+		$column_controller = self::get_controller( 'Admin_Post_Column' );
+		laterpay_event_dispatcher()->add_subscriber( $column_controller );
+	}
 
-        laterpay_event_dispatcher()->add_listener( 'laterpay_option_update', array( $cache_helper, 'purge_cache' ) );
-    }
+	/**
+	 * Internal function to register the cache helper for {update_option_} hooks.
+	 *
+	 * @return void
+	 */
+	private function register_cache_helper() {
+		// cache helper to purge the cache on update_option()
+		$cache_helper = new LaterPay_Helper_Cache();
 
-    /**
-     * Internal function to register all upgrade checks.
-     *
-     * @return void
-     */
-    private function register_upgrade_checks() {
-        laterpay_event_dispatcher()->add_subscriber( self::get_controller( 'Install' ) );
-    }
+		laterpay_event_dispatcher()->add_listener( 'laterpay_option_update', array( $cache_helper, 'purge_cache' ) );
+	}
 
-    /**
-     * Late load event for other plugins to remove / add own actions to the LaterPay plugin.
-     *
-     * @return void
-     */
-    public function late_load() {
-        /**
-         * Late loading event for LaterPay.
-         *
-         * @param LaterPay_Core_Bootstrap $this
-         */
-        do_action( 'laterpay_and_wp_loaded', $this );
-    }
+	/**
+	 * Internal function to register all upgrade checks.
+	 *
+	 * @return void
+	 */
+	private function register_upgrade_checks() {
+		laterpay_event_dispatcher()->add_subscriber( self::get_controller( 'Install' ) );
+	}
 
-    /**
-     * Install callback to create custom database tables.
-     *
-     * @wp-hook register_activation_hook
-     *
-     * @return void
-     */
-    public function activate() {
-        $install_controller = self::get_controller( 'Install' );
-        $install_controller->install();
-    }
+	/**
+	 * Late load event for other plugins to remove / add own actions to the LaterPay plugin.
+	 *
+	 * @return void
+	 */
+	public function late_load() {
+		/**
+		 * Late loading event for LaterPay.
+		 *
+		 * @param LaterPay_Core_Bootstrap $this
+		 */
+		do_action( 'laterpay_and_wp_loaded', $this );
+	}
 
-    /**
-     * Callback to deactivate the plugin.
-     *
-     * @wp-hook register_deactivation_hook
-     *
-     * @return void
-     */
-    public function deactivate() {
-        // de-register the 'refresh dashboard' cron job
-        wp_clear_scheduled_hook( 'laterpay_refresh_dashboard_data' );
-        // de-register the 'delete old post views' cron job
-        wp_clear_scheduled_hook( 'laterpay_delete_old_post_views', array( '3 month' ) );
-    }
+	/**
+	 * Install callback to create custom database tables.
+	 *
+	 * @wp-hook register_activation_hook
+	 *
+	 * @return void
+	 */
+	public function activate() {
+		$install_controller = self::get_controller( 'Install' );
+		$install_controller->install();
+	}
 
-    /**
-     * Internal function to register event subscribers.
-     *
-     * @return void
-     */
-    private function register_modules() {
-        laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_Appearance() );
-        laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_Purchase() );
-        laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_TimePasses() );
-        laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_Subscriptions() );
-        laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_Rates() );
-    }
+	/**
+	 * Callback to deactivate the plugin.
+	 *
+	 * @wp-hook register_deactivation_hook
+	 *
+	 * @return void
+	 */
+	public function deactivate() {
+		// de-register the 'refresh dashboard' cron job
+		wp_clear_scheduled_hook( 'laterpay_refresh_dashboard_data' );
+		// de-register the 'delete old post views' cron job
+		wp_clear_scheduled_hook( 'laterpay_delete_old_post_views', array( '3 month' ) );
+	}
 
-    /**
-     * Internal function to register event subscribers.
-     *
-     * @return void
-     */
-    private function register_wordpress_hooks() {
-        LaterPay_Hooks::get_instance()->init();
-    }
+	/**
+	 * Internal function to register event subscribers.
+	 *
+	 * @return void
+	 */
+	private function register_modules() {
+		laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_Appearance() );
+		laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_Purchase() );
+		laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_TimePasses() );
+		laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_Subscriptions() );
+		laterpay_event_dispatcher()->add_subscriber( new LaterPay_Module_Rates() );
+	}
+
+	/**
+	 * Internal function to register event subscribers.
+	 *
+	 * @return void
+	 */
+	private function register_wordpress_hooks() {
+		LaterPay_Hooks::get_instance()->init();
+	}
 }

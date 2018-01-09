@@ -7,141 +7,141 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_View
-{
-    /**
-     * Contains all settings for the plugin.
-     *
-     * @var LaterPay_Model_Config
-     */
-    protected $config;
+class LaterPay_Core_View {
 
-    /**
-     * Variables for substitution in templates.
-     *
-     * @var array
-     */
-    protected $variables = array();
+	/**
+	 * Contains all settings for the plugin.
+	 *
+	 * @var LaterPay_Model_Config
+	 */
+	protected $config;
 
-    /**
-     * @param LaterPay_Model_Config $config
-     *
-     * @return LaterPay_Core_View
-     */
-    public function __construct( $config = null ) {
-        $this->config = ( $config && $config instanceof LaterPay_Model_Config ) ? $config : laterpay_get_plugin_config();
-        // assign the config to the views
-        $this->assign( 'config', $this->config );
-        $this->initialize();
-    }
+	/**
+	 * Variables for substitution in templates.
+	 *
+	 * @var array
+	 */
+	protected $variables = array();
 
-    /**
-     * Refresh config
-     *
-     * @return void
-     */
-    protected function refresh_config() {
-        laterpay_clean_plugin_cache();
+	/**
+	 * @param LaterPay_Model_Config $config
+	 *
+	 * @return LaterPay_Core_View
+	 */
+	public function __construct( $config = null ) {
+		$this->config = ( $config && $config instanceof LaterPay_Model_Config ) ? $config : laterpay_get_plugin_config();
+		// assign the config to the views
+		$this->assign( 'config', $this->config );
+		$this->initialize();
+	}
 
-        // set new config and update assignation
-        $this->config = laterpay_get_plugin_config();
-        $this->assign( 'config', $this->config );
-    }
+	/**
+	 * Refresh config
+	 *
+	 * @return void
+	 */
+	protected function refresh_config() {
+		laterpay_clean_plugin_cache();
 
-    /**
-     * Function which will be called on constructor and can be overwritten by child class.
-     *
-     * @return void
-     */
-    protected function initialize() {}
+		// set new config and update assignation
+		$this->config = laterpay_get_plugin_config();
+		$this->assign( 'config', $this->config );
+	}
 
-    /**
-     * Load all assets on boot-up.
-     *
-     * @return void
-     */
-    public function load_assets() {}
+	/**
+	 * Function which will be called on constructor and can be overwritten by child class.
+	 *
+	 * @return void
+	 */
+	protected function initialize() {}
 
-    /**
-     * Render HTML file.
-     *
-     * @param string $file file to get HTML string
-     * @param string $view_dir view directory
-     *
-     * @return void
-     */
-    public function render( $file, $view_dir = null ) {
-        foreach ( $this->variables as $key => $value ) {
-            ${$key} = $value;
-        }
+	/**
+	 * Load all assets on boot-up.
+	 *
+	 * @return void
+	 */
+	public function load_assets() {}
 
-        $view_dir  = isset( $view_dir ) ? $view_dir : $this->config->get( 'view_dir' );
-        $view_file = $view_dir . $file . '.php';
-        if ( ! file_exists( $view_file ) ) {
-            $msg = sprintf(
-                __( '%s : <code>%s</code> not found', 'laterpay' ),
-                __METHOD__,
-                __FILE__
-            );
+	/**
+	 * Render HTML file.
+	 *
+	 * @param string $file file to get HTML string
+	 * @param string $view_dir view directory
+	 *
+	 * @return void
+	 */
+	public function render( $file, $view_dir = null ) {
+		foreach ( $this->variables as $key => $value ) {
+			${$key} = $value;
+		}
 
-            return;
-        }
+		$view_dir  = isset( $view_dir ) ? $view_dir : $this->config->get( 'view_dir' );
+		$view_file = $view_dir . $file . '.php';
+		if ( ! file_exists( $view_file ) ) {
+			$msg = sprintf(
+				__( '%1$s : <code>%2$s</code> not found', 'laterpay' ),
+				__METHOD__,
+				__FILE__
+			);
 
-        include_once( $view_file );
-    }
+			return;
+		}
 
-    /**
-     * Assign variable for substitution in templates.
-     *
-     * @param string $variable name variable to assign
-     * @param mixed  $value    value variable for assign
-     *
-     * @return void
-     */
-    public function assign( $variable, $value ) {
-        $this->variables[ $variable ] = $value;
-    }
+		include_once( $view_file );
+	}
 
-    /**
-     * Get HTML from file.
-     *
-     * @param string $file file to get HTML string
-     * @param string $view_dir  view directory
-     *
-     * @return string $html html output as string
-     */
-    public function get_text_view( $file, $view_dir = null ) {
-        foreach ( $this->variables as $key => $value ) {
-            ${$key} = $value;
-        }
+	/**
+	 * Assign variable for substitution in templates.
+	 *
+	 * @param string $variable name variable to assign
+	 * @param mixed  $value    value variable for assign
+	 *
+	 * @return void
+	 */
+	public function assign( $variable, $value ) {
+		$this->variables[ $variable ] = $value;
+	}
 
-        $view_dir  = isset( $view_dir ) ? $view_dir : $this->config->get( 'view_dir' );
-        $view_file = $view_dir . $file . '.php';
-        if ( ! file_exists( $view_file ) ) {
-            $msg = sprintf(
-                __( '%s : <code>%s</code> not found', 'laterpay' ),
-                __METHOD__,
-                $file
-            );
+	/**
+	 * Get HTML from file.
+	 *
+	 * @param string $file file to get HTML string
+	 * @param string $view_dir  view directory
+	 *
+	 * @return string $html html output as string
+	 */
+	public function get_text_view( $file, $view_dir = null ) {
+		foreach ( $this->variables as $key => $value ) {
+			${$key} = $value;
+		}
 
-            return '';
-        }
+		$view_dir  = isset( $view_dir ) ? $view_dir : $this->config->get( 'view_dir' );
+		$view_file = $view_dir . $file . '.php';
+		if ( ! file_exists( $view_file ) ) {
+			$msg = sprintf(
+				__( '%1$s : <code>%2$s</code> not found', 'laterpay' ),
+				__METHOD__,
+				$file
+			);
 
-        ob_start();
-        include( $view_file );
-        $thread = ob_get_contents();
-        ob_end_clean();
-        $html = $thread;
+			return '';
+		}
 
-        $this->init_assignments();
+		ob_start();
+		include( $view_file );
+		$thread = ob_get_contents();
+		ob_end_clean();
+		$html = $thread;
 
-        return $html;
-    }
+		$this->init_assignments();
 
-    protected function init_assignments() {
-        $this->variables = array();
-        // assign the config to the views
-        $this->assign( 'config', $this->config );
-    }
+		return $html;
+	}
+
+	protected function init_assignments() {
+		$this->variables = array();
+		// assign the config to the views
+		$this->assign( 'config', $this->config );
+	}
 }
 

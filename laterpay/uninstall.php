@@ -1,8 +1,8 @@
 <?php
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-    // exit, if uninstall was not called from WordPress
-    exit;
+	// exit, if uninstall was not called from WordPress
+	exit;
 }
 
 global $wpdb;
@@ -117,7 +117,7 @@ delete_option( 'laterpay_pro_merchant' );
 $dir = dirname( __FILE__ ) . DIRECTORY_SEPARATOR;
 
 if ( ! class_exists( 'LaterPay_Autoloader' ) ) {
-    require_once( $dir . 'laterpay-load.php' );
+	require_once( $dir . 'laterpay-load.php' );
 }
 
 LaterPay_AutoLoader::register_namespace( $dir . 'application', 'LaterPay' );
@@ -130,14 +130,14 @@ LaterPay_Helper_User::remove_custom_capabilities();
 $pointers = LaterPay_Controller_Admin::get_all_pointers();
 
 if ( ! empty( $pointers ) && is_array( $pointers ) ) {
-    $replace_string = 'meta_value';
+	$replace_string = 'meta_value';
 
-    foreach ( $pointers as $pointer ) {
-        // we need to use prefix ',' before pointer names to remove them properly from string
-        $replace_string = "REPLACE($replace_string, ',$pointer', '')";
-    }
+	foreach ( $pointers as $pointer ) {
+		// we need to use prefix ',' before pointer names to remove them properly from string
+		$replace_string = "REPLACE($replace_string, ',$pointer', '')";
+	}
 
-    $sql = "
+	$sql = "
         UPDATE
             $table_usermeta
         SET
@@ -147,5 +147,5 @@ if ( ! empty( $pointers ) && is_array( $pointers ) ) {
         ;
     ";
 
-    $wpdb->query( $sql );
+	$wpdb->query( $sql );
 }

@@ -7,271 +7,273 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Controller_Admin extends LaterPay_Controller_Base
-{
+class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 
-    const ADMIN_MENU_POINTER            = 'lpwpp01';
-    const POST_PRICE_BOX_POINTER        = 'lpwpp02';
-    const POST_TEASER_CONTENT_POINTER   = 'lpwpp03';
 
-    /**
-     * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
-     */
-    public static function get_subscribed_events() {
-        return array(
-            'laterpay_admin_head' => array(
-                array( 'laterpay_on_admin_view', 200 ),
-                array( 'laterpay_on_plugin_is_active', 200 ),
-                array( 'add_html5shiv_to_admin_head' ),
-            ),
-            'laterpay_admin_menu' => array(
-                array( 'laterpay_on_admin_view', 200 ),
-                array( 'laterpay_on_plugin_is_active', 200 ),
-                array( 'add_to_admin_panel' ),
-            ),
-            'laterpay_admin_menu_data' => array(
-                array( 'laterpay_on_admin_view', 200 ),
-                array( 'laterpay_on_plugin_is_active', 200 ),
-                array( 'get_admin_menu' ),
-            ),
-            'laterpay_admin_footer_scripts' => array(
-                array( 'laterpay_on_admin_view', 200 ),
-                array( 'laterpay_on_plugin_is_active', 200 ),
-                array( 'modify_footer' ),
-            ),
-            'laterpay_post_edit' => array(
-                array( 'laterpay_on_admin_view', 200 ),
-                array( 'laterpay_on_plugin_is_active', 200 ),
-                array( 'help_wp_edit_post' ),
-            ),
-            'laterpay_post_new' => array(
-                array( 'laterpay_on_admin_view', 200 ),
-                array( 'laterpay_on_plugin_is_active', 200 ),
-                array( 'help_wp_add_post' ),
-            ),
-            'laterpay_admin_enqueue_scripts' => array(
-                array( 'laterpay_on_admin_view', 200 ),
-                array( 'laterpay_on_plugin_is_active', 200 ),
-                array( 'add_plugin_admin_assets' ),
-                array( 'add_admin_pointers_script' ),
-            ),
-            'laterpay_delete_term_taxonomy' => array(
-                array( 'laterpay_on_admin_view', 200 ),
-                array( 'laterpay_on_plugin_is_active', 200 ),
-                array( 'update_post_prices_after_category_delete' ),
-            ),
-        );
-    }
+	const ADMIN_MENU_POINTER          = 'lpwpp01';
+	const POST_PRICE_BOX_POINTER      = 'lpwpp02';
+	const POST_TEASER_CONTENT_POINTER = 'lpwpp03';
 
-    /**
-     * Show plugin in administrator panel.
-     *
-     * @return void
-     */
-    public function add_to_admin_panel() {
-        $plugin_page = LaterPay_Helper_View::$pluginPage;
-        add_menu_page(
-            __( 'LaterPay Plugin Settings', 'laterpay' ),
-            'LaterPay',
-            'moderate_comments', // allow Super Admin, Admin, and Editor to view the settings page
-            $plugin_page,
-            array( $this, 'run' ),
-            'dashicons-laterpay-logo',
-            81
-        );
+	/**
+	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 */
+	public static function get_subscribed_events() {
+		return array(
+			'laterpay_admin_head'            => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'add_html5shiv_to_admin_head' ),
+			),
+			'laterpay_admin_menu'            => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'add_to_admin_panel' ),
+			),
+			'laterpay_admin_menu_data'       => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'get_admin_menu' ),
+			),
+			'laterpay_admin_footer_scripts'  => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'modify_footer' ),
+			),
+			'laterpay_post_edit'             => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'help_wp_edit_post' ),
+			),
+			'laterpay_post_new'              => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'help_wp_add_post' ),
+			),
+			'laterpay_admin_enqueue_scripts' => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'add_plugin_admin_assets' ),
+				array( 'add_admin_pointers_script' ),
+			),
+			'laterpay_delete_term_taxonomy'  => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'update_post_prices_after_category_delete' ),
+			),
+		);
+	}
 
-        $menu = LaterPay_Helper_View::get_admin_menu();
-        foreach ( $menu as $name => $page ) {
-            $slug    = $page['url'];
-            $page_id = add_submenu_page(
-                $plugin_page,
-                $page['title'] . ' | ' . __( 'LaterPay Plugin Settings', 'laterpay' ),
-                $page['title'],
-                $page['cap'],
-                $slug,
-                isset( $page['run'] ) ? $page['run'] : array( $this, 'run_' . $name )
-            );
-            if ( isset( $page['submenu'] ) ) {
-                $sub_page   = $page['submenu'];
-                add_submenu_page(
-                    $sub_page['name'],
-                    $sub_page['title'] . ' | ' . __( 'LaterPay Plugin Settings', 'laterpay' ),
-                    $sub_page['title'],
-                    $page['cap'],
-                    $sub_page['url'],
-                    array( $this, 'run_' . $sub_page['name'] )
-                );
-            }
-            LaterPay_Hooks::add_wp_action( 'load-' . $page_id, 'laterpay_load_' . $page_id );
-            $help_action = isset( $page['help'] ) ? $page['help'] : array( $this, 'help_' . $name );
-            laterpay_event_dispatcher()->add_listener( 'laterpay_load_' . $page_id, $help_action );
-        }
-    }
+	/**
+	 * Show plugin in administrator panel.
+	 *
+	 * @return void
+	 */
+	public function add_to_admin_panel() {
+		$plugin_page = LaterPay_Helper_View::$pluginPage;
+		add_menu_page(
+			__( 'LaterPay Plugin Settings', 'laterpay' ),
+			'LaterPay',
+			'moderate_comments', // allow Super Admin, Admin, and Editor to view the settings page
+			$plugin_page,
+			array( $this, 'run' ),
+			'dashicons-laterpay-logo',
+			81
+		);
 
-    /**
-     *
-     * @param string $name
-     * @param mixed  $args
-     *
-     * @return void
-     */
-    public function __call( $name, $args ) {
-        if ( substr( $name, 0, 4 ) == 'run_' ) {
-            return $this->run( strtolower( substr( $name, 4 ) ) );
-        } elseif ( substr( $name, 0, 5 ) == 'help_' ) {
-            return $this->help( strtolower( substr( $name, 5 ) ) );
-        }
-    }
+		$menu = LaterPay_Helper_View::get_admin_menu();
+		foreach ( $menu as $name => $page ) {
+			$slug    = $page['url'];
+			$page_id = add_submenu_page(
+				$plugin_page,
+				$page['title'] . ' | ' . __( 'LaterPay Plugin Settings', 'laterpay' ),
+				$page['title'],
+				$page['cap'],
+				$slug,
+				isset( $page['run'] ) ? $page['run'] : array( $this, 'run_' . $name )
+			);
+			if ( isset( $page['submenu'] ) ) {
+				$sub_page = $page['submenu'];
+				add_submenu_page(
+					$sub_page['name'],
+					$sub_page['title'] . ' | ' . __( 'LaterPay Plugin Settings', 'laterpay' ),
+					$sub_page['title'],
+					$page['cap'],
+					$sub_page['url'],
+					array( $this, 'run_' . $sub_page['name'] )
+				);
+			}
+			LaterPay_Hooks::add_wp_action( 'load-' . $page_id, 'laterpay_load_' . $page_id );
+			$help_action = isset( $page['help'] ) ? $page['help'] : array( $this, 'help_' . $name );
+			laterpay_event_dispatcher()->add_listener( 'laterpay_load_' . $page_id, $help_action );
+		}
+	}
 
-    /**
-     * @see LaterPay_Core_View::load_assets()
-     */
-    public function load_assets() {
-        parent::load_assets();
+	/**
+	 *
+	 * @param string $name
+	 * @param mixed  $args
+	 *
+	 * @return void
+	 */
+	public function __call( $name, $args ) {
+		if ( substr( $name, 0, 4 ) == 'run_' ) {
+			return $this->run( strtolower( substr( $name, 4 ) ) );
+		} elseif ( substr( $name, 0, 5 ) == 'help_' ) {
+			return $this->help( strtolower( substr( $name, 5 ) ) );
+		}
+	}
 
-        // load LaterPay-specific CSS
-        wp_register_style(
-            'laterpay-backend',
-            $this->config->get( 'css_url' ) . 'laterpay-backend.css',
-            array(),
-            $this->config->get( 'version' )
-        );
-        wp_register_style(
-            'open-sans',
-            '//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,300,400,600&subset=latin,latin-ext'
-        );
-        wp_register_style(
-            'laterpay-select2',
-            $this->config->get( 'css_url' ) . 'vendor/select2.min.css',
-            array(),
-            $this->config->get( 'version' )
-        );
-        wp_enqueue_style( 'open-sans' );
-        wp_enqueue_style( 'laterpay-select2' );
-        wp_enqueue_style( 'laterpay-backend' );
+	/**
+	 * @see LaterPay_Core_View::load_assets()
+	 */
+	public function load_assets() {
+		parent::load_assets();
 
-        // load LaterPay-specific JS
-        wp_register_script(
-            'laterpay-velocity',
-            $this->config->get( 'js_url' ) . 'vendor/velocity.min.js',
-            array(),
-            $this->config->get( 'version' ),
-            true
-        );
-        wp_register_script(
-            'laterpay-backend',
-            $this->config->get( 'js_url' ) . 'laterpay-backend.js',
-            array( 'jquery', 'laterpay-velocity' ),
-            $this->config->get( 'version' ),
-            true
-        );
-        wp_enqueue_script( 'laterpay-velocity' );
-        wp_enqueue_script( 'laterpay-backend' );
+		// load LaterPay-specific CSS
+		wp_register_style(
+			'laterpay-backend',
+			$this->config->get( 'css_url' ) . 'laterpay-backend.css',
+			array(),
+			$this->config->get( 'version' )
+		);
+		wp_register_style(
+			'open-sans',
+			'//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,300,400,600&subset=latin,latin-ext'
+		);
+		wp_register_style(
+			'laterpay-select2',
+			$this->config->get( 'css_url' ) . 'vendor/select2.min.css',
+			array(),
+			$this->config->get( 'version' )
+		);
+		wp_enqueue_style( 'open-sans' );
+		wp_enqueue_style( 'laterpay-select2' );
+		wp_enqueue_style( 'laterpay-backend' );
 
-    }
+		// load LaterPay-specific JS
+		wp_register_script(
+			'laterpay-velocity',
+			$this->config->get( 'js_url' ) . 'vendor/velocity.min.js',
+			array(),
+			$this->config->get( 'version' ),
+			true
+		);
+		wp_register_script(
+			'laterpay-backend',
+			$this->config->get( 'js_url' ) . 'laterpay-backend.js',
+			array( 'jquery', 'laterpay-velocity' ),
+			$this->config->get( 'version' ),
+			true
+		);
+		wp_enqueue_script( 'laterpay-velocity' );
+		wp_enqueue_script( 'laterpay-backend' );
 
-    /**
-     * Add html5shim to the admin_head() for Internet Explorer < 9.
-     *
-     * @wp-hook admin_head
-     * @param LaterPay_Core_Event $event
-     * @return void
-     */
-    public function add_html5shiv_to_admin_head( LaterPay_Core_Event $event ) {
-        $event->set_echo( true );
-        $view_args = array(
-            'scripts' => array(
-                '//html5shim.googlecode.com/svn/trunk/html5.js',
-            ),
-        );
-        $this->assign( 'laterpay', $view_args );
+	}
 
-        $event->set_result( laterpay_sanitized( $this->get_text_view( 'backend/partials/html5shiv' ) ) );
-    }
+	/**
+	 * Add html5shim to the admin_head() for Internet Explorer < 9.
+	 *
+	 * @wp-hook admin_head
+	 * @param LaterPay_Core_Event $event
+	 * @return void
+	 */
+	public function add_html5shiv_to_admin_head( LaterPay_Core_Event $event ) {
+		$event->set_echo( true );
+		$view_args = array(
+			'scripts' => array(
+				'//html5shim.googlecode.com/svn/trunk/html5.js',
+			),
+		);
+		$this->assign( 'laterpay', $view_args );
 
-    /**
-     * Constructor for class LaterPayController, processes the tabs in the plugin backend.
-     *
-     * @param string $tab
-     *
-     * @return void
-     */
-    public function run( $tab = '' ) {
-        $this->load_assets();
+		$event->set_result( laterpay_sanitized( $this->get_text_view( 'backend/partials/html5shiv' ) ) );
+	}
 
-        if ( isset( $_GET['tab'] ) ) {
-            $tab = sanitize_text_field( $_GET['tab'] );
-        }
+	/**
+	 * Constructor for class LaterPayController, processes the tabs in the plugin backend.
+	 *
+	 * @param string $tab
+	 *
+	 * @return void
+	 */
+	public function run( $tab = '' ) {
+		$this->load_assets();
 
-        // return default tab, if no specific tab is requested
-        if ( empty( $tab ) ) {
-            $tab = 'pricing';
-        }
+		if ( isset( $_GET['tab'] ) ) {
+			$tab = sanitize_text_field( $_GET['tab'] );
+		}
 
-        switch ( $tab ) {
-            default:
-            // render pricing tab
-            case 'pricing':
-                $pricing_controller = new LaterPay_Controller_Admin_Pricing( $this->config );
-                $pricing_controller->render_page();
-                break;
+		// return default tab, if no specific tab is requested
+		if ( empty( $tab ) ) {
+			$tab = 'pricing';
+		}
 
-            // render appearance tab
-            case 'appearance':
-                $appearance_controller = new LaterPay_Controller_Admin_Appearance( $this->config );
-                $appearance_controller->render_page();
-                break;
+		switch ( $tab ) {
+			default:
+				// render pricing tab
+			case 'pricing':
+				$pricing_controller = new LaterPay_Controller_Admin_Pricing( $this->config );
+				$pricing_controller->render_page();
+				break;
 
-            // render account tab
-            case 'account':
-                $account_controller = new LaterPay_Controller_Admin_Account( $this->config );
-                $account_controller->render_page();
-                break;
-        }
-    }
+			// render appearance tab
+			case 'appearance':
+				$appearance_controller = new LaterPay_Controller_Admin_Appearance( $this->config );
+				$appearance_controller->render_page();
+				break;
 
-    /**
-     * Render contextual help, depending on the current page.
-     *
-     * @param string $tab
-     *
-     * @return void
-     */
-    public function help( $tab = '' ) {
-        switch ( $tab ) {
-            case 'wp_edit_post':
-            case 'wp_add_post':
-                $this->render_add_edit_post_page_help();
-                break;
+			// render account tab
+			case 'account':
+				$account_controller = new LaterPay_Controller_Admin_Account( $this->config );
+				$account_controller->render_page();
+				break;
+		}
+	}
 
-            case 'pricing':
-                $this->render_pricing_tab_help();
-                break;
+	/**
+	 * Render contextual help, depending on the current page.
+	 *
+	 * @param string $tab
+	 *
+	 * @return void
+	 */
+	public function help( $tab = '' ) {
+		switch ( $tab ) {
+			case 'wp_edit_post':
+			case 'wp_add_post':
+				$this->render_add_edit_post_page_help();
+				break;
 
-            case 'appearance':
-                $this->render_appearance_tab_help();
-                break;
+			case 'pricing':
+				$this->render_pricing_tab_help();
+				break;
 
-            case 'account':
-                $this->render_account_tab_help();
-                break;
+			case 'appearance':
+				$this->render_appearance_tab_help();
+				break;
 
-            default:
-                break;
-        }
-    }
+			case 'account':
+				$this->render_account_tab_help();
+				break;
 
-    /**
-     * Add contextual help for add / edit post page.
-     *
-     * @return void
-     */
-    protected function render_add_edit_post_page_help() {
-        $screen = get_current_screen();
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_add_edit_post_page_help',
-            'title'   => __( 'LaterPay', 'laterpay' ),
-            'content' => __( '
+			default:
+				break;
+		}
+	}
+
+	/**
+	 * Add contextual help for add / edit post page.
+	 *
+	 * @return void
+	 */
+	protected function render_add_edit_post_page_help() {
+		$screen = get_current_screen();
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_add_edit_post_page_help',
+				'title'   => __( 'LaterPay', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 <strong>Setting Prices</strong><br>
                 You can set an individual price for each post.<br>
@@ -306,21 +308,24 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                 Pay Now are especially suitable for higher-value content and / or content that immediately occasions costs (e. g. license fees for a video stream).<br>
                 Pay Now are possible for prices between (including) <strong>1.49 € (in Europe) / $ 1.99 (in the U.S.)</strong> and (including) <strong>149.99</strong>.
             </p>', 'laterpay'
-            ),
-        ) );
-    }
+				),
+			)
+		);
+	}
 
-    /**
-     * Add contextual help for pricing tab.
-     *
-     * @return  void
-     */
-    protected function render_pricing_tab_help() {
-        $screen = get_current_screen();
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_pricing_tab_help_global_default_price',
-            'title'   => __( 'Global Default Price', 'laterpay' ),
-            'content' => __( '
+	/**
+	 * Add contextual help for pricing tab.
+	 *
+	 * @return  void
+	 */
+	protected function render_pricing_tab_help() {
+		$screen = get_current_screen();
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_pricing_tab_help_global_default_price',
+				'title'   => __( 'Global Default Price', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 The global default price is used for all posts, for which no
                 category default price or individual price has been set.<br>
@@ -328,12 +333,15 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                 all articles free, for which no category default price or
                 individual price has been set.
             </p>', 'laterpay'
-            ),
-        ) );
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_pricing_tab_help_category_default_price',
-            'title'   => __( 'Category Default Prices', 'laterpay' ),
-            'content' => __( '
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_pricing_tab_help_category_default_price',
+				'title'   => __( 'Category Default Prices', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 A category default price is applied to all posts in a given
                 category that don\'t have an individual price.<br>
@@ -345,12 +353,15 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                 but a post belongs to a category with a category default price
                 of 0.30, that post will sell for 0.30.
             </p>', 'laterpay'
-            ),
-        ) );
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_pricing_tab_help_currency',
-            'title'   => __( 'Currency', 'laterpay' ),
-            'content' => __( '
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_pricing_tab_help_currency',
+				'title'   => __( 'Currency', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 The plugin supports two currencies, depending on the region of your LaterPay merchant account: EUR (€) for European merchant accounts, USD ($) for a U.S. merchant account.<br>
                 Changing the standard currency will not convert the prices you have set.
@@ -358,12 +369,15 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                 For example, if your global default price is 0.10 EUR and you change the default currency to USD, the global default
                 price will be 0.10 USD.<br>
             </p>', 'laterpay'
-            ),
-        ) );
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_pricing_tab_help_time_passes',
-            'title'   => __( 'Time Passes', 'laterpay' ),
-            'content' => __( '
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_pricing_tab_help_time_passes',
+				'title'   => __( 'Time Passes', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 <strong>Validity of Time Passes</strong><br>
                 With time passes, you can offer your users <strong>time-limited</strong> access to your content. You can define, which content a time pass should cover and for which period of time it should be valid. A time pass can be valid for <strong>all LaterPay content</strong>
@@ -385,12 +399,15 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                 When a user purchases a time pass, he has access to all the content covered by this pass during the validity period. Of course, you can still sell your content individually.<br>
                 Example: A user has already purchased the post "New York – a Travel Report" for 0.29. Now he purchases a Week Pass for the category "Travel Reports" for 0.99. The category also contains the "New York" post. For one week, he can now read all posts in the category "Travel Reports" for a fixed price of 0.99. After this week, the access expires automatically. During the validity period, the user will not see any LaterPay purchase buttons for posts in the category "Travel Reports". After the pass has expired, the user will still have access to the post he had previously purchased individually.
             </p>', 'laterpay'
-            ),
-        ) );
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_pricing_tab_help_time_pass_vouchers',
-            'title'   => __( 'Time Pass Vouchers', 'laterpay' ),
-            'content' => __( '
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_pricing_tab_help_time_pass_vouchers',
+				'title'   => __( 'Time Pass Vouchers', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 You can create any number of voucher codes for each time pass. A voucher code allows one (or multiple) user(s) to purchase a time pass for a reduced price. A user can enter a voucher code right <strong>below the time passes</strong> by clicking <strong>"I have a voucher"</strong>. If the entered code is a valid voucher code, the price of the respective time pass will be reduced.<br>
                 A voucher code can be used <strong>any number of times</strong> and is <strong>not linked</strong> to a specific user. If you want to invalidate a time pass voucher code, you can simply delete it.<br>
@@ -405,21 +422,24 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                     If you enter a price of e.g. \'0.20\', entering this voucher code will change the price of the respective time pass to 0.20.</li>
                 <li>Click the \'Save\' button.</li>
             </ul>', 'laterpay'
-            ),
-        ) );
-    }
+				),
+			)
+		);
+	}
 
-    /**
-     * Add contextual help for appearance tab.
-     *
-     * @return  void
-     */
-    protected function render_appearance_tab_help() {
-        $screen = get_current_screen();
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_appearance_tab_help_preview_mode',
-            'title'   => __( 'Preview Mode', 'laterpay' ),
-            'content' => __( '
+	/**
+	 * Add contextual help for appearance tab.
+	 *
+	 * @return  void
+	 */
+	protected function render_appearance_tab_help() {
+		$screen = get_current_screen();
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_appearance_tab_help_preview_mode',
+				'title'   => __( 'Preview Mode', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 The preview mode defines, how teaser content is shown to your
                 visitors.<br>
@@ -438,12 +458,15 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                     purchased it.
                 </li>
             </ul>', 'laterpay'
-            ),
-        ) );
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_appearance_tab_help_purchase_button_position',
-            'title'   => __( 'Purchase Button Position', 'laterpay' ),
-            'content' => __( '
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_appearance_tab_help_purchase_button_position',
+				'title'   => __( 'Purchase Button Position', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 You can choose, if the LaterPay purchase button is positioned at its default or a custom position:
             </p>
@@ -455,12 +478,15 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                     <strong>Custom position</strong> &ndash; You can position the LaterPay purchase button yourself by using the stated WordPress action.
                 </li>
             </ul>', 'laterpay'
-            ),
-        ) );
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_appearance_tab_help_time_pass_position',
-            'title'   => __( 'Time Pass Position', 'laterpay' ),
-            'content' => __( '
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_appearance_tab_help_time_pass_position',
+				'title'   => __( 'Time Pass Position', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 You can choose, if time passes are positioned at their default or a custom position:
             </p>
@@ -473,21 +499,24 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                     <strong>Custom position</strong> &ndash; You can position time passes yourself by using the stated WordPress action.
                 </li>
             </ul>', 'laterpay'
-            ),
-        ) );
-    }
+				),
+			)
+		);
+	}
 
-    /**
-     * Add contextual help for account tab.
-     *
-     * @return void
-     */
-    protected function render_account_tab_help() {
-        $screen = get_current_screen();
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_account_tab_help_api_credentials',
-            'title'   => __( 'API Credentials', 'laterpay' ),
-            'content' => __( '
+	/**
+	 * Add contextual help for account tab.
+	 *
+	 * @return void
+	 */
+	protected function render_account_tab_help() {
+		$screen = get_current_screen();
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_account_tab_help_api_credentials',
+				'title'   => __( 'API Credentials', 'laterpay' ),
+				'content' => __(
+					'
             <p>
                 To access the LaterPay API, you need LaterPay API credentials,
                 consisting of
@@ -530,12 +559,15 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                 including <strong>all necessary identification documents</strong>.<br>
                 <a href="https://www.laterpay.net/how-to-become-a-content-provider" target="blank">Visit our website to read more about how to become a content provider.</a>
             </p>', 'laterpay'
-            ),
-        ) );
-        $screen->add_help_tab( array(
-            'id'      => 'laterpay_account_tab_help_plugin_mode',
-            'title'   => __( 'Plugin Mode', 'laterpay' ),
-            'content' => __( '
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_account_tab_help_plugin_mode',
+				'title'   => __( 'Plugin Mode', 'laterpay' ),
+				'content' => __(
+					'
             <p>You can run the LaterPay plugin in three modes:</p>
             <ul>
                 <li>
@@ -564,167 +596,168 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base
                 the LaterPay plugin on a test system before activating it on
                 your production system.
             </p>', 'laterpay'
-            ),
-        ) );
-    }
+				),
+			)
+		);
+	}
 
-    /**
-     * Add WordPress pointers to pages.
-     *
-     * @param LaterPay_Core_Event $event
-     * @return void
-     */
-    public function modify_footer( LaterPay_Core_Event $event ) {
-        $pointers = LaterPay_Controller_Admin::get_pointers_to_be_shown();
+	/**
+	 * Add WordPress pointers to pages.
+	 *
+	 * @param LaterPay_Core_Event $event
+	 * @return void
+	 */
+	public function modify_footer( LaterPay_Core_Event $event ) {
+		$pointers = LaterPay_Controller_Admin::get_pointers_to_be_shown();
 
-        // don't render the partial, if there are no pointers to be shown
-        if ( empty( $pointers ) ) {
-            return;
-        }
+		// don't render the partial, if there are no pointers to be shown
+		if ( empty( $pointers ) ) {
+			return;
+		}
 
-        // assign pointers
-        $view_args = array(
-            'pointers' => $pointers,
-        );
+		// assign pointers
+		$view_args = array(
+			'pointers' => $pointers,
+		);
 
-        $this->assign( 'laterpay', $view_args );
-        $result = $event->get_result();
-        $result .= laterpay_sanitized( $this->get_text_view( 'backend/partials/pointer-scripts' ) );
-        $event->set_result( $result );
-    }
+		$this->assign( 'laterpay', $view_args );
+		$result  = $event->get_result();
+		$result .= laterpay_sanitized( $this->get_text_view( 'backend/partials/pointer-scripts' ) );
+		$event->set_result( $result );
+	}
 
-    /**
-     * Load LaterPay stylesheet with LaterPay vector logo on all pages where the admin menu is visible.
-     *
-     * @return void
-     */
-    public function add_plugin_admin_assets() {
-        wp_register_style(
-            'laterpay-admin',
-            $this->config->css_url . 'laterpay-admin.css',
-            array(),
-            $this->config->version
-        );
+	/**
+	 * Load LaterPay stylesheet with LaterPay vector logo on all pages where the admin menu is visible.
+	 *
+	 * @return void
+	 */
+	public function add_plugin_admin_assets() {
+		wp_register_style(
+			'laterpay-admin',
+			$this->config->css_url . 'laterpay-admin.css',
+			array(),
+			$this->config->version
+		);
 
-        wp_enqueue_style( 'laterpay-admin' );
+		wp_enqueue_style( 'laterpay-admin' );
 
-        // apply colors config
-        LaterPay_Helper_View::apply_colors( 'laterpay-admin' );
-    }
+		// apply colors config
+		LaterPay_Helper_View::apply_colors( 'laterpay-admin' );
+	}
 
-    /**
-     * Hint at the newly installed plugin using WordPress pointers.
-     *
-     * @return void
-     */
-    public function add_admin_pointers_script() {
-        $pointers = LaterPay_Controller_Admin::get_pointers_to_be_shown();
+	/**
+	 * Hint at the newly installed plugin using WordPress pointers.
+	 *
+	 * @return void
+	 */
+	public function add_admin_pointers_script() {
+		$pointers = LaterPay_Controller_Admin::get_pointers_to_be_shown();
 
-        // don't enqueue the assets, if there are no pointers to be shown
-        if ( empty( $pointers ) ) {
-            return;
-        }
+		// don't enqueue the assets, if there are no pointers to be shown
+		if ( empty( $pointers ) ) {
+			return;
+		}
 
-        wp_enqueue_script( 'wp-pointer' );
-        wp_enqueue_style( 'wp-pointer' );
-    }
+		wp_enqueue_script( 'wp-pointer' );
+		wp_enqueue_style( 'wp-pointer' );
+	}
 
-    /**
-     * Return the pointers that have not been shown yet.
-     *
-     * @return array $pointers
-     */
-    public function get_pointers_to_be_shown() {
-        $dismissed_pointers = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
-        $pointers = array();
+	/**
+	 * Return the pointers that have not been shown yet.
+	 *
+	 * @return array $pointers
+	 */
+	public function get_pointers_to_be_shown() {
+		$dismissed_pointers = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
+		$pointers           = array();
 
-        if ( ! in_array( LaterPay_Controller_Admin::ADMIN_MENU_POINTER, $dismissed_pointers ) ) {
-            $pointers[] = LaterPay_Controller_Admin::ADMIN_MENU_POINTER;
-        }
-        // add pointers to LaterPay features on add / edit post page
-        if ( ! in_array( LaterPay_Controller_Admin::POST_PRICE_BOX_POINTER, $dismissed_pointers ) ) {
-            $pointers[] = LaterPay_Controller_Admin::POST_PRICE_BOX_POINTER;
-        }
-        if ( ! in_array( LaterPay_Controller_Admin::POST_TEASER_CONTENT_POINTER, $dismissed_pointers ) ) {
-            $pointers[] = LaterPay_Controller_Admin::POST_TEASER_CONTENT_POINTER;
-        }
+		if ( ! in_array( LaterPay_Controller_Admin::ADMIN_MENU_POINTER, $dismissed_pointers ) ) {
+			$pointers[] = LaterPay_Controller_Admin::ADMIN_MENU_POINTER;
+		}
+		// add pointers to LaterPay features on add / edit post page
+		if ( ! in_array( LaterPay_Controller_Admin::POST_PRICE_BOX_POINTER, $dismissed_pointers ) ) {
+			$pointers[] = LaterPay_Controller_Admin::POST_PRICE_BOX_POINTER;
+		}
+		if ( ! in_array( LaterPay_Controller_Admin::POST_TEASER_CONTENT_POINTER, $dismissed_pointers ) ) {
+			$pointers[] = LaterPay_Controller_Admin::POST_TEASER_CONTENT_POINTER;
+		}
 
-        return $pointers;
-    }
+		return $pointers;
+	}
 
-    /**
-     * Return all pointer constants from current class.
-     *
-     * @return array $pointers
-     */
-    public static function get_all_pointers() {
-        $reflection         = new ReflectionClass( __CLASS__ );
-        $class_constants    = $reflection->getConstants();
-        $pointers           = array();
+	/**
+	 * Return all pointer constants from current class.
+	 *
+	 * @return array $pointers
+	 */
+	public static function get_all_pointers() {
+		$reflection      = new ReflectionClass( __CLASS__ );
+		$class_constants = $reflection->getConstants();
+		$pointers        = array();
 
-        if ( $class_constants ) {
-            foreach ( array_keys( $class_constants ) as $key_value ) {
-                if ( strpos( $key_value, 'POINTER' ) !== false ) {
-                    $pointers[] = $class_constants[ $key_value ];
-                }
-            }
-        }
+		if ( $class_constants ) {
+			foreach ( array_keys( $class_constants ) as $key_value ) {
+				if ( strpos( $key_value, 'POINTER' ) !== false ) {
+					$pointers[] = $class_constants[ $key_value ];
+				}
+			}
+		}
 
-        return $pointers;
-    }
+		return $pointers;
+	}
 
-    /**
-     * Update post prices after category delete.
-     *
-     * @hook delete_term_taxonomies
-     *
-     * @return void
-     */
-    public function update_post_prices_after_category_delete( LaterPay_Core_Event $event ) {
-        $args = (array) $event->get_arguments();
-        $category_id = $args[0];
+	/**
+	 * Update post prices after category delete.
+	 *
+	 * @hook delete_term_taxonomies
+	 *
+	 * @return void
+	 */
+	public function update_post_prices_after_category_delete( LaterPay_Core_Event $event ) {
+		$args        = (array) $event->get_arguments();
+		$category_id = $args[0];
 
-        $category_price_model = new LaterPay_Model_CategoryPrice();
-        $category_price_model->delete_prices_by_category_id( $category_id );
+		$category_price_model = new LaterPay_Model_CategoryPrice();
+		$category_price_model->delete_prices_by_category_id( $category_id );
 
-        // get posts by category price id
-        $post_ids = LaterPay_Helper_Pricing::get_posts_by_category_price_id( $category_id );
-        foreach ( $post_ids as $post_id => $meta ) {
-            // update post prices
-            LaterPay_Helper_Pricing::update_post_data_after_category_delete( $post_id );
-        }
-    }
+		// get posts by category price id
+		$post_ids = LaterPay_Helper_Pricing::get_posts_by_category_price_id( $category_id );
+		foreach ( $post_ids as $post_id => $meta ) {
+			// update post prices
+			LaterPay_Helper_Pricing::update_post_data_after_category_delete( $post_id );
+		}
+	}
 
-    /**
-     * Get links to be rendered in the plugin backend navigation.
-     *
-     * @param LaterPay_Core_Event $event
-     */
-    public function get_admin_menu( LaterPay_Core_Event $event ) {
-        $menu = (array) $event->get_result();
+	/**
+	 * Get links to be rendered in the plugin backend navigation.
+	 *
+	 * @param LaterPay_Core_Event $event
+	 */
+	public function get_admin_menu( LaterPay_Core_Event $event ) {
+		$menu = (array) $event->get_result();
 
-        // @link http://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table
-        // cap "activate_plugins"   => Super Admin, Admin
-        // cap "moderate_comments"  => Super Admin, Admin, Editor
+		// @link http://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table
+		// cap "activate_plugins"   => Super Admin, Admin
+		// cap "moderate_comments"  => Super Admin, Admin, Editor
 
-        $menu['pricing'] = array(
-            'url'   => 'laterpay-pricing-tab',
-            'title' => __( 'Pricing', 'laterpay' ),
-            'cap'   => 'activate_plugins',
-        );
+		$menu['pricing'] = array(
+			'url'   => 'laterpay-pricing-tab',
+			'title' => __( 'Pricing', 'laterpay' ),
+			'cap'   => 'activate_plugins',
+		);
 
-        $menu['appearance'] = array(
-            'url'   => 'laterpay-appearance-tab',
-            'title' => __( 'Appearance', 'laterpay' ),
-            'cap'   => 'activate_plugins',
-        );
+		$menu['appearance'] = array(
+			'url'   => 'laterpay-appearance-tab',
+			'title' => __( 'Appearance', 'laterpay' ),
+			'cap'   => 'activate_plugins',
+		);
 
-        $menu['account'] = array(
-            'url'   => 'laterpay-account-tab',
-            'title' => __( 'Account', 'laterpay' ),
-            'cap'   => 'activate_plugins',
-        );
+		$menu['account'] = array(
+			'url'   => 'laterpay-account-tab',
+			'title' => __( 'Account', 'laterpay' ),
+			'cap'   => 'activate_plugins',
+		);
 
-        $event->set_result( $menu );
-    }
+		$event->set_result( $menu );
+	}
 }

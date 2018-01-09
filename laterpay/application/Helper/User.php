@@ -7,262 +7,262 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Helper_User
-{
+class LaterPay_Helper_User {
 
-    /**
-     * @var mixed Does user want to preview post as visitor or not?
-     */
-    protected static $_preview_post_as_visitor;
 
-    /**
-     * @var
-     */
-    protected static $_hide_preview_mode_pane;
+	/**
+	 * @var mixed Does user want to preview post as visitor or not?
+	 */
+	protected static $_preview_post_as_visitor;
 
-    /**
-     * Check, if the current user has a given capability.
-     *
-     * @param string           $capability
-     * @param WP_Post|int|null $post
-     * @param boolean          $strict
-     *
-     * @return bool
-     */
-    public static function can( $capability, $post = null, $strict = true ) {
-        $allowed = false;
+	/**
+	 * @var
+	 */
+	protected static $_hide_preview_mode_pane;
 
-        // try to get WP_Post object, if post id was passed instead of post object
-        if ( ! $post instanceof WP_Post ) {
-            $post = get_post( $post );
-        }
+	/**
+	 * Check, if the current user has a given capability.
+	 *
+	 * @param string           $capability
+	 * @param WP_Post|int|null $post
+	 * @param boolean          $strict
+	 *
+	 * @return bool
+	 */
+	public static function can( $capability, $post = null, $strict = true ) {
+		$allowed = false;
 
-        if ( ! function_exists( 'wp_get_current_user' ) ) {
-            include_once( ABSPATH . 'wp-includes/pluggable.php' );
-        }
+		// try to get WP_Post object, if post id was passed instead of post object
+		if ( ! $post instanceof WP_Post ) {
+			$post = get_post( $post );
+		}
 
-        if ( self::current_user_can( $capability, $post ) ) {
-            if ( ! $strict ) {
-                // if $strict = false, it's sufficient that a capability is added to the role of the current user
-                $allowed = true;
-            } else {
-                switch ( $capability ) {
-                    case 'laterpay_edit_teaser_content':
-                        if ( ! empty( $post ) && current_user_can( 'edit_post', $post ) ) {
-                            // use edit_post capability as proxy:
-                            // - super admins, admins, and editors can edit all posts
-                            // - authors and contributors can edit their own posts
-                            $allowed = true;
-                        }
-                        break;
+		if ( ! function_exists( 'wp_get_current_user' ) ) {
+			include_once( ABSPATH . 'wp-includes/pluggable.php' );
+		}
 
-                    case 'laterpay_edit_individual_price':
-                        if ( ! empty( $post ) && current_user_can( 'publish_post', $post ) ) {
-                            // use publish_post capability as proxy:
-                            // - super admins, admins, and editors can publish all posts
-                            // - authors can publish their own posts
-                            // - contributors can not publish posts
-                            $allowed = true;
-                        }
-                        break;
+		if ( self::current_user_can( $capability, $post ) ) {
+			if ( ! $strict ) {
+				// if $strict = false, it's sufficient that a capability is added to the role of the current user
+				$allowed = true;
+			} else {
+				switch ( $capability ) {
+					case 'laterpay_edit_teaser_content':
+						if ( ! empty( $post ) && current_user_can( 'edit_post', $post ) ) {
+							// use edit_post capability as proxy:
+							// - super admins, admins, and editors can edit all posts
+							// - authors and contributors can edit their own posts
+							$allowed = true;
+						}
+						break;
 
-                    case 'laterpay_has_full_access_to_content':
-                        if ( ! empty( $post ) ) {
-                            $allowed = true;
-                        }
-                        break;
+					case 'laterpay_edit_individual_price':
+						if ( ! empty( $post ) && current_user_can( 'publish_post', $post ) ) {
+							// use publish_post capability as proxy:
+							// - super admins, admins, and editors can publish all posts
+							// - authors can publish their own posts
+							// - contributors can not publish posts
+							$allowed = true;
+						}
+						break;
 
-                    default:
-                        $allowed = true;
-                        break;
-                }
-            }
-        }
+					case 'laterpay_has_full_access_to_content':
+						if ( ! empty( $post ) ) {
+							$allowed = true;
+						}
+						break;
 
-        return $allowed;
-    }
+					default:
+						$allowed = true;
+						break;
+				}
+			}
+		}
 
-    /**
-     * Check, if user has a given capability.
-     *
-     * @param string       $capability capability
-     * @param WP_Post|null $post       post object
-     *
-     * @return bool
-     */
-    public static function current_user_can( $capability, $post = null ) {
-        if ( current_user_can( $capability ) ) {
-            return true;
-        }
+		return $allowed;
+	}
 
-        $unlimited_access = get_option( 'laterpay_unlimited_access' );
-        if ( ! $unlimited_access ) {
-            return false;
-        }
+	/**
+	 * Check, if user has a given capability.
+	 *
+	 * @param string       $capability capability
+	 * @param WP_Post|null $post       post object
+	 *
+	 * @return bool
+	 */
+	public static function current_user_can( $capability, $post = null ) {
+		if ( current_user_can( $capability ) ) {
+			return true;
+		}
 
-        // check, if user has a role that has the given capability
-        $user = wp_get_current_user();
-        if ( ! $user instanceof WP_User || ! $user->roles ) {
-            return false;
-        }
+		$unlimited_access = get_option( 'laterpay_unlimited_access' );
+		if ( ! $unlimited_access ) {
+			return false;
+		}
 
-        if ( ! $post ) {
-            return false;
-        }
+		// check, if user has a role that has the given capability
+		$user = wp_get_current_user();
+		if ( ! $user instanceof WP_User || ! $user->roles ) {
+			return false;
+		}
 
-        $has_cap = false;
+		if ( ! $post ) {
+			return false;
+		}
 
-        foreach ( $user->roles as $role ) {
-            if ( ! isset( $unlimited_access[ $role ] ) || false !== array_search( 'none', $unlimited_access[ $role ] ) ) {
-                continue;
-            }
+		$has_cap = false;
 
-            $categories       = array( 'all' );
-            // get post categories and their parents
-            $post_categories  = wp_get_post_categories( $post->ID );
-            foreach ( $post_categories as $post_category_id ) {
-                $categories[] = $post_category_id;
-                $parents      = LaterPay_Helper_Pricing::get_category_parents( $post_category_id );
-                $categories   = array_merge( $categories, $parents );
-            }
+		foreach ( $user->roles as $role ) {
+			if ( ! isset( $unlimited_access[ $role ] ) || false !== array_search( 'none', $unlimited_access[ $role ] ) ) {
+				continue;
+			}
 
-            if ( array_intersect( $categories, $unlimited_access[ $role ] ) ) {
-                $has_cap = true;
-                break;
-            }
-        }
+			$categories = array( 'all' );
+			// get post categories and their parents
+			$post_categories = wp_get_post_categories( $post->ID );
+			foreach ( $post_categories as $post_category_id ) {
+				$categories[] = $post_category_id;
+				$parents      = LaterPay_Helper_Pricing::get_category_parents( $post_category_id );
+				$categories   = array_merge( $categories, $parents );
+			}
 
-        return $has_cap;
-    }
+			if ( array_intersect( $categories, $unlimited_access[ $role ] ) ) {
+				$has_cap = true;
+				break;
+			}
+		}
 
-    /**
-     * Remove custom capabilities.
-     *
-     * @return void
-     */
-    public static function remove_custom_capabilities() {
-        global $wp_roles;
+		return $has_cap;
+	}
 
-        // array of capabilities (capability => option)
-        $capabilities = array(
-            'laterpay_edit_teaser_content',
-            'laterpay_edit_individual_price',
-            'laterpay_has_full_access_to_content',
-        );
+	/**
+	 * Remove custom capabilities.
+	 *
+	 * @return void
+	 */
+	public static function remove_custom_capabilities() {
+		global $wp_roles;
 
-        foreach ( $capabilities as $cap_name ) {
-            // loop through roles
-            if ( $wp_roles instanceof WP_Roles ) {
-                foreach ( array_keys( $wp_roles->roles ) as $role ) {
-                    // get role
-                    $role = get_role( $role );
-                    // remove capability from role
-                    $role->remove_cap( $cap_name );
-                }
-            }
-        }
-    }
+		// array of capabilities (capability => option)
+		$capabilities = array(
+			'laterpay_edit_teaser_content',
+			'laterpay_edit_individual_price',
+			'laterpay_has_full_access_to_content',
+		);
 
-    /**
-     * Check, if a given user has a given role.
-     *
-     * @param string $role    role name
-     * @param int    $user_id (optional) ID of a user. Defaults to the current user.
-     *
-     * @return bool
-     */
-    public static function user_has_role( $role, $user_id = null ) {
+		foreach ( $capabilities as $cap_name ) {
+			// loop through roles
+			if ( $wp_roles instanceof WP_Roles ) {
+				foreach ( array_keys( $wp_roles->roles ) as $role ) {
+					// get role
+					$role = get_role( $role );
+					// remove capability from role
+					$role->remove_cap( $cap_name );
+				}
+			}
+		}
+	}
 
-        if ( is_numeric( $user_id ) ) {
-            $user = get_userdata( $user_id );
-        } else {
-            $user = wp_get_current_user();
-        }
+	/**
+	 * Check, if a given user has a given role.
+	 *
+	 * @param string $role    role name
+	 * @param int    $user_id (optional) ID of a user. Defaults to the current user.
+	 *
+	 * @return bool
+	 */
+	public static function user_has_role( $role, $user_id = null ) {
 
-        if ( empty( $user ) ) {
-            return false;
-        }
+		if ( is_numeric( $user_id ) ) {
+			$user = get_userdata( $user_id );
+		} else {
+			$user = wp_get_current_user();
+		}
 
-        return in_array( $role, (array) $user->roles );
-    }
+		if ( empty( $user ) ) {
+			return false;
+		}
 
-    /**
-     * Check, if the current user wants to preview the post as it renders for an admin or as it renders for a visitor.
-     *
-     * @param null|WP_Post $post
-     *
-     * @return bool
-     */
-    public static function preview_post_as_visitor( $post = null ) {
-        if ( null === static::$_preview_post_as_visitor ) {
-            $preview_post_as_visitor = 0;
-            $current_user            = wp_get_current_user();
-            if ( $current_user instanceof WP_User ) {
-                $preview_post_as_visitor = get_user_meta( $current_user->ID, 'laterpay_preview_post_as_visitor' );
-                if ( ! empty( $preview_post_as_visitor ) ) {
-                    $preview_post_as_visitor = $preview_post_as_visitor[0];
-                }
-            }
-            static::$_preview_post_as_visitor = $preview_post_as_visitor;
-        }
+		return in_array( $role, (array) $user->roles );
+	}
 
-        return static::$_preview_post_as_visitor;
-    }
+	/**
+	 * Check, if the current user wants to preview the post as it renders for an admin or as it renders for a visitor.
+	 *
+	 * @param null|WP_Post $post
+	 *
+	 * @return bool
+	 */
+	public static function preview_post_as_visitor( $post = null ) {
+		if ( null === static::$_preview_post_as_visitor ) {
+			$preview_post_as_visitor = 0;
+			$current_user            = wp_get_current_user();
+			if ( $current_user instanceof WP_User ) {
+				$preview_post_as_visitor = get_user_meta( $current_user->ID, 'laterpay_preview_post_as_visitor' );
+				if ( ! empty( $preview_post_as_visitor ) ) {
+					$preview_post_as_visitor = $preview_post_as_visitor[0];
+				}
+			}
+			static::$_preview_post_as_visitor = $preview_post_as_visitor;
+		}
 
-    /**
-     * Check, if the current user has hidden the post preview mode pane.
-     *
-     * @return bool
-     */
-    public static function preview_mode_pane_is_hidden() {
-        if (null === static::$_hide_preview_mode_pane) {
-            static::$_hide_preview_mode_pane = false;
-            $current_user = wp_get_current_user();
+		return static::$_preview_post_as_visitor;
+	}
 
-            if ($current_user instanceof WP_User &&
-                true === (bool) get_user_meta($current_user->ID, 'laterpay_hide_preview_mode_pane', true)
-            ) {
-                static::$_hide_preview_mode_pane = true;
-            }
-        }
+	/**
+	 * Check, if the current user has hidden the post preview mode pane.
+	 *
+	 * @return bool
+	 */
+	public static function preview_mode_pane_is_hidden() {
+		if ( null === static::$_hide_preview_mode_pane ) {
+			static::$_hide_preview_mode_pane = false;
+			$current_user                    = wp_get_current_user();
 
-        return static::$_hide_preview_mode_pane;
-    }
+			if ( $current_user instanceof WP_User &&
+				true === (bool) get_user_meta( $current_user->ID, 'laterpay_hide_preview_mode_pane', true )
+			) {
+				static::$_hide_preview_mode_pane = true;
+			}
+		}
 
-    /**
-     * Get user unique id.
-     *
-     * @return null|string user id
-     */
-    public static function get_user_unique_id( ) {
-        if ( isset( $_COOKIE['laterpay_tracking_code'] ) ) {
-            list( $uniqueId, $control_code ) = explode( '.', sanitize_text_field( $_COOKIE['laterpay_tracking_code'] ) );
+		return static::$_hide_preview_mode_pane;
+	}
 
-            // make sure only authorized information is recorded
-            if ( $control_code != md5( $uniqueId . AUTH_SALT ) ) {
-                return null;
-            }
+	/**
+	 * Get user unique id.
+	 *
+	 * @return null|string user id
+	 */
+	public static function get_user_unique_id() {
+		if ( isset( $_COOKIE['laterpay_tracking_code'] ) ) {
+			list( $uniqueId, $control_code ) = explode( '.', sanitize_text_field( $_COOKIE['laterpay_tracking_code'] ) );
 
-            return $uniqueId;
-        }
+			// make sure only authorized information is recorded
+			if ( $control_code != md5( $uniqueId . AUTH_SALT ) ) {
+				return null;
+			}
 
-        return null;
-    }
+			return $uniqueId;
+		}
 
-    /**
-     * Remove cookie by name
-     *
-     * @param $name
-     *
-     * @return void
-     */
-    public static function remove_cookie_by_name( $name ) {
-        unset( $_COOKIE[ $name ] );
-        setcookie(
-            $name,
-            null,
-            time() - 60,
-            '/'
-        );
-    }
+		return null;
+	}
+
+	/**
+	 * Remove cookie by name
+	 *
+	 * @param $name
+	 *
+	 * @return void
+	 */
+	public static function remove_cookie_by_name( $name ) {
+		unset( $_COOKIE[ $name ] );
+		setcookie(
+			$name,
+			null,
+			time() - 60,
+			'/'
+		);
+	}
 }
