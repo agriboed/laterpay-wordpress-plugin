@@ -18,12 +18,12 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'laterpay_on_ajax_send_json', 300 ),
 				array( 'process_ajax_requests' ),
-				array( 'laterpay_on_ajax_user_can_activate_plugins', 200 ),
+				array( 'laterpay_on_ajax_user_can_activate_plugins', 200 )
 			),
 			'laterpay_admin_enqueue_scripts' => array(
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'laterpay_on_plugin_is_active', 200 ),
-				array( 'add_custom_styles' ),
+				array( 'add_custom_styles' )
 			),
 		);
 	}
@@ -56,13 +56,13 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 			'laterpay-backend-appearance',
 			'lpVars',
 			array(
-				'overlaySettings'  => json_encode(
+				'overlaySettings'  => wp_json_encode(
 					array(
 						'default' => LaterPay_Helper_Appearance::get_default_options(),
-						'current' => LaterPay_Helper_Appearance::get_current_options(),
+						'current' => LaterPay_Helper_Appearance::get_current_options()
 					)
 				),
-				'l10n_print_after' => 'lpVars.overlaySettings = JSON.parse(lpVars.overlaySettings)',
+				'l10n_print_after' => 'lpVars.overlaySettings = JSON.parse(lpVars.overlaySettings)'
 			)
 		);
 	}
@@ -84,7 +84,7 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 			'purchase_button_positioned_manually' => get_option( 'laterpay_purchase_button_positioned_manually' ),
 			'time_passes_positioned_manually'     => get_option( 'laterpay_time_passes_positioned_manually' ),
 			'hide_free_posts'                     => get_option( 'laterpay_hide_free_posts' ),
-			'overlay'                             => LaterPay_Helper_Appearance::get_current_options(),
+			'overlay'                             => LaterPay_Helper_Appearance::get_current_options()
 		);
 
 		$this->assign( 'laterpay', $view_args );
@@ -169,7 +169,7 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 				$event->set_result(
 					array(
 						'success' => true,
-						'message' => __( 'Purchase overlay settings saved successfully.', 'laterpay' ),
+						'message' => __( 'Purchase overlay settings saved successfully.', 'laterpay' )
 					)
 				);
 
@@ -183,14 +183,14 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 					throw new LaterPay_Core_Exception_FormValidation( get_class( $ratings_form ), $ratings_form->get_errors() );
 				}
 
-				$result = update_option( 'laterpay_ratings', ! ! $ratings_form->get_field_value( 'enable_ratings' ) );
+				$result = update_option( 'laterpay_ratings', (bool)$ratings_form->get_field_value( 'enable_ratings' ));
 
 				if ( $result ) {
 					if ( get_option( 'laterpay_ratings' ) ) {
 						$event->set_result(
 							array(
 								'success' => true,
-								'message' => __( 'Visitors can now rate the posts they have purchased.', 'laterpay' ),
+								'message' => __( 'Visitors can now rate the posts they have purchased.', 'laterpay' )
 							)
 						);
 						return;
@@ -199,7 +199,7 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 					$event->set_result(
 						array(
 							'success' => true,
-							'message' => __( 'The rating of posts has been disabled.', 'laterpay' ),
+							'message' => __( 'The rating of posts has been disabled.', 'laterpay' )
 						)
 					);
 					return;
@@ -213,7 +213,8 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 					throw new LaterPay_Core_Exception_FormValidation( get_class( $purchase_button_position_form ), $purchase_button_position_form->get_errors() );
 				}
 
-				$result = update_option( 'laterpay_purchase_button_positioned_manually', ! ! $purchase_button_position_form->get_field_value( 'purchase_button_positioned_manually' ) );
+				$result = update_option( 'laterpay_purchase_button_positioned_manually',
+                    (bool)$purchase_button_position_form->get_field_value( 'purchase_button_positioned_manually' ));
 
 				if ( $result ) {
 					if ( get_option( 'laterpay_purchase_button_positioned_manually' ) ) {
@@ -243,14 +244,15 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 					throw new LaterPay_Core_Exception_FormValidation( get_class( $time_passes_position_form ), $time_passes_position_form->get_errors() );
 				}
 
-				$result = update_option( 'laterpay_time_passes_positioned_manually', ! ! $time_passes_position_form->get_field_value( 'time_passes_positioned_manually' ) );
+				$result = update_option( 'laterpay_time_passes_positioned_manually',
+                    (bool)$time_passes_position_form->get_field_value( 'time_passes_positioned_manually' ));
 
 				if ( $result ) {
 					if ( get_option( 'laterpay_time_passes_positioned_manually' ) ) {
 						$event->set_result(
 							array(
 								'success' => true,
-								'message' => __( 'Time passes are now rendered at a custom position.', 'laterpay' ),
+								'message' => __( 'Time passes are now rendered at a custom position.', 'laterpay' )
 							)
 						);
 						return;
@@ -259,7 +261,7 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 					$event->set_result(
 						array(
 							'success' => true,
-							'message' => __( 'Time passes are now rendered at their default position.', 'laterpay' ),
+							'message' => __( 'Time passes are now rendered at their default position.', 'laterpay' )
 						)
 					);
 					return;
@@ -273,14 +275,15 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 					throw new LaterPay_Core_Exception_FormValidation( get_class( $hide_free_posts_form ), $hide_free_posts_form->get_errors() );
 				}
 
-				$result = update_option( 'laterpay_hide_free_posts', ! ! $hide_free_posts_form->get_field_value( 'hide_free_posts' ) );
+				$result = update_option( 'laterpay_hide_free_posts',
+                    (bool)$hide_free_posts_form->get_field_value( 'hide_free_posts' ));
 
 				if ( $result ) {
 					if ( get_option( 'laterpay_hide_free_posts' ) ) {
 						$event->set_result(
 							array(
 								'success' => true,
-								'message' => __( 'Free posts with premium content now hided from the homepage.', 'laterpay' ),
+								'message' => __( 'Free posts with premium content now hided from the homepage.', 'laterpay' )
 							)
 						);
 						return;
@@ -289,7 +292,7 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 					$event->set_result(
 						array(
 							'success' => true,
-							'message' => __( 'Free posts with premium content now hided from the homepage.', 'laterpay' ),
+							'message' => __( 'Free posts with premium content now hided from the homepage.', 'laterpay' )
 						)
 					);
 					return;
@@ -312,7 +315,7 @@ class LaterPay_Controller_Admin_Appearance extends LaterPay_Controller_Admin_Bas
 
 		$additional_data = array(
 			'currency' => $config->get( 'currency.code' ),
-			'icons'    => $config->get_section( 'payment.icons' ),
+			'icons'    => $config->get_section( 'payment.icons' )
 		);
 
 		$this->assign( 'overlay', array_merge( LaterPay_Helper_Appearance::get_current_options(), $additional_data ) );
