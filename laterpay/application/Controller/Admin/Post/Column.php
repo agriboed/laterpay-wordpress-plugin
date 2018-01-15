@@ -16,12 +16,12 @@ class LaterPay_Controller_Admin_Post_Column extends LaterPay_Controller_Base {
 		return array(
 			'laterpay_post_custom_column'      => array(
 				array( 'laterpay_on_admin_view', 200 ),
-				array( 'add_columns_to_posts_table' ),
+				array( 'add_columns_to_posts_table' )
 			),
 			'laterpay_post_custom_column_data' => array(
 				array( 'laterpay_on_admin_view', 200 ),
-				array( 'add_data_to_posts_table' ),
-			),
+				array( 'add_data_to_posts_table' )
+			)
 		);
 	}
 
@@ -29,16 +29,19 @@ class LaterPay_Controller_Admin_Post_Column extends LaterPay_Controller_Base {
 	 * Add custom columns to posts table.
 	 *
 	 * @param LaterPay_Core_Event $event
-	 * @return array $extended_columns
+	 * @return void
 	 */
 	public function add_columns_to_posts_table( LaterPay_Core_Event $event ) {
 		list( $columns )  = $event->get_arguments() + array( array() );
 		$extended_columns = array();
 		$insert_after     = 'title';
 
+        /**
+         * @var $columns array
+         */
 		foreach ( $columns as $key => $val ) {
 			$extended_columns[ $key ] = $val;
-			if ( $key == $insert_after ) {
+			if ( $key === $insert_after ) {
 				$extended_columns['post_price']      = __( 'Price', 'laterpay' );
 				$extended_columns['post_price_type'] = __( 'Price Type', 'laterpay' );
 			}
@@ -83,7 +86,7 @@ class LaterPay_Controller_Admin_Post_Column extends LaterPay_Controller_Base {
 					// render the price type of the post, if it exists
 					switch ( $post_prices['type'] ) {
 						case LaterPay_Helper_Pricing::TYPE_INDIVIDUAL_PRICE:
-							$revenue_model   = ( LaterPay_Helper_Pricing::get_post_revenue_model( $post_id ) == 'sis' )
+							$revenue_model   = ( LaterPay_Helper_Pricing::get_post_revenue_model( $post_id ) === 'sis' )
 													? __( 'Pay Now', 'laterpay' )
 													: __( 'Pay Later', 'laterpay' );
 							$post_price_type = __( 'individual price', 'laterpay' ) . ' (' . $revenue_model . ')';
