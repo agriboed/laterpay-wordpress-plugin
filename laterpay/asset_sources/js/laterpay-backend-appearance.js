@@ -240,13 +240,23 @@
                 // change button bg color
                 if ($trigger.hasClass($o.buttonBgColor)) {
                     style = 'background-color: ' + $('.' + $o.buttonBgColor).val() + ' !important;';
+
+                    if ($($o.overlayButton).css('color')) {
+                        style += '; color: ' + $('.' + $o.buttonTextColor).val() + ' !important;';
+                    }
+
                     setStyle($($o.overlayButton), style);
                 }
 
                 // change button text color
                 if ($trigger.hasClass($o.buttonTextColor)) {
                     style = 'color: ' + $('.' + $o.buttonTextColor).val() + ' !important;';
-                    setStyle($($o.overlayButton), style);
+
+                    if ($($o.overlayButton).css('background-color')) {
+                        style += '; background-color: ' + $('.' + $o.buttonBgColor).val() + ' !important;';
+                    }
+
+                   setStyle($($o.overlayButton), style);
                 }
 
                 // change link main color
