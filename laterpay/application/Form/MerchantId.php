@@ -8,9 +8,7 @@
  * Author URI: https://laterpay.net/
  */
 class LaterPay_Form_MerchantId extends LaterPay_Form_Abstract {
-
-
-	/**
+    /**
 	 * Implementation of abstract method.
 	 *
 	 * @return void
@@ -23,10 +21,10 @@ class LaterPay_Form_MerchantId extends LaterPay_Form_Abstract {
 					'is_string',
 					'cmp' => array(
 						array(
-							'like' => 'merchant_id',
-						),
-					),
-				),
+							'like' => 'merchant_id'
+						)
+					)
+				)
 			)
 		);
 
@@ -37,10 +35,10 @@ class LaterPay_Form_MerchantId extends LaterPay_Form_Abstract {
 					'is_string',
 					'cmp' => array(
 						array(
-							'eq' => 'laterpay_account',
-						),
-					),
-				),
+							'eq' => 'laterpay_account'
+						)
+					)
+				)
 			)
 		);
 
@@ -51,10 +49,10 @@ class LaterPay_Form_MerchantId extends LaterPay_Form_Abstract {
 					'is_string',
 					'cmp' => array(
 						array(
-							'ne' => null,
-						),
-					),
-				),
+							'ne' => null
+						)
+					)
+				)
 			)
 		);
 
@@ -63,15 +61,14 @@ class LaterPay_Form_MerchantId extends LaterPay_Form_Abstract {
 			array(
 				'validators'      => array(
 					'is_string',
-					'match' => '/[a-zA-Z0-9\-]{22}/',
+					'match' => '/[a-zA-Z0-9\-]{22}/'
 				),
 				'filters'         => array(
 					'to_string',
-					'text',
+					'text'
 				),
-				'not_strict_name' => true,
+				'not_strict_name' => true
 			)
 		);
 	}
 }
-

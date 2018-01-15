@@ -8,8 +8,6 @@
  * Author URI: https://laterpay.net/
  */
 class LaterPay_Form_ApiKey extends LaterPay_Form_Abstract {
-
-
 	/**
 	 * Implementation of abstract method.
 	 *
@@ -23,10 +21,10 @@ class LaterPay_Form_ApiKey extends LaterPay_Form_Abstract {
 					'is_string',
 					'cmp' => array(
 						array(
-							'like' => 'api_key',
-						),
-					),
-				),
+							'like' => 'api_key'
+						)
+					)
+				)
 			)
 		);
 
@@ -37,7 +35,7 @@ class LaterPay_Form_ApiKey extends LaterPay_Form_Abstract {
 					'is_string',
 					'cmp' => array(
 						array(
-							'eq' => 'laterpay_account',
+							'eq' => 'laterpay_account'
 						),
 					),
 				),
@@ -51,11 +49,11 @@ class LaterPay_Form_ApiKey extends LaterPay_Form_Abstract {
 					'is_string',
 					'cmp' => array(
 						array(
-							'ne' => null,
-						),
-					),
-				),
-			)
+							'ne' => null
+						)
+					)
+				)
+            )
 		);
 
 		$this->set_field(
@@ -63,13 +61,13 @@ class LaterPay_Form_ApiKey extends LaterPay_Form_Abstract {
 			array(
 				'validators'      => array(
 					'is_string',
-					'match' => '/[a-z0-9]{32}/',
+					'match' => '/[a-z0-9]{32}/'
 				),
 				'filters'         => array(
 					'to_string',
-					'text',
+					'text'
 				),
-				'not_strict_name' => true,
+				'not_strict_name' => true
 			)
 		);
 	}

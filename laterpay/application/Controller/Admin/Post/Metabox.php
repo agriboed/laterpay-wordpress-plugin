@@ -11,49 +11,51 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 
 	/**
 	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 *
+	 * @return array
 	 */
 	public static function get_subscribed_events() {
 		return array(
 			'laterpay_meta_boxes'                          => array(
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'add_teaser_meta_box' ),
-				array( 'add_pricing_meta_box' )
+				array( 'add_pricing_meta_box' ),
 			),
 			'laterpay_post_save'                           => array(
 				array( 'laterpay_on_admin_view', 200 ),
-				array( 'save_laterpay_post_data' )
+				array( 'save_laterpay_post_data' ),
 			),
 			'laterpay_attachment_edit'                     => array(
 				array( 'laterpay_on_admin_view', 200 ),
-				array( 'save_laterpay_post_data' )
+				array( 'save_laterpay_post_data' ),
 			),
 			'laterpay_transition_post_status'              => array(
 				array( 'laterpay_on_admin_view', 200 ),
-				array( 'update_post_publication_date' )
+				array( 'update_post_publication_date' ),
 			),
 			'laterpay_admin_enqueue_styles_post_edit'      => array(
 				array( 'laterpay_on_admin_view', 200 ),
-				array( 'load_assets' )
+				array( 'load_assets' ),
 			),
 			'laterpay_admin_enqueue_styles_post_new'       => array(
 				array( 'laterpay_on_admin_view', 200 ),
-				array( 'load_assets' )
+				array( 'load_assets' ),
 			),
 			'wp_ajax_laterpay_reset_post_publication_date' => array(
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'laterpay_on_ajax_send_json', 300 ),
-				array( 'reset_post_publication_date' )
+				array( 'reset_post_publication_date' ),
 			),
 			'wp_ajax_laterpay_get_dynamic_pricing_data'    => array(
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'laterpay_on_ajax_send_json', 300 ),
-				array( 'get_dynamic_pricing_data' )
+				array( 'get_dynamic_pricing_data' ),
 			),
 			'wp_ajax_laterpay_remove_post_dynamic_pricing' => array(
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'laterpay_on_ajax_send_json', 300 ),
-				array( 'remove_dynamic_pricing_data' )
-			)
+				array( 'remove_dynamic_pricing_data' ),
+			),
 		);
 	}
 
@@ -62,6 +64,8 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 	 * and load metabox's assets only for enabled post types
 	 *
 	 * @see LaterPay_Core_View::load_assets()
+	 *
+	 * @return void
 	 */
 	public function load_assets() {
 		global $post_type;
@@ -139,7 +143,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 				'i18nTeaserError'          => __( 'Paid posts require some teaser content. Please fill in the Teaser Content field.', 'laterpay' ),
 				'i18nAddDynamicPricing'    => __( 'Add dynamic pricing', 'laterpay' ),
 				'i18nRemoveDynamicPricing' => __( 'Remove dynamic pricing', 'laterpay' ),
-				'l10n_print_after'         => 'jQuery.extend(lpVars, laterpay_post_edit)'
+				'l10n_print_after'         => 'jQuery.extend(lpVars, laterpay_post_edit)',
 			)
 		);
 		wp_localize_script(
@@ -150,7 +154,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 				'i18nDefaultPrice' => __( 'default price', 'laterpay' ),
 				'i18nDays'         => __( 'days', 'laterpay' ),
 				'i18nToday'        => __( 'Today', 'laterpay' ),
-				'l10n_print_after' => 'jQuery.extend(lpVars, laterpay_d3_dynamic_pricing_widget)'
+				'l10n_print_after' => 'jQuery.extend(lpVars, laterpay_d3_dynamic_pricing_widget)',
 			)
 		);
 	}
@@ -165,9 +169,9 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 	public function add_teaser_meta_box() {
 		$post_types = $this->config->get( 'content.enabled_post_types' );
 
-        /**
-         * @var $post_types array
-         */
+		/**
+		 * @var $post_types array
+		 */
 		foreach ( $post_types as $post_type ) {
 			// add teaser content metabox below content editor
 			add_meta_box(
@@ -191,9 +195,9 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 	public function add_pricing_meta_box() {
 		$post_types = $this->config->get( 'content.enabled_post_types' );
 
-        /**
-         * @var $post_types array
-         */
+		/**
+		 * @var $post_types array
+		 */
 		foreach ( $post_types as $post_type ) {
 			// add post price metabox in sidebar
 			add_meta_box(
@@ -220,7 +224,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 				__METHOD__ . ' - current user can not edit teaser content',
 				array(
 					'post'         => $post,
-					'current_user' => wp_get_current_user()
+					'current_user' => wp_get_current_user(),
 				)
 			);
 			return;
@@ -237,7 +241,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 			'teeny'         => 1,
 			'dfw'           => 1,
 			'tinymce'       => 1,
-			'quicktags'     => 1
+			'quicktags'     => 1,
 		);
 		$content  = get_post_meta( $post->ID, 'laterpay_post_teaser', true );
 
@@ -248,15 +252,16 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 
 		$editor_id = 'postcueeditor';
 
-		echo laterpay_sanitize_output(
+		laterpay_sanitize_output(
 			'<dfn>' .
 			__( 'Visitors will see the teaser content <strong>instead of the full content</strong> before purchase.', 'laterpay' ) . '<br>' .
 			__( 'If you do not enter any teaser content, the plugin will use an excerpt of the full content as teaser content.', 'laterpay' ) . '<br>' .
 			__( 'We do recommend to write dedicated teaser content to increase your sales though.', 'laterpay' ) .
-			'</dfn>'
+			'</dfn>', true
 		);
+
 		wp_editor( $content, $editor_id, $settings );
-		echo laterpay_sanitized( '<input type="hidden" name="laterpay_teaser_content_box_nonce" value="' . wp_create_nonce( $this->config->get( 'plugin_base_name' ) ) . '" />' );
+		laterpay_sanitize_output( '<input type="hidden" name="laterpay_teaser_content_box_nonce" value="' . wp_create_nonce( $this->config->get( 'plugin_base_name' ) ) . '" />', true );
 	}
 
 	/**
@@ -306,7 +311,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 				__METHOD__ . ' - current user can not edit individual price',
 				array(
 					'post'         => $post,
-					'current_user' => wp_get_current_user()
+					'current_user' => wp_get_current_user(),
 				)
 			);
 			return;
@@ -351,7 +356,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 		// get currency settings for current region
 		$currency_settings = LaterPay_Helper_Config::get_currency_config();
 
-		echo laterpay_sanitized( '<input type="hidden" name="laterpay_pricing_post_content_box_nonce" value="' . wp_create_nonce( $this->config->plugin_base_name ) . '" />' );
+		laterpay_sanitize_output( '<input type="hidden" name="laterpay_pricing_post_content_box_nonce" value="' . wp_create_nonce( $this->config->plugin_base_name ) . '" />', true );
 
 		$view_args = array(
 			'post_id'                              => $post->ID,
@@ -365,7 +370,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 			'global_default_price'                 => $global_default_price,
 			'global_default_price_revenue_model'   => $global_default_price_revenue_model,
 			'category_default_price_revenue_model' => $category_default_price_revenue_model,
-			'price_ranges'                         => wp_json_encode( $currency_settings )
+			'price_ranges'                         => wp_json_encode( $currency_settings ),
 		);
 
 		$this->assign( 'laterpay', $view_args );
@@ -379,6 +384,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 	 * @wp-hook save_post, edit_attachments
 	 *
 	 * @param LaterPay_Core_Event $event
+	 *
 	 * @throws LaterPay_Core_Exception_PostNotFound
 	 * @throws LaterPay_Core_Exception_FormValidation
 	 *
@@ -396,11 +402,11 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 			throw new LaterPay_Core_Exception_PostNotFound( $post_id );
 		}
 
-		$post_form = new LaterPay_Form_Post( $_POST );
+		$post_form = new LaterPay_Form_Post( LaterPay_Helper_Globals::post() );
 		$condition = array(
 			'verify_nonce' => array(
-				'action' => $this->config->get( 'plugin_base_name' )
-			)
+				'action' => $this->config->get( 'plugin_base_name' ),
+			),
 		);
 		$post_form->add_validation( 'laterpay_teaser_content_box_nonce', $condition );
 
@@ -479,7 +485,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 	/**
 	 * Set post meta data.
 	 *
-	 * @param string  $name meta name
+	 * @param string $name meta name
 	 * @param string|array $meta_value new meta value
 	 * @param integer $post_id post id
 	 *
@@ -528,45 +534,52 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 		LaterPay_Helper_Pricing::reset_post_publication_date( $post );
 	}
 
-    /**
-     * Reset post publication date.
-     *
-     * @wp-hook wp_ajax_laterpay_reset_post_publication_date
-     *
-     * @param LaterPay_Core_Event $event
-     *
-     * @return void
-     * @throws LaterPay_Core_Exception_InvalidIncomingData
-     */
+	/**
+	 * Reset post publication date.
+	 *
+	 * @wp-hook wp_ajax_laterpay_reset_post_publication_date
+	 *
+	 * @param LaterPay_Core_Event $event
+	 *
+	 * @throws LaterPay_Core_Exception_InvalidIncomingData
+	 *
+	 * @return void
+	 */
 	public function reset_post_publication_date( LaterPay_Core_Event $event ) {
 		$event->set_result(
 			array(
-				'success' => false
+				'success' => false,
 			)
 		);
 
-		if ( ! isset( $_POST['post_id'] ) ) {
+		$post_id = LaterPay_Helper_Globals::post( 'post_id' );
+
+		if ( null === $post_id ) {
 			throw new LaterPay_Core_Exception_InvalidIncomingData( 'post_id' );
 		}
 
-		$post = get_post( sanitize_text_field( $_POST['post_id'] ) );
+		$post = get_post( (int) $post_id );
 
-		if ( $post !== null ) {
-			LaterPay_Helper_Pricing::reset_post_publication_date( $post );
-			$event->set_result(
-				array(
-					'success' => true
-				)
-			);
+		if ( $post === null ) {
 			return;
 		}
+
+		LaterPay_Helper_Pricing::reset_post_publication_date( $post );
+		$event->set_result(
+			array(
+				'success' => true,
+			)
+		);
+
 	}
 
 	/**
 	 * Get dynamic pricing data.
 	 *
 	 * @wp-hook wp_ajax_laterpay_get_dynamic_pricing_data
+	 *
 	 * @param LaterPay_Core_Event $event
+	 *
 	 * @throws LaterPay_Core_Exception_FormValidation
 	 *
 	 * @return void
@@ -575,11 +588,11 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 		$dynamic_pricing_data_form = new LaterPay_Form_DynamicPricingData();
 		$event->set_result(
 			array(
-				'success' => false
+				'success' => false,
 			)
 		);
 
-		if ( ! $dynamic_pricing_data_form->is_valid( $_POST ) ) {
+		if ( ! $dynamic_pricing_data_form->is_valid( LaterPay_Helper_Globals::post() ) ) {
 			throw new LaterPay_Core_Exception_FormValidation( get_class( $dynamic_pricing_data_form ), $dynamic_pricing_data_form->get_errors() );
 		}
 
@@ -589,15 +602,15 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 		$event->set_result(
 			LaterPay_Helper_Pricing::get_dynamic_prices( $post, $post_price ) + array( 'success' => true )
 		);
-
-		return;
 	}
 
 	/**
 	 * Remove dynamic pricing data.
 	 *
 	 * @wp-hook wp_ajax_laterpay_remove_post_dynamic_pricing
+	 *
 	 * @param LaterPay_Core_Event $event
+	 *
 	 * @throws LaterPay_Core_Exception_InvalidIncomingData
 	 *
 	 * @return void
@@ -605,27 +618,29 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 	public function remove_dynamic_pricing_data( LaterPay_Core_Event $event ) {
 		$event->set_result(
 			array(
-				'success' => false
+				'success' => false,
 			)
 		);
 
-		if ( ! isset( $_POST['post_id'] ) || empty( $_POST['post_id'] ) ) {
+		$post_id = LaterPay_Helper_Globals::post( 'post_id' );
+
+		if ( empty( $post_id ) ) {
 			throw new LaterPay_Core_Exception_InvalidIncomingData( 'post_id' );
 		}
 
-		$post_id    = sanitize_text_field( $_POST['post_id'] );
+		$post_id    = sanitize_text_field( $post_id );
 		$post_price = get_post_meta( $post_id, LaterPay_Helper_Pricing::META_KEY, true );
 
-        unset(
-            $post_price['price_range_type'],
-            $post_price['start_price'],
-            $post_price['end_price'],
-            $post_price['reach_end_price_after_days'],
-            $post_price['change_start_price_after_days'],
-            $post_price['transitional_period_end_after_days']
-        );
+		unset(
+			$post_price['price_range_type'],
+			$post_price['start_price'],
+			$post_price['end_price'],
+			$post_price['reach_end_price_after_days'],
+			$post_price['change_start_price_after_days'],
+			$post_price['transitional_period_end_after_days']
+		);
 
-        $this->set_post_meta(
+		$this->set_post_meta(
 			'laterpay_post_prices',
 			$post_price,
 			$post_id
@@ -633,7 +648,7 @@ class LaterPay_Controller_Admin_Post_Metabox extends LaterPay_Controller_Base {
 
 		$event->set_result(
 			array(
-				'success' => true
+				'success' => true,
 			)
 		);
 	}

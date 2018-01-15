@@ -8,8 +8,6 @@
  * Author URI: https://laterpay.net/
  */
 abstract class LaterPay_Form_Abstract {
-
-
 	/**
 	 * Form fields
 	 *
@@ -66,7 +64,7 @@ abstract class LaterPay_Form_Abstract {
 		// format number with given decimal places
 		'format_num' => 'number_format',
 		// strip slashes
-		'unslash'    => 'wp_unslash',
+		'unslash'    => 'wp_unslash'
 	);
 
 	/**
@@ -76,7 +74,7 @@ abstract class LaterPay_Form_Abstract {
 	 *
 	 * @return void
 	 */
-	public final function __construct( $data = array() ) {
+	final public function __construct( $data = array() ) {
 		// Call init method from child class
 		$this->init();
 
@@ -107,7 +105,8 @@ abstract class LaterPay_Form_Abstract {
 		// check, if field already exists
 		if ( isset( $fields[ $name ] ) ) {
 			return false;
-		} else {
+		}
+
 			// field name
 			$data = array();
 			// validators
@@ -120,12 +119,12 @@ abstract class LaterPay_Form_Abstract {
 			$data['can_be_null'] = isset( $options['can_be_null'] ) ? $options['can_be_null'] : false;
 
 			// name not strict, value searched in data by part of the name (for dynamic params)
-			if ( isset( $options['not_strict_name'] ) && $options['not_strict_name'] ) {
+			if ( !empty($options['not_strict_name']) ) {
 				$this->set_nostrict( $name );
 			}
 
 			$this->save_field_data( $name, $data );
-		}
+
 
 		return true;
 	}
@@ -197,11 +196,11 @@ abstract class LaterPay_Form_Abstract {
 	 * @return void
 	 */
 	protected function set_nostrict( $name ) {
-		if ( ! isset( $this->nostrict ) ) {
+		if ( null === $this->nostrict ) {
 			$this->nostrict = array();
 		}
 
-		array_push( $this->nostrict, $name );
+		$this->nostrict[] = $name;
 	}
 
 	/**
@@ -230,12 +229,10 @@ abstract class LaterPay_Form_Abstract {
 	public function add_validation( $field, $condition = array() ) {
 		$fields = $this->get_fields();
 
-		if ( isset( $fields[ $field ] ) ) {
-			if ( is_array( $condition ) && ! empty( $condition ) ) {
-				// condition should be correct
-				array_push( $fields[ $field ]['validators'], $condition );
-			}
-		}
+		if (isset($fields[$field]) && is_array($condition) && ! empty($condition)) {
+            // condition should be correct
+            $fields[ $field ]['validators'][] = $condition;
+        }
 	}
 
 	/**
@@ -258,6 +255,9 @@ abstract class LaterPay_Form_Abstract {
 		if ( is_array( $fields ) ) {
 			foreach ( $fields as $name => $field ) {
 				$validators = $field['validators'];
+                /**
+                 * @var array $validators
+                 */
 				foreach ( $validators as $validator_key => $validator_value ) {
 					$validator_option = is_int( $validator_key ) ? $validator_value : $validator_key;
 					$validator_params = is_int( $validator_key ) ? null : $validator_value;
@@ -274,7 +274,7 @@ abstract class LaterPay_Form_Abstract {
 							'name'      => $name,
 							'value'     => $field['value'],
 							'validator' => $validator_option,
-							'options'   => $validator_params,
+							'options'   => $validator_params
 						);
 					}
 				}
@@ -302,6 +302,9 @@ abstract class LaterPay_Form_Abstract {
 		if ( is_array( $fields ) ) {
 			foreach ( $fields as $name => $field ) {
 				$filters = $field['filters'];
+                /**
+                 * @var array $filters
+                 */
 				foreach ( $filters as $filter_key => $filter_value ) {
 					$filter_option = is_int( $filter_key ) ? $filter_value : $filter_key;
 					$filter_params = is_int( $filter_key ) ? null : $filter_value;
@@ -365,15 +368,15 @@ abstract class LaterPay_Form_Abstract {
 		return $value;
 	}
 
-	/**
-	 * Validate value by selected validator and its value optionally.
-	 *
-	 * @param $value
-	 * @param $validator
-	 * @param null $validator_param
-	 *
-	 * @return bool
-	 */
+    /**
+     * Validate value by selected validator and its value optionally.
+     *
+     * @param $value
+     * @param $validator
+     * @param null $validator_params
+     *
+     * @return bool
+     */
 	public function validate_value( $value, $validator, $validator_params = null ) {
 		$is_valid = false;
 
@@ -384,6 +387,9 @@ abstract class LaterPay_Form_Abstract {
 					// OR realization, all validators inside validators set used like AND
 					// if at least one set correct then validation passed
 					foreach ( $validator_params as $validators_set ) {
+                        /**
+                         * @var array $validators_set
+                         */
 						foreach ( $validators_set as $operator => $param ) {
 							$is_valid = $this->compare_values( $operator, $value, $param );
 							// if comparison not valid break the loop and go to the next validation set

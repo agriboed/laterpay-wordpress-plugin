@@ -266,11 +266,27 @@ function laterpay_get_logger() {
  *
  * @param string $string
  *
+ * @param bool $echo
+ * @param bool $strict
+ * @param array $allowed_html
+ *
  * @return string
  * @link     http://codex.wordpress.org/Data_Validation Data Validation on WordPress Codex
  */
-function laterpay_sanitize_output( $string ) {
-	return wp_kses( $string, 'post' );
+function laterpay_sanitize_output($string, $echo = false, $strict = false, array $allowed_html = array()) {
+    if (empty($allowed_html) && true === $strict) {
+        $string = wp_kses_post($string);
+    }
+
+    if (!empty($allowed_html) && true === $strict) {
+       $string = wp_kses($string, $allowed_html);
+    }
+
+    if (true === $echo) {
+        echo $string;
+    }
+
+    return $string;
 }
 
 /**

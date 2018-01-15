@@ -18,18 +18,14 @@ class LaterPay_Controller_Admin_Base extends LaterPay_Controller_Base {
 	 * @return string $html
 	 */
 	public function get_menu( $file = null, $view_dir = null ) {
-		if ( empty( $file ) ) {
+		if ( null === $file ) {
 			$file = 'backend/partials/navigation';
 		}
 
-		$current_page = isset( $_GET['page'] ) ? sanitize_text_field( $_GET['page'] ) : LaterPay_Helper_View::$pluginPage;
-		$menu         = LaterPay_Helper_View::get_admin_menu();
-		$plugin_page  = LaterPay_Helper_View::$pluginPage;
-
 		$view_args = array(
-			'menu'         => $menu,
-			'current_page' => $current_page,
-			'plugin_page'  => $plugin_page,
+			'menu'         => LaterPay_Helper_View::get_admin_menu(),
+			'current_page' => LaterPay_Helper_Globals::get( 'page' ) ?: LaterPay_Helper_View::$pluginPage,
+			'plugin_page'  => LaterPay_Helper_View::$pluginPage,
 		);
 
 		$this->assign( 'laterpay', $view_args );
