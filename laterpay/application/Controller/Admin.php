@@ -9,13 +9,14 @@
  */
 class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 
-
 	const ADMIN_MENU_POINTER          = 'lpwpp01';
 	const POST_PRICE_BOX_POINTER      = 'lpwpp02';
 	const POST_TEASER_CONTENT_POINTER = 'lpwpp03';
 
 	/**
 	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+     *
+     * @return array
 	 */
 	public static function get_subscribed_events() {
 		return array(
@@ -116,15 +117,21 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	 * @return void
 	 */
 	public function __call( $name, $args ) {
-		if ( substr( $name, 0, 4 ) == 'run_' ) {
-			return $this->run( strtolower( substr( $name, 4 ) ) );
-		} elseif ( substr( $name, 0, 5 ) == 'help_' ) {
-			return $this->help( strtolower( substr( $name, 5 ) ) );
+		if ( 0 === strpos( $name, 'run_' ) ) {
+			$this->run( strtolower( substr( $name, 4 ) ) );
+			return;
+		}
+
+		if ( 0 === strpos( $name, 'help_' ) ) {
+			$this->help( strtolower( substr( $name, 5 ) ) );
+			return;
 		}
 	}
 
 	/**
 	 * @see LaterPay_Core_View::load_assets()
+     *
+     * @return void
 	 */
 	public function load_assets() {
 		parent::load_assets();
@@ -167,14 +174,15 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 		);
 		wp_enqueue_script( 'laterpay-velocity' );
 		wp_enqueue_script( 'laterpay-backend' );
-
 	}
 
 	/**
 	 * Add html5shim to the admin_head() for Internet Explorer < 9.
 	 *
 	 * @wp-hook admin_head
+     *
 	 * @param LaterPay_Core_Event $event
+     *
 	 * @return void
 	 */
 	public function add_html5shiv_to_admin_head( LaterPay_Core_Event $event ) {
@@ -199,8 +207,8 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	public function run( $tab = '' ) {
 		$this->load_assets();
 
-		if ( isset( $_GET['tab'] ) ) {
-			$tab = sanitize_text_field( $_GET['tab'] );
+		if ( null !== LaterPay_Helper_Globals::get( 'tab' ) ) {
+			$tab = sanitize_text_field( LaterPay_Helper_Globals::get( 'tab' ) );
 		}
 
 		// return default tab, if no specific tab is requested
@@ -316,7 +324,7 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	/**
 	 * Add contextual help for pricing tab.
 	 *
-	 * @return  void
+	 * @return void
 	 */
 	protected function render_pricing_tab_help() {
 		$screen = get_current_screen();
@@ -430,7 +438,7 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	/**
 	 * Add contextual help for appearance tab.
 	 *
-	 * @return  void
+	 * @return void
 	 */
 	protected function render_appearance_tab_help() {
 		$screen = get_current_screen();
@@ -605,10 +613,11 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	 * Add WordPress pointers to pages.
 	 *
 	 * @param LaterPay_Core_Event $event
+     * 
 	 * @return void
 	 */
 	public function modify_footer( LaterPay_Core_Event $event ) {
-		$pointers = LaterPay_Controller_Admin::get_pointers_to_be_shown();
+		$pointers = static::get_pointers_to_be_shown();
 
 		// don't render the partial, if there are no pointers to be shown
 		if ( empty( $pointers ) ) {
@@ -651,7 +660,7 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	 * @return void
 	 */
 	public function add_admin_pointers_script() {
-		$pointers = LaterPay_Controller_Admin::get_pointers_to_be_shown();
+		$pointers = static::get_pointers_to_be_shown();
 
 		// don't enqueue the assets, if there are no pointers to be shown
 		if ( empty( $pointers ) ) {
@@ -667,19 +676,19 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	 *
 	 * @return array $pointers
 	 */
-	public function get_pointers_to_be_shown() {
-		$dismissed_pointers = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
+	public static function get_pointers_to_be_shown() {
+		$dismissed_pointers = explode( ',', (string) LaterPay_Helper_User::get_user_meta( 'dismissed_wp_pointers' ) );
 		$pointers           = array();
 
-		if ( ! in_array( LaterPay_Controller_Admin::ADMIN_MENU_POINTER, $dismissed_pointers ) ) {
-			$pointers[] = LaterPay_Controller_Admin::ADMIN_MENU_POINTER;
+		if ( ! in_array( static::ADMIN_MENU_POINTER, $dismissed_pointers, true ) ) {
+			$pointers[] = static::ADMIN_MENU_POINTER;
 		}
 		// add pointers to LaterPay features on add / edit post page
-		if ( ! in_array( LaterPay_Controller_Admin::POST_PRICE_BOX_POINTER, $dismissed_pointers ) ) {
-			$pointers[] = LaterPay_Controller_Admin::POST_PRICE_BOX_POINTER;
+		if ( ! in_array( static::POST_PRICE_BOX_POINTER, $dismissed_pointers, true ) ) {
+			$pointers[] = static::POST_PRICE_BOX_POINTER;
 		}
-		if ( ! in_array( LaterPay_Controller_Admin::POST_TEASER_CONTENT_POINTER, $dismissed_pointers ) ) {
-			$pointers[] = LaterPay_Controller_Admin::POST_TEASER_CONTENT_POINTER;
+		if ( ! in_array( static::POST_TEASER_CONTENT_POINTER, $dismissed_pointers, true ) ) {
+			$pointers[] = static::POST_TEASER_CONTENT_POINTER;
 		}
 
 		return $pointers;
@@ -688,7 +697,10 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	/**
 	 * Return all pointer constants from current class.
 	 *
+	 * @throws \ReflectionException
+	 *
 	 * @return array $pointers
+	 *
 	 */
 	public static function get_all_pointers() {
 		$reflection      = new ReflectionClass( __CLASS__ );
@@ -722,7 +734,8 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 
 		// get posts by category price id
 		$post_ids = LaterPay_Helper_Pricing::get_posts_by_category_price_id( $category_id );
-		foreach ( $post_ids as $post_id => $meta ) {
+
+		foreach ( array_keys( $post_ids ) as $post_id ) {
 			// update post prices
 			LaterPay_Helper_Pricing::update_post_data_after_category_delete( $post_id );
 		}
@@ -732,6 +745,8 @@ class LaterPay_Controller_Admin extends LaterPay_Controller_Base {
 	 * Get links to be rendered in the plugin backend navigation.
 	 *
 	 * @param LaterPay_Core_Event $event
+	 *
+	 * @return void
 	 */
 	public function get_admin_menu( LaterPay_Core_Event $event ) {
 		$menu = (array) $event->get_result();

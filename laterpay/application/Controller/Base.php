@@ -33,7 +33,6 @@ class LaterPay_Controller_Base extends LaterPay_Core_View implements LaterPay_Co
 	/**
 	 * @param LaterPay_Model_Config $config
 	 *
-	 * @return LaterPay_Core_View
 	 */
 	public function __construct( $config = null ) {
 		$this->logger = laterpay_get_logger();
