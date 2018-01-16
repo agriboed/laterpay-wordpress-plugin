@@ -11,6 +11,8 @@ class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
 
 	/**
 	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 *
+	 * @return array
 	 */
 	public static function get_subscribed_events() {
 		return array(
@@ -28,15 +30,11 @@ class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
 
 	/**
 	 * Callback to render LaterPay account links by making an API request to /controls/links.
-	 * (see https://laterpay.net/developers/docs/inpage-api#GET/controls/links)
+	 * @see https://laterpay.net/developers/docs/inpage-api#GET/controls/links
 	 *
 	 * @wp-hook laterpay_account_links
 	 *
-	 * @var $show         'show' attribute for the API request as documented in the LaterPay API docs
-	 * @var $css          'css' attribute for the API request as documented in the LaterPay API docs
-	 * @var $next         'next' attribute for the API request as documented in the LaterPay API docs
-	 * @var $forcelang    'forcelang' attribute for the API request as documented in the LaterPay API docs
-	 * @param LaterPay_Core_Event $event
+	 * @param $event LaterPay_Core_Event
 	 *
 	 * @return void
 	 */
@@ -94,6 +92,11 @@ class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
 		);
 	}
 
+	/**
+	 * @param LaterPay_Core_Event $event
+	 *
+	 * @return void
+	 */
 	public function is_page_secure( LaterPay_Core_Event $event ) {
 		if ( ! is_ssl() ) {
 			$event->stop_propagation();

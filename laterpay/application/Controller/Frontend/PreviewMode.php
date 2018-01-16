@@ -11,6 +11,8 @@ class LaterPay_Controller_Frontend_PreviewMode extends LaterPay_Controller_Base 
 
 	/**
 	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 *
+	 * @return array
 	 */
 	public static function get_subscribed_events() {
 		return array(
@@ -43,7 +45,7 @@ class LaterPay_Controller_Frontend_PreviewMode extends LaterPay_Controller_Base 
 	 */
 	protected function check_requirements( $post = null ) {
 
-		if ( empty( $post ) ) {
+		if ( null === $post ) {
 			// check, if we're on a singular page
 			if ( ! is_singular() ) {
 				$this->logger->warning(
@@ -69,7 +71,7 @@ class LaterPay_Controller_Frontend_PreviewMode extends LaterPay_Controller_Base 
 
 		// don't collect statistics data, if the current post_type is not an allowed post_type
 		$allowed_post_types = $this->config->get( 'content.enabled_post_types' );
-		if ( ! in_array( $post->post_type, $allowed_post_types ) ) {
+		if ( ! in_array( $post->post_type, $allowed_post_types, true ) ) {
 			$this->logger->warning(
 				__METHOD__ . ' - post is not purchasable',
 				array(
@@ -136,7 +138,7 @@ class LaterPay_Controller_Frontend_PreviewMode extends LaterPay_Controller_Base 
 	 * @return void
 	 */
 	public function ajax_toggle_preview( LaterPay_Core_Event $event ) {
-		$preview_form = new LaterPay_Form_PreviewModeForm( $_POST );
+		$preview_form = new LaterPay_Form_PreviewModeForm( LaterPay_Helper_Globals::post() );
 
 		if ( ! $preview_form->is_valid() ) {
 			throw new LaterPay_Core_Exception_FormValidation( get_class( $preview_form ), $preview_form->get_errors() );
@@ -170,8 +172,7 @@ class LaterPay_Controller_Frontend_PreviewMode extends LaterPay_Controller_Base 
 			return;
 		}
 
-		$result = update_user_meta(
-			$current_user->ID,
+		$result = LaterPay_Helper_User::update_user_meta(
 			'laterpay_preview_post_as_visitor',
 			$preview_post
 		);
@@ -199,7 +200,7 @@ class LaterPay_Controller_Frontend_PreviewMode extends LaterPay_Controller_Base 
 	 * @return void
 	 */
 	public function ajax_render_tab_preview_mode( LaterPay_Core_Event $event ) {
-		$preview_form = new LaterPay_Form_PreviewMode( $_GET );
+		$preview_form = new LaterPay_Form_PreviewMode( LaterPay_Helper_Globals::get() );
 
 		if ( ! $preview_form->is_valid() ) {
 			$event->stop_propagation();
@@ -233,7 +234,7 @@ class LaterPay_Controller_Frontend_PreviewMode extends LaterPay_Controller_Base 
 	 * @return void
 	 */
 	public function ajax_toggle_visibility( LaterPay_Core_Event $event ) {
-		$preview_mode_visibility_form = new LaterPay_Form_PreviewModeVisibility( $_POST );
+		$preview_mode_visibility_form = new LaterPay_Form_PreviewModeVisibility( LaterPay_Helper_Globals::post() );
 
 		if ( ! $preview_mode_visibility_form->is_valid() ) {
 			throw new LaterPay_Core_Exception_FormValidation( get_class( $preview_mode_visibility_form ), $preview_mode_visibility_form->get_errors() );
@@ -254,8 +255,7 @@ class LaterPay_Controller_Frontend_PreviewMode extends LaterPay_Controller_Base 
 			return;
 		}
 
-		$result = update_user_meta(
-			$current_user->ID,
+		$result = LaterPay_Helper_User::update_user_meta(
 			'laterpay_hide_preview_mode_pane',
 			$preview_mode_visibility_form->get_field_value( 'hide_preview_mode_pane' )
 		);

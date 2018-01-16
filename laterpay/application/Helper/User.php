@@ -265,4 +265,25 @@ class LaterPay_Helper_User {
 			'/'
 		);
 	}
+
+    /**
+     * @param $key
+     * @param $value
+     *
+     * @return bool|int
+     */
+    public static function update_user_meta($key = null, $value = null)
+    {
+        if (null === $key) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+
+        return update_user_meta(
+            $user->ID,
+            $key,
+            $value
+        );
+    }
 }

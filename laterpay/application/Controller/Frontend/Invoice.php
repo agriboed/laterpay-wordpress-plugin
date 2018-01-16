@@ -11,6 +11,8 @@ class LaterPay_Controller_Frontend_Invoice extends LaterPay_Controller_Base {
 
 	/**
 	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 *
+	 * @return array
 	 */
 	public static function get_subscribed_events() {
 		return array(
@@ -30,7 +32,9 @@ class LaterPay_Controller_Frontend_Invoice extends LaterPay_Controller_Base {
 	 *
 	 *
 	 * @wp-hook laterpay_invoice_indicator
+	 *
 	 * @param LaterPay_Core_Event $event
+	 *
 	 * @return void
 	 */
 	public function the_invoice_indicator( LaterPay_Core_Event $event ) {
