@@ -2,7 +2,7 @@
 
 namespace LaterPay\Controller\Admin;
 
-use LaterPay\Helper\Globals;
+use LaterPay\Core\Request;
 use LaterPay\Helper\View;
 
 /**
@@ -29,7 +29,7 @@ class Base extends \LaterPay\Controller\Base {
 
 		$view_args = array(
 			'menu'         => View::getAdminMenu(),
-			'current_page' => Globals::GET( 'page' ) ?: View::$pluginPage,
+			'current_page' => Request::get( 'page' ) ?: View::$pluginPage,
 			'plugin_page'  => View::$pluginPage,
 		);
 

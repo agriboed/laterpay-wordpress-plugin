@@ -1,5 +1,12 @@
 <?php
 
+namespace LaterPay\Controller\Frontend;
+
+use LaterPay\Controller\Base;
+use LaterPay\Helper\Config;
+use LaterPay\Core\Event;
+use LaterPay_Client;
+
 /**
  * LaterPay account controller.
  *
@@ -7,23 +14,23 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
+class Account extends Base {
 
 	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
 	 *
 	 * @return array
 	 */
-	public static function get_subscribed_events() {
+	public static function getSubscribedEvents() {
 		return array(
 			'laterpay_account_links'   => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'is_page_secure', 100 ),
-				array( 'render_account_links' ),
+				array( 'isPageSecure', 100 ),
+				array( 'renderAccountLinks' ),
 			),
 			'laterpay_enqueue_scripts' => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'add_frontend_scripts' ),
+				array( 'addFrontendScripts' ),
 			),
 		);
 	}
@@ -34,12 +41,12 @@ class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
 	 *
 	 * @wp-hook laterpay_account_links
 	 *
-	 * @param $event LaterPay_Core_Event
+	 * @param $event Event
 	 *
 	 * @return void
 	 */
-	public function render_account_links( LaterPay_Core_Event $event ) {
-		list( $css, $forcelang, $show, $next ) = $event->get_arguments() + array(
+	public function renderAccountLinks( Event $event ) {
+		list($css, $forcelang, $show, $next) = $event->getArguments() + array(
 			$this->config->get( 'css_url' ) . 'laterpay-account-links.css',
 			substr( get_locale(), 0, 2 ),
 			'lg',
@@ -47,7 +54,7 @@ class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
 		);
 
 		// create account links URL with passed parameters
-		$client_options = LaterPay_Helper_Config::get_php_client_options();
+		$client_options = Config::getPHPClientOptions();
 		$client         = new LaterPay_Client(
 			$client_options['cp_key'],
 			$client_options['api_key'],
@@ -57,8 +64,8 @@ class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
 		);
 
 		// add iframe placeholder
-		$event->set_echo( true );
-		$event->set_result( laterpay_sanitized( $this->get_text_view( 'frontend/partials/widget/account-links' ) ) );
+		$event->setEcho( true );
+		$event->setResult( laterpay_sanitized( $this->getTextView( 'frontend/partials/widget/account-links' ) ) );
 
 		wp_enqueue_script( 'laterpay-yui' );
 		wp_enqueue_script( 'laterpay-account-links' );
@@ -82,7 +89,7 @@ class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
 	 *
 	 * @return void
 	 */
-	public function add_frontend_scripts() {
+	public function addFrontendScripts() {
 		wp_register_script(
 			'laterpay-account-links',
 			$this->config->get( 'js_url' ) . 'laterpay-account-links.js',
@@ -93,13 +100,13 @@ class LaterPay_Controller_Frontend_Account extends LaterPay_Controller_Base {
 	}
 
 	/**
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @return void
 	 */
-	public function is_page_secure( LaterPay_Core_Event $event ) {
+	public function isPageSecure( Event $event ) {
 		if ( ! is_ssl() ) {
-			$event->stop_propagation();
+			$event->stopPropagation();
 		}
 	}
 }

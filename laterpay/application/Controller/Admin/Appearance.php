@@ -2,16 +2,14 @@
 
 namespace LaterPay\Controller\Admin;
 
-use LaterPay\Helper\Appearance as HelperAppearance;
 use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Form\PurchaseButtonPosition;
 use LaterPay\Form\PaidContentPreview;
 use LaterPay\Form\TimePassPosition;
 use LaterPay\Form\HideFreePosts;
-use LaterPay\Helper\Globals;
+use LaterPay\Core\Request;
 use LaterPay\Model\Config;
-use LaterPay\Form\Rating;
 use LaterPay\Helper\View;
 use LaterPay\Core\Event;
 
@@ -52,7 +50,7 @@ class Appearance extends Base {
 	 */
 	public function addCustomStyles() {
 		// apply colors config
-		HelperAppearance::add_overlay_styles( 'laterpay-admin' );
+		\LaterPay\Helper\Appearance::addOverlayStyles( 'laterpay-admin' );
 	}
 
 	/**
@@ -66,9 +64,9 @@ class Appearance extends Base {
 		// load page-specific JS
 		wp_register_script(
 			'laterpay-backend-appearance',
-			$this->config->js_url . '/laterpay-backend-appearance.js',
+			$this->config->get( 'js_url' ) . '/laterpay-backend-appearance.js',
 			array( 'jquery' ),
-			$this->config->version,
+			$this->config->get( 'version' ),
 			true
 		);
 		wp_enqueue_script( 'laterpay-backend-appearance' );
@@ -79,8 +77,8 @@ class Appearance extends Base {
 			array(
 				'overlaySettings'  => wp_json_encode(
 					array(
-						'default' => HelperAppearance::getDefaultOptions(),
-						'current' => HelperAppearance::getCurrentOptions(),
+						'default' => \LaterPay\Helper\Appearance::getDefaultOptions(),
+						'current' => \LaterPay\Helper\Appearance::getCurrentOptions(),
 					)
 				),
 				'l10n_print_after' => 'lpVars.overlaySettings = JSON.parse(lpVars.overlaySettings)',
@@ -106,11 +104,10 @@ class Appearance extends Base {
 				array( 'page' => $menu['account']['url'] ),
 				admin_url( 'admin.php' )
 			),
-			'is_rating_enabled'                   => $this->config->get( 'ratings_enabled' ),
 			'purchase_button_positioned_manually' => get_option( 'laterpay_purchase_button_positioned_manually' ),
 			'time_passes_positioned_manually'     => get_option( 'laterpay_time_passes_positioned_manually' ),
 			'hide_free_posts'                     => get_option( 'laterpay_hide_free_posts' ),
-			'overlay'                             => HelperAppearance::getCurrentOptions(),
+			'overlay'                             => \LaterPay\Helper\Appearance::getCurrentOptions(),
 		);
 
 		$this->assign( 'laterpay', $view_args );
@@ -135,7 +132,7 @@ class Appearance extends Base {
 			)
 		);
 
-		$form = Globals::POST( 'form' );
+		$form = Request::post( 'form' );
 
 		if ( null === $form ) {
 			// invalid request
@@ -151,16 +148,16 @@ class Appearance extends Base {
 			case 'paid_content_preview':
 				$paid_content_preview_form = new PaidContentPreview();
 
-				if ( ! $paid_content_preview_form->is_valid( Globals::POST() ) ) {
+				if ( ! $paid_content_preview_form->isValid( Request::post() ) ) {
 					throw new FormValidation(
 						get_class( $paid_content_preview_form ),
-						$paid_content_preview_form->get_errors()
+						$paid_content_preview_form->getErrors()
 					);
 				}
 
 				$result = update_option(
 					'laterpay_teaser_mode',
-					$paid_content_preview_form->get_field_value( 'paid_content_preview' )
+					$paid_content_preview_form->getFieldValue( 'paid_content_preview' )
 				);
 
 				if ( $result ) {
@@ -195,29 +192,17 @@ class Appearance extends Base {
 
 			case 'overlay_settings':
 				// handle additional settings save if present in request
-				update_option( 'laterpay_overlay_header_title', Globals::POST( 'header_title' ) );
-				update_option(
-					'laterpay_overlay_header_bg_color',
-					Globals::POST( 'header_background_color' )
-				);
-				update_option( 'laterpay_overlay_main_bg_color', Globals::POST( 'background_color' ) );
-				update_option( 'laterpay_overlay_main_text_color', Globals::POST( 'main_text_color' ) );
-				update_option(
-					'laterpay_overlay_description_color',
-					Globals::POST( 'description_text_color' )
-				);
-				update_option(
-					'laterpay_overlay_button_bg_color',
-					Globals::POST( 'button_background_color' )
-				);
-				update_option( 'laterpay_overlay_button_text_color', Globals::POST( 'button_text_color' ) );
-				update_option( 'laterpay_overlay_link_main_color', Globals::POST( 'link_main_color' ) );
-				update_option( 'laterpay_overlay_link_hover_color', Globals::POST( 'link_hover_color' ) );
-				update_option( 'laterpay_overlay_show_footer', (int) Globals::POST( 'show_footer' ) );
-				update_option(
-					'laterpay_overlay_footer_bg_color',
-					Globals::POST( 'footer_background_color' )
-				);
+				update_option( 'laterpay_overlay_header_title', Request::post( 'header_title' ) );
+				update_option( 'laterpay_overlay_header_bg_color', Request::post( 'header_background_color' ) );
+				update_option( 'laterpay_overlay_main_bg_color', Request::post( 'background_color' ) );
+				update_option( 'laterpay_overlay_main_text_color', Request::post( 'main_text_color' ) );
+				update_option( 'laterpay_overlay_description_color', Request::post( 'description_text_color' ) );
+				update_option( 'laterpay_overlay_button_bg_color', Request::post( 'button_background_color' ) );
+				update_option( 'laterpay_overlay_button_text_color', Request::post( 'button_text_color' ) );
+				update_option( 'laterpay_overlay_link_main_color', Request::post( 'link_main_color' ) );
+				update_option( 'laterpay_overlay_link_hover_color', Request::post( 'link_hover_color' ) );
+				update_option( 'laterpay_overlay_show_footer', (int) Request::post( 'show_footer' ) );
+				update_option( 'laterpay_overlay_footer_bg_color', Request::post( 'footer_background_color' ) );
 
 				$event->setResult(
 					array(
@@ -228,52 +213,19 @@ class Appearance extends Base {
 
 				break;
 
-			// update rating functionality (on / off) for purchased items
-			case 'ratings':
-				$ratings_form = new Rating();
-
-				if ( ! $ratings_form->is_valid( Globals::POST() ) ) {
-					throw new FormValidation( get_class( $ratings_form ), $ratings_form->get_errors() );
-				}
-
-				$result = update_option( 'laterpay_ratings', (bool) $ratings_form->get_field_value( 'enable_ratings' ) );
-
-				if ( $result ) {
-					if ( get_option( 'laterpay_ratings' ) ) {
-						$event->setResult(
-							array(
-								'success' => true,
-								'message' => __( 'Visitors can now rate the posts they have purchased.', 'laterpay' ),
-							)
-						);
-
-						return;
-					}
-
-					$event->setResult(
-						array(
-							'success' => true,
-							'message' => __( 'The rating of posts has been disabled.', 'laterpay' ),
-						)
-					);
-
-					return;
-				}
-				break;
-
 			case 'purchase_button_position':
-				$purchase_button_position_form = new PurchaseButtonPosition( Globals::POST() );
+				$purchase_button_position_form = new PurchaseButtonPosition( Request::post() );
 
-				if ( ! $purchase_button_position_form->is_valid() ) {
+				if ( ! $purchase_button_position_form->isValid() ) {
 					throw new FormValidation(
 						get_class( $purchase_button_position_form ),
-						$purchase_button_position_form->get_errors()
+						$purchase_button_position_form->getErrors()
 					);
 				}
 
 				$result = update_option(
 					'laterpay_purchase_button_positioned_manually',
-					(bool) $purchase_button_position_form->get_field_value( 'purchase_button_positioned_manually' )
+					(bool) $purchase_button_position_form->getFieldValue( 'purchase_button_positioned_manually' )
 				);
 
 				if ( $result ) {
@@ -300,18 +252,18 @@ class Appearance extends Base {
 				break;
 
 			case 'time_passes_position':
-				$time_passes_position_form = new TimePassPosition( Globals::POST() );
+				$time_passes_position_form = new TimePassPosition( Request::post() );
 
-				if ( ! $time_passes_position_form->is_valid() ) {
+				if ( ! $time_passes_position_form->isValid() ) {
 					throw new FormValidation(
 						get_class( $time_passes_position_form ),
-						$time_passes_position_form->get_errors()
+						$time_passes_position_form->getErrors()
 					);
 				}
 
 				$result = update_option(
 					'laterpay_time_passes_positioned_manually',
-					(bool) $time_passes_position_form->get_field_value( 'time_passes_positioned_manually' )
+					(bool) $time_passes_position_form->getFieldValue( 'time_passes_positioned_manually' )
 				);
 
 				if ( $result ) {
@@ -338,18 +290,18 @@ class Appearance extends Base {
 				break;
 
 			case 'free_posts_visibility':
-				$hide_free_posts_form = new HideFreePosts( Globals::POST() );
+				$hide_free_posts_form = new HideFreePosts( Request::post() );
 
-				if ( ! $hide_free_posts_form->is_valid() ) {
+				if ( ! $hide_free_posts_form->isValid() ) {
 					throw new FormValidation(
 						get_class( $hide_free_posts_form ),
-						$hide_free_posts_form->get_errors()
+						$hide_free_posts_form->getErrors()
 					);
 				}
 
 				$result = update_option(
 					'laterpay_hide_free_posts',
-					(bool) $hide_free_posts_form->get_field_value( 'hide_free_posts' )
+					(bool) $hide_free_posts_form->getFieldValue( 'hide_free_posts' )
 				);
 
 				if ( $result ) {
@@ -396,10 +348,10 @@ class Appearance extends Base {
 
 		$additional_data = array(
 			'currency' => $config->get( 'currency.code' ),
-			'icons'    => $config->get_section( 'payment.icons' ),
+			'icons'    => $config->getSection( 'payment.icons' ),
 		);
 
-		$this->assign( 'overlay', array_merge( HelperAppearance::getCurrentOptions(), $additional_data ) );
+		$this->assign( 'overlay', array_merge( \LaterPay\Helper\Appearance::getCurrentOptions(), $additional_data ) );
 
 		return $this->getTextView( 'backend/partials/purchase-overlay' );
 	}

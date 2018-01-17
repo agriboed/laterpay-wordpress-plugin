@@ -1,4 +1,8 @@
 <?php
+
+use LaterPay\Helper\View;
+use LaterPay\Helper\TimePass;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	// prevent direct access to this file
 	exit;
@@ -8,18 +12,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php
 $title = sprintf(
 	'%s<small class="lp_purchase-link__currency">%s</small>',
-	LaterPay_Helper_View::format_number( $laterpay_subscription['price'] ),
+	View::formatNumber( $laterpay_subscription['price'] ),
 	$laterpay['standard_currency']
 );
 
-$period = LaterPay_Helper_TimePass::get_period_options( $laterpay_subscription['period'] );
+$period = TimePass::getPeriodOptions( $laterpay_subscription['period'] );
 if ( $laterpay_subscription['duration'] > 1 ) {
-	$period = LaterPay_Helper_TimePass::get_period_options( $laterpay_subscription['period'], true );
+	$period = TimePass::getPeriodOptions( $laterpay_subscription['period'], true );
 }
 
-$price = LaterPay_Helper_View::format_number( $laterpay_subscription['price'] );
+$price = View::formatNumber( $laterpay_subscription['price'] );
 
-$access_type = LaterPay_Helper_TimePass::get_access_options( $laterpay_subscription['access_to'] );
+$access_type = TimePass::getAccessOptions( $laterpay_subscription['access_to'] );
 $access_dest = __( 'on this website', 'laterpay' );
 $category    = get_category( $laterpay_subscription['access_category'] );
 if ( $laterpay_subscription['access_to'] != 0 ) {

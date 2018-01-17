@@ -1,4 +1,6 @@
 <?php
+use LaterPay\Controller\Admin;
+use LaterPay\Helper\User;
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	// exit, if uninstall was not called from WordPress
@@ -7,13 +9,15 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 global $wpdb;
 
-$table_terms_price   = $wpdb->prefix . 'laterpay_terms_price';
-$table_history       = $wpdb->prefix . 'laterpay_payment_history';
-$table_post_views    = $wpdb->prefix . 'laterpay_post_views';
-$table_time_passes   = $wpdb->prefix . 'laterpay_passes';
-$table_subscriptions = $wpdb->prefix . 'laterpay_subscriptions';
-$table_postmeta      = $wpdb->postmeta;
-$table_usermeta      = $wpdb->usermeta;
+$db = $wpdb;
+
+$table_terms_price   = $db->prefix . 'laterpay_terms_price';
+$table_history       = $db->prefix . 'laterpay_payment_history';
+$table_post_views    = $db->prefix . 'laterpay_post_views';
+$table_time_passes   = $db->prefix . 'laterpay_passes';
+$table_subscriptions = $db->prefix . 'laterpay_subscriptions';
+$table_postmeta      = $db->postmeta;
+$table_usermeta      = $db->usermeta;
 
 // remove custom tables
 $sql = "
@@ -25,7 +29,7 @@ $sql = "
         $table_subscriptions
     ;
 ";
-$wpdb->query( $sql );
+$db->query( $sql );
 
 // remove pricing and voting data from wp_postmeta table
 delete_post_meta_by_key( 'laterpay_post_prices' );
@@ -44,7 +48,7 @@ $sql = "
         )
     ;
 ";
-$wpdb->query( $sql );
+$db->query( $sql );
 
 // remove global settings from wp_options table
 delete_option( 'laterpay_live_backend_api_url' );
@@ -113,21 +117,12 @@ delete_option( 'laterpay_region' );
 delete_option( 'laterpay_plugin_version' );
 delete_option( 'laterpay_pro_merchant' );
 
-// register LaterPay autoloader
-$dir = dirname( __FILE__ ) . DIRECTORY_SEPARATOR;
-
-if ( ! class_exists( 'LaterPay_Autoloader' ) ) {
-	require_once( $dir . 'laterpay-load.php' );
-}
-
-LaterPay_AutoLoader::register_namespace( $dir . 'application', 'LaterPay' );
-
 // remove custom capabilities
-LaterPay_Helper_User::remove_custom_capabilities();
+User::removeCustomCapabilities();
 
 // remove all dismissed LaterPay pointers
 // delete_user_meta can't remove these pointers without damaging other data
-$pointers = LaterPay_Controller_Admin::get_all_pointers();
+$pointers = Admin::getAllPointers();
 
 if ( ! empty( $pointers ) && is_array( $pointers ) ) {
 	$replace_string = 'meta_value';
@@ -147,5 +142,5 @@ if ( ! empty( $pointers ) && is_array( $pointers ) ) {
         ;
     ";
 
-	$wpdb->query( $sql );
+    $db->query( $sql );
 }

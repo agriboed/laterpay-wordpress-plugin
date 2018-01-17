@@ -11,6 +11,18 @@
  */
 
 // Kick-off
+use LaterPay\Core\Bootstrap;
+use LaterPay\Core\Event\Dispatcher;
+use LaterPay\Core\Logger;
+use LaterPay\Core\Logger\Formatter\Html;
+use LaterPay\Core\Logger\Handler\WordPress;
+use LaterPay\Core\Logger\Handler\Null;
+use LaterPay\Core\Logger\Processor\Web;
+use LaterPay\Core\Logger\Processor\MemoryUsage;
+use LaterPay\Core\Logger\Processor\MemoryPeakUsage;
+use LaterPay\Helper\Config;
+use LaterPay\Model\Config as ModelConfig;
+
 add_action( 'plugins_loaded', 'laterpay_init' );
 
 register_activation_hook( __FILE__, 'laterpay_activate' );
@@ -27,7 +39,7 @@ function laterpay_init() {
 	laterpay_before_start();
 
 	$config   = laterpay_get_plugin_config();
-	$laterpay = new LaterPay_Core_Bootstrap( $config );
+	$laterpay = new Bootstrap( $config );
 
 	try {
 		$laterpay->run();
@@ -46,11 +58,12 @@ function laterpay_init() {
  * @wp-hook register_activation_hook
  *
  * @return void
+ * @throws \LaterPay\Core\Exception
  */
 function laterpay_activate() {
 	laterpay_before_start();
 	$config   = laterpay_get_plugin_config();
-	$laterpay = new LaterPay_Core_Bootstrap( $config );
+	$laterpay = new Bootstrap( $config );
 
 	laterpay_event_dispatcher()->dispatch( 'laterpay_activate_before' );
 	$laterpay->activate();
@@ -67,7 +80,7 @@ function laterpay_activate() {
 function laterpay_deactivate() {
 	laterpay_before_start();
 	$config   = laterpay_get_plugin_config();
-	$laterpay = new LaterPay_Core_Bootstrap( $config );
+	$laterpay = new Bootstrap( $config );
 
 	laterpay_event_dispatcher()->dispatch( 'laterpay_deactivate_before' );
 	$laterpay->deactivate();
@@ -77,16 +90,16 @@ function laterpay_deactivate() {
 /**
  * Get the plugin settings.
  *
- * @return LaterPay_Model_Config
+ * @return ModelConfig
  */
 function laterpay_get_plugin_config() {
 	// check, if the config is in cache -> don't load it again.
 	$config = wp_cache_get( 'config', 'laterpay' );
-	if ( is_a( $config, 'LaterPay_Model_Config' ) ) {
+	if ( is_a( $config, 'LaterPay\Model\Config') ) {
 		return $config;
 	}
 
-	$config = new LaterPay_Model_Config();
+	$config = new ModelConfig();
 
 	// plugin default settings for paths and directories
 	$config->set( 'plugin_dir_path', plugin_dir_path( __FILE__ ) );
@@ -146,7 +159,7 @@ function laterpay_get_plugin_config() {
 	/**
 	 * LaterPay API endpoints and API default settings depends from region.
 	 */
-	$config->import( LaterPay_Helper_Config::get_regional_settings() );
+	$config->import( Config::getRegionalSettings() );
 
 	/**
 	 * Use page caching compatible mode.
@@ -221,12 +234,12 @@ function laterpay_clean_plugin_cache() {
 /**
  * Get logger object.
  *
- * @return LaterPay_Core_Logger
+ * @return Logger
  */
 function laterpay_get_logger() {
 	// check, if the config is cached -> don't load it again
 	$logger = wp_cache_get( 'logger', 'laterpay' );
-	if ( is_a( $logger, 'LaterPay_Core_Logger' ) ) {
+	if ( is_a( $logger, 'LaterPay\Core\Logger') ) {
 		return $logger;
 	}
 
@@ -235,22 +248,22 @@ function laterpay_get_logger() {
 
 	if ( $config->get( 'debug_mode' ) ) {
 		// LaterPay WordPress handler to render the debugger pane
-		$wp_handler = new LaterPay_Core_Logger_Handler_WordPress( LaterPay_Core_Logger::WARNING );
-		$wp_handler->set_formatter( new LaterPay_Core_Logger_Formatter_Html() );
+		$wp_handler = new WordPress( Logger::WARNING );
+		$wp_handler->setFormatter( new Html() );
 
 		$handlers[] = $wp_handler;
 	} else {
-		$handlers[] = new LaterPay_Core_Logger_Handler_Null();
+		$handlers[] = new Null();
 	}
 
 	// add additional processors for more detailed log entries
 	$processors = array(
-		new LaterPay_Core_Logger_Processor_Web(),
-		new LaterPay_Core_Logger_Processor_MemoryUsage(),
-		new LaterPay_Core_Logger_Processor_MemoryPeakUsage(),
+		new Web(),
+		new MemoryUsage(),
+		new MemoryPeakUsage(),
 	);
-	laterpay_event_dispatcher()->set_debug_enabled( true );
-	$logger = new LaterPay_Core_Logger( 'laterpay', $handlers, $processors );
+	laterpay_event_dispatcher()->setDebugEnabled( true );
+	$logger = new Logger( 'laterpay', $handlers, $processors );
 
 	// cache the config
 	wp_cache_set( 'logger', $logger, 'laterpay' );
@@ -304,9 +317,9 @@ function laterpay_sanitized( $string ) {
 /**
  * Alias for the LaterPay Event Dispatcher
  *
- * @return LaterPay_Core_Event_Dispatcher
+ * @return Dispatcher
  */
 function laterpay_event_dispatcher() {
-	return LaterPay_Core_Event_Dispatcher::get_dispatcher();
+	return Dispatcher::getDispatcher();
 }
 

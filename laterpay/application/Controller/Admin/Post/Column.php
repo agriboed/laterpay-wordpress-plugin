@@ -70,7 +70,7 @@ class Column extends Base {
 	 */
 	public function addDataToPostsTable( Event $event ) {
 		list($column_name, $post_id) = $event->getArguments() + array( '', '' );
-		$event->setEcho( true );
+		$event->setEchoOutput( true );
 
 		switch ( $column_name ) {
 			case 'post_price':
@@ -96,7 +96,7 @@ class Column extends Base {
 					// render the price type of the post, if it exists
 					switch ( $post_prices['type'] ) {
 						case Pricing::TYPE_INDIVIDUAL_PRICE:
-							$revenue_model   = ( Pricing::get_post_revenue_model( $post_id ) === 'sis' )
+							$revenue_model   = ( Pricing::getPostRevenueModel( $post_id ) === 'sis' )
 								? __( 'Pay Now', 'laterpay' )
 								: __( 'Pay Later', 'laterpay' );
 							$post_price_type = __( 'individual price', 'laterpay' ) . ' (' . $revenue_model . ')';

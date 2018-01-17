@@ -1,5 +1,12 @@
 <?php
 
+namespace LaterPay\Controller\Frontend;
+
+use LaterPay\Controller\Base;
+use LaterPay\Helper\Config;
+use LaterPay\Core\Event;
+use LaterPay_Client;
+
 /**
  * LaterPay invoice controller.
  *
@@ -7,22 +14,22 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Controller_Frontend_Invoice extends LaterPay_Controller_Base {
+class Invoice extends Base {
 
 	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
 	 *
 	 * @return array
 	 */
-	public static function get_subscribed_events() {
+	public static function getSubscribedEvents() {
 		return array(
 			'laterpay_invoice_indicator' => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'the_invoice_indicator' ),
+				array( 'theInvoiceIndicator' ),
 			),
 			'laterpay_enqueue_scripts'   => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'add_frontend_scripts' ),
+				array( 'addFrontendScripts' ),
 			),
 		);
 	}
@@ -33,13 +40,13 @@ class LaterPay_Controller_Frontend_Invoice extends LaterPay_Controller_Base {
 	 *
 	 * @wp-hook laterpay_invoice_indicator
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @return void
 	 */
-	public function the_invoice_indicator( LaterPay_Core_Event $event ) {
-		$event->set_echo( true );
-		$event->set_result( laterpay_sanitized( $this->get_text_view( 'frontend/partials/widget/invoice-indicator' ) ) );
+	public function theInvoiceIndicator( Event $event ) {
+		$event->setEcho( true );
+		$event->setResult( laterpay_sanitized( $this->getTextView( 'frontend/partials/widget/invoice-indicator' ) ) );
 
 		wp_enqueue_script( 'laterpay-yui' );
 		wp_enqueue_script( 'laterpay-invoice-indicator' );
@@ -52,7 +59,7 @@ class LaterPay_Controller_Frontend_Invoice extends LaterPay_Controller_Base {
 	 *
 	 * @return void
 	 */
-	public function add_frontend_scripts() {
+	public function addFrontendScripts() {
 		wp_register_script(
 			'laterpay-yui',
 			$this->config->get( 'laterpay_yui_js' ),
@@ -69,7 +76,7 @@ class LaterPay_Controller_Frontend_Invoice extends LaterPay_Controller_Base {
 		);
 
 		// pass localized strings and variables to script
-		$client_options = LaterPay_Helper_Config::get_php_client_options();
+		$client_options = Config::getPHPClientOptions();
 		$client         = new LaterPay_Client(
 			$client_options['cp_key'],
 			$client_options['api_key'],

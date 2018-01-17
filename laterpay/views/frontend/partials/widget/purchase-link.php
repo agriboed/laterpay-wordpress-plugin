@@ -1,5 +1,7 @@
 <?php
 
+use LaterPay\Helper\View;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	// prevent direct access to this file
 	exit;
@@ -27,19 +29,19 @@ foreach ( $args as $key => $value ) {
 if ( $laterpay['revenue_model'] == 'sis' ) :
 	$link_text = sprintf(
 		__( 'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small>', 'laterpay' ),
-		LaterPay_Helper_View::format_number( $laterpay['price'] ),
+		View::formatNumber( $laterpay['price'] ),
 		$laterpay['currency']
 	);
 else :
 	$link_text = sprintf(
 		__( 'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small> and pay later', 'laterpay' ),
-		LaterPay_Helper_View::format_number( $laterpay['price'] ),
+		View::formatNumber( $laterpay['price'] ),
 		$laterpay['currency']
 	);
 endif;
 if ( isset( $laterpay['link_text'] ) ) {
 	$link_text = $laterpay['link_text'];
-	$link_text = str_replace( array( '{price}', '{currency}' ), array( LaterPay_Helper_View::format_number( $laterpay['price'] ), $laterpay['currency'] ), $link_text );
+	$link_text = str_replace( array( '{price}', '{currency}' ), array( View::formatNumber( $laterpay['price'] ), $laterpay['currency'] ), $link_text );
 }
 ?>
 

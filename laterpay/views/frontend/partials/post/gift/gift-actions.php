@@ -1,4 +1,7 @@
 <?php
+
+use LaterPay\Helper\View;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	// prevent direct access to this file
 	exit;
@@ -9,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	$pass  = $laterpay['pass'];
 	$title = sprintf(
 		'%s<small class="lp_purchase-link__currency">%s</small>',
-		LaterPay_Helper_View::format_number( $pass['price'] ),
+		View::formatNumber( $pass['price'] ),
 		$laterpay['standard_currency']
 	);
 ?>

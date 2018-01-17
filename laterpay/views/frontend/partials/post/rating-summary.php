@@ -1,4 +1,7 @@
 <?php
+
+use LaterPay\Helper\View;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	// prevent direct access to this file
 	exit;
@@ -7,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <div class="lp_rating-results">
 	<div class="lp_rating-results__aggregated-result">
-		<div class="lp_rating__ratings-count lp_ml-"><?php echo esc_attr( LaterPay_Helper_View::format_number( $laterpay['post_summary_votes'], false ) ); ?></div>
+		<div class="lp_rating__ratings-count lp_ml-"><?php echo esc_attr( View::formatNumber( $laterpay['post_summary_votes'], false ) ); ?></div>
 		<?php for ( $i = 1; $i < 6; $i++ ) : ?>
 			<?php
 			if ( $i <= $laterpay['post_aggregated_rating'] ) {

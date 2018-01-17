@@ -100,7 +100,6 @@ class Settings extends Base {
 		$this->addEnabledPostTypesSettings();
 		$this->addTimePassesSettings();
 		$this->addRevenueSettings();
-		$this->addGiftCodesSettings();
 		$this->addTeaserContentSettings();
 		$this->addPreviewExcerptSettings();
 		$this->addUnlimitedAccessSettings();
@@ -365,70 +364,6 @@ class Settings extends Base {
 		);
 
 		register_setting( 'laterpay', 'laterpay_require_login' );
-	}
-
-	/**
-	 * Add gift codes section and fields.
-	 *
-	 * @return void
-	 */
-	public function addGiftCodesSettings() {
-		add_settings_section(
-			'laterpay_gift_codes',
-			__( 'Gift Codes Limit', 'laterpay' ),
-			function() {
-				laterpay_sanitize_output(
-					'<p>' .
-					__( 'Specify, how many times a gift code can be redeemed for the associated time pass.', 'laterpay' ) .
-					'</p>', true
-				);
-			},
-			'laterpay'
-		);
-
-		add_settings_field(
-			'laterpay_maximum_redemptions_per_gift_code',
-			__( 'Times Redeemable', 'laterpay' ),
-			array( $this, 'getInputFieldMarkup' ),
-			'laterpay',
-			'laterpay_gift_codes',
-			array(
-				'name'  => 'laterpay_maximum_redemptions_per_gift_code',
-				'class' => 'lp_number-input',
-			)
-		);
-
-		register_setting(
-			'laterpay', 'laterpay_maximum_redemptions_per_gift_code',
-			array( $this, 'sanitize_maximum_redemptions_per_gift_code_input' )
-		);
-	}
-
-	/**
-	 * Sanitize maximum redem options per gift code.
-	 *
-	 * @param $input
-	 *
-	 * @return int
-	 */
-	public function sanitizeMaximumRedemptionsPerGiftCodeInput( $input ) {
-		$error = '';
-		$input = absint( $input );
-
-		if ( $input < 1 ) {
-			$input = 1;
-			$error = 'Please enter a valid limit ( 1 or greater )';
-		}
-
-		if ( ! empty( $error ) ) {
-			add_settings_error(
-				'laterpay',
-				'gift_code_redeem_error',
-				$error
-			);
-		}
-
-		return $input;
 	}
 
 	/**

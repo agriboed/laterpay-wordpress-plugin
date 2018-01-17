@@ -6,9 +6,9 @@ use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Form\MerchantId;
 use LaterPay\Form\PluginMode;
-use LaterPay\Helper\Globals;
 use LaterPay\Form\TestMode;
 use LaterPay\Helper\Config;
+use LaterPay\Core\Request;
 use LaterPay\Helper\View;
 use LaterPay\Form\ApiKey;
 use LaterPay\Form\Region;
@@ -105,7 +105,6 @@ class Account extends Base {
 	 *
 	 * @param Event $event
 	 *
-	 * @throws \InvalidArgumentException
 	 * @throws InvalidIncomingData
 	 * @throws FormValidation
 	 *
@@ -119,7 +118,7 @@ class Account extends Base {
 			)
 		);
 
-		$form = Globals::POST( 'form' );
+		$form = Request::post( 'form' );
 
 		if ( null === $form ) {
 			// invalid request
@@ -173,7 +172,6 @@ class Account extends Base {
 	 *
 	 * @param Event $event
 	 *
-	 * @throws \InvalidArgumentException
 	 * @throws FormValidation
 	 *
 	 * @return void
@@ -184,8 +182,8 @@ class Account extends Base {
 		if ( $event->hasArgument( 'is_live' ) ) {
 			$is_live = $event->getArgument( 'is_live' );
 		}
-		$merchant_id_form = new MerchantId( Globals::POST() );
-		$merchant_id      = $merchant_id_form->get_field_value( 'merchant_id' );
+		$merchant_id_form = new MerchantId( Request::post() );
+		$merchant_id      = $merchant_id_form->getFieldValue( 'merchant_id' );
 		$merchant_id_type = $is_live ? 'live' : 'sandbox';
 
 		if ( empty( $merchant_id ) ) {
@@ -203,7 +201,7 @@ class Account extends Base {
 			return;
 		}
 
-		if ( ! $merchant_id_form->is_valid( Globals::POST() ) ) {
+		if ( ! $merchant_id_form->isValid( Request::post() ) ) {
 			$event->setResult(
 				array(
 					'success' => false,
@@ -213,7 +211,7 @@ class Account extends Base {
 					),
 				)
 			);
-			throw new FormValidation( get_class( $merchant_id_form ), $merchant_id_form->get_errors() );
+			throw new FormValidation( get_class( $merchant_id_form ), $merchant_id_form->getErrors() );
 		}
 
 		update_option( sprintf( 'laterpay_%s_merchant_id', $merchant_id_type ), $merchant_id );
@@ -233,7 +231,6 @@ class Account extends Base {
 	 *
 	 * @param Event $event
 	 *
-	 * @throws \InvalidArgumentException
 	 * @throws FormValidation
 	 *
 	 * @return void
@@ -245,8 +242,8 @@ class Account extends Base {
 			$is_live = $event->getArgument( 'is_live' );
 		}
 
-		$api_key_form     = new ApiKey( Globals::POST() );
-		$api_key          = $api_key_form->get_field_value( 'api_key' );
+		$api_key_form     = new ApiKey( Request::post() );
+		$api_key          = $api_key_form->getFieldValue( 'api_key' );
 		$api_key_type     = $is_live ? 'live' : 'sandbox';
 		$transaction_type = $is_live ? 'REAL' : 'TEST';
 
@@ -265,7 +262,7 @@ class Account extends Base {
 			return;
 		}
 
-		if ( ! $api_key_form->is_valid( Globals::POST() ) ) {
+		if ( ! $api_key_form->isValid( Request::post() ) ) {
 			$event->setResult(
 				array(
 					'success' => false,
@@ -275,7 +272,7 @@ class Account extends Base {
 					),
 				)
 			);
-			throw new FormValidation( get_class( $api_key_form ), $api_key_form->get_errors() );
+			throw new FormValidation( get_class( $api_key_form ), $api_key_form->getErrors() );
 		}
 
 		update_option( sprintf( 'laterpay_%s_api_key', $api_key_type ), $api_key );
@@ -302,15 +299,15 @@ class Account extends Base {
 	protected static function updatePluginMode( Event $event ) {
 		$plugin_mode_form = new PluginMode();
 
-		if ( ! $plugin_mode_form->is_valid( Globals::POST() ) ) {
+		if ( ! $plugin_mode_form->isValid( Request::post() ) ) {
 			array(
 				'success' => false,
 				'message' => __( 'Error occurred. Incorrect data provided.', 'laterpay' ),
 			);
-			throw new FormValidation( get_class( $plugin_mode_form ), $plugin_mode_form->get_errors() );
+			throw new FormValidation( get_class( $plugin_mode_form ), $plugin_mode_form->getErrors() );
 		}
 
-		$plugin_mode = $plugin_mode_form->get_field_value( 'plugin_is_in_live_mode' );
+		$plugin_mode = $plugin_mode_form->getFieldValue( 'plugin_is_in_live_mode' );
 		$result      = update_option( 'laterpay_plugin_is_in_live_mode', $plugin_mode );
 
 		if ( $result ) {
@@ -377,17 +374,17 @@ class Account extends Base {
 	protected static function changeRegion( Event $event ) {
 		$region_form = new Region();
 
-		if ( ! $region_form->is_valid( Globals::POST() ) ) {
+		if ( ! $region_form->isValid( Request::post() ) ) {
 			$event->setResult(
 				array(
 					'success' => false,
 					'message' => __( 'Error occurred. Incorrect data provided.', 'laterpay' ),
 				)
 			);
-			throw new FormValidation( get_class( $region_form ), $region_form->get_errors() );
+			throw new FormValidation( get_class( $region_form ), $region_form->getErrors() );
 		}
 
-		$result = update_option( 'laterpay_region', $region_form->get_field_value( 'laterpay_region' ) );
+		$result = update_option( 'laterpay_region', $region_form->getFieldValue( 'laterpay_region' ) );
 
 		if ( ! $result ) {
 			$event->setResult(
@@ -421,7 +418,7 @@ class Account extends Base {
 	public static function updatePluginVisibilityInTestMode( Event $event ) {
 		$plugin_test_mode_form = new TestMode();
 
-		if ( ! $plugin_test_mode_form->is_valid( Globals::POST() ) ) {
+		if ( ! $plugin_test_mode_form->isValid( Request::post() ) ) {
 			$event->setResult(
 				array(
 					'success' => false,
@@ -431,12 +428,12 @@ class Account extends Base {
 			);
 			throw new FormValidation(
 				get_class( $plugin_test_mode_form ),
-				$plugin_test_mode_form->get_errors()
+				$plugin_test_mode_form->getErrors()
 			);
 		}
 
-		$is_in_visible_test_mode = $plugin_test_mode_form->get_field_value( 'plugin_is_in_visible_test_mode' );
-		$has_invalid_credentials = $plugin_test_mode_form->get_field_value( 'invalid_credentials' );
+		$is_in_visible_test_mode = $plugin_test_mode_form->getFieldValue( 'plugin_is_in_visible_test_mode' );
+		$has_invalid_credentials = $plugin_test_mode_form->getFieldValue( 'invalid_credentials' );
 
 		if ( $has_invalid_credentials ) {
 			update_option( 'laterpay_is_in_visible_test_mode', 0 );

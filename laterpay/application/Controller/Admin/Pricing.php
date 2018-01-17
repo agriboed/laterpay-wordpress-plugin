@@ -2,22 +2,16 @@
 
 namespace LaterPay\Controller\Admin;
 
-use LaterPay\Model\Subscription as ModelSubscription;
-use LaterPay\Form\Subscription as FormSubscription;
 use LaterPay\Core\Exception\InvalidIncomingData;
-use LaterPay\Model\TimePass as ModelTimePass;
-use LaterPay\Helper\Pricing as HelperPricing;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Model\CategoryPrice;
 use LaterPay\Helper\Subscription;
 use LaterPay\Form\PriceCategory;
 use LaterPay\Form\GlobalPrice;
-use LaterPay\Form\LandingPage;
 use LaterPay\Helper\TimePass;
-use LaterPay\Form\BulkPrice;
-use LaterPay\Helper\Globals;
 use LaterPay\Helper\Voucher;
 use LaterPay\Helper\Config;
+use LaterPay\Core\Request;
 use LaterPay\Helper\View;
 use LaterPay\Core\Event;
 use LaterPay\Form\Pass;
@@ -100,14 +94,14 @@ class Pricing extends Base {
 
 		// pass localized strings and variables to script
 		// time pass with vouchers
-		$time_passes_model  = new ModelTimePass();
-		$time_passes_list   = $time_passes_model->get_active_time_passes();
-		$vouchers_list      = Voucher::get_all_vouchers();
-		$vouchers_statistic = Voucher::get_all_vouchers_statistic();
+		$time_passes_model  = new \LaterPay\Model\TimePass();
+		$time_passes_list   = $time_passes_model->getActiveTimePasses();
+		$vouchers_list      = Voucher::getAllVouchers();
+		$vouchers_statistic = Voucher::getAllVouchersStatistic();
 
 		// subscriptions
-		$subscriptions_model = new ModelSubscription();
-		$subscriptions_list  = $subscriptions_model->get_active_subscriptions();
+		$subscriptions_model = new \LaterPay\Model\Subscription();
+		$subscriptions_list  = $subscriptions_model->getActiveSubscriptions();
 
 		wp_localize_script(
 			'laterpay-backend-pricing',
@@ -140,34 +134,17 @@ class Pricing extends Base {
 		$this->loadAssets();
 
 		$category_price_model          = new CategoryPrice();
-		$categories_with_defined_price = $category_price_model->get_categories_with_defined_price();
+		$categories_with_defined_price = $category_price_model->getCategoriesWithDefinedPrice();
 
 		// time passes and vouchers data
-		$time_passes_model  = new ModelTimePass();
-		$time_passes_list   = $time_passes_model->get_active_time_passes();
-		$vouchers_list      = Voucher::get_all_vouchers();
-		$vouchers_statistic = Voucher::get_all_vouchers_statistic();
+		$time_passes_model  = new \LaterPay\Model\TimePass();
+		$time_passes_list   = $time_passes_model->getActiveTimePasses();
+		$vouchers_list      = Voucher::getAllVouchers();
+		$vouchers_statistic = Voucher::getAllVouchersStatistic();
 
 		// subscriptions data
-		$subscriptions_model = new ModelSubscription();
-		$subscriptions_list  = $subscriptions_model->get_active_subscriptions();
-
-		// bulk price editor data
-		$bulk_actions = array(
-			'set'      => __( 'Set price of', 'laterpay' ),
-			'increase' => __( 'Increase price of', 'laterpay' ),
-			'reduce'   => __( 'Reduce price of', 'laterpay' ),
-			'free'     => __( 'Make free', 'laterpay' ),
-			'reset'    => __( 'Reset', 'laterpay' ),
-		);
-
-		$bulk_selectors = array(
-			'all' => __( 'All posts', 'laterpay' ),
-		);
-
-		$bulk_categories            = get_categories();
-		$bulk_categories_with_price = HelperPricing::getCategoriesWithPrice( $bulk_categories );
-		$bulk_saved_operations      = HelperPricing::getBulkOperations();
+		$subscriptions_model = new \LaterPay\Model\Subscription();
+		$subscriptions_list  = $subscriptions_model->getActiveSubscriptions();
 
 		$view_args = array(
 			'top_nav'                            => $this->getMenu(),
@@ -181,12 +158,6 @@ class Pricing extends Base {
 			'vouchers_list'                      => $vouchers_list,
 			'vouchers_statistic'                 => $vouchers_statistic,
 			'subscriptions_list'                 => $subscriptions_list,
-			'bulk_actions'                       => $bulk_actions,
-			'bulk_selectors'                     => $bulk_selectors,
-			'bulk_categories'                    => $bulk_categories,
-			'bulk_categories_with_price'         => $bulk_categories_with_price,
-			'bulk_saved_operations'              => $bulk_saved_operations,
-			'landing_page'                       => get_option( 'laterpay_landing_page' ),
 			'only_time_pass_purchases_allowed'   => get_option( 'laterpay_only_time_pass_purchases_allowed' ),
 		);
 
@@ -212,7 +183,7 @@ class Pricing extends Base {
 			)
 		);
 
-		$form = Globals::POST( 'form' );
+		$form = Request::post( 'form' );
 
 		if ( null === $form ) {
 			// invalid request
@@ -234,7 +205,7 @@ class Pricing extends Base {
 				break;
 
 			case 'laterpay_get_category_prices':
-				$category_ids = Globals::POST( 'category_ids' );
+				$category_ids = Request::post( 'category_ids' );
 
 				if ( null === $category_ids || ! is_array( $category_ids ) ) {
 					$category_ids = array();
@@ -246,18 +217,6 @@ class Pricing extends Base {
 						'prices'  => $this->getCategoryPrices( $categories ),
 					)
 				);
-				break;
-
-			case 'bulk_price_form':
-				$this->changePostsPrice( $event );
-				break;
-
-			case 'bulk_price_form_save':
-				$this->saveBulkOperation( $event );
-				break;
-
-			case 'bulk_price_form_delete':
-				$this->deleteBulkOperation( $event );
 				break;
 
 			case 'time_pass_form_save':
@@ -280,12 +239,8 @@ class Pricing extends Base {
 				$this->generateVoucherCode( $event );
 				break;
 
-			case 'save_landing_page':
-				$this->saveLandingPage( $event );
-				break;
-
 			case 'laterpay_get_categories_with_price':
-				$term = Globals::POST( 'term' );
+				$term = Request::post( 'term' );
 
 				if ( null === $term ) {
 					throw new InvalidIncomingData( 'term' );
@@ -302,13 +257,13 @@ class Pricing extends Base {
 				$event->setResult(
 					array(
 						'success'    => true,
-						'categories' => $category_price_model->get_categories_without_price_by_term( $args ),
+						'categories' => $category_price_model->getCategoriesWithoutPriceByTerm( $args ),
 					)
 				);
 				break;
 
 			case 'laterpay_get_categories':
-				$term = Globals::POST( 'term' );
+				$term = Request::post( 'term' );
 
 				// return categories
 				$args = array(
@@ -351,7 +306,7 @@ class Pricing extends Base {
 	protected function updateGlobalDefaultPrice( Event $event ) {
 		$global_price_form = new GlobalPrice();
 
-		if ( ! $global_price_form->is_valid( Globals::POST() ) ) {
+		if ( ! $global_price_form->isValid( Request::post() ) ) {
 			$event->setResult(
 				array(
 					'success'       => false,
@@ -360,11 +315,11 @@ class Pricing extends Base {
 					'message'       => __( 'An error occurred. Incorrect data provided.', 'laterpay' ),
 				)
 			);
-			throw new FormValidation( get_class( $global_price_form ), $global_price_form->get_errors() );
+			throw new FormValidation( get_class( $global_price_form ), $global_price_form->getErrors() );
 		}
 
-		$delocalized_global_price   = $global_price_form->get_field_value( 'laterpay_global_price' );
-		$global_price_revenue_model = $global_price_form->get_field_value( 'laterpay_global_price_revenue_model' );
+		$delocalized_global_price   = $global_price_form->getFieldValue( 'laterpay_global_price' );
+		$global_price_revenue_model = $global_price_form->getFieldValue( 'laterpay_global_price_revenue_model' );
 		$localized_global_price     = View::formatNumber( $delocalized_global_price );
 
 		update_option( 'laterpay_global_price', $delocalized_global_price );
@@ -386,7 +341,7 @@ class Pricing extends Base {
 				'price'               => number_format( $delocalized_global_price, 2, '.', '' ),
 				'localized_price'     => $localized_global_price,
 				'revenue_model'       => $global_price_revenue_model,
-				'revenue_model_label' => HelperPricing::getRevenueLabel( $global_price_revenue_model ),
+				'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel( $global_price_revenue_model ),
 				'message'             => $message,
 			)
 		);
@@ -404,8 +359,8 @@ class Pricing extends Base {
 	protected function setCategoryDefaultPrice( Event $event ) {
 		$price_category_form = new PriceCategory();
 
-		if ( ! $price_category_form->is_valid( Globals::POST() ) ) {
-			$errors = $price_category_form->get_errors();
+		if ( ! $price_category_form->isValid( Request::post() ) ) {
+			$errors = $price_category_form->getErrors();
 			$event->setResult(
 				array(
 					'success' => false,
@@ -415,10 +370,10 @@ class Pricing extends Base {
 			throw new FormValidation( get_class( $price_category_form ), $errors['name'] );
 		}
 
-		$post_category_id             = $price_category_form->get_field_value( 'category_id' );
-		$category                     = $price_category_form->get_field_value( 'category' );
+		$post_category_id             = $price_category_form->getFieldValue( 'category_id' );
+		$category                     = $price_category_form->getFieldValue( 'category' );
 		$term                         = get_term_by( 'name', $category, 'category' );
-		$category_price_revenue_model = $price_category_form->get_field_value( 'laterpay_category_price_revenue_model' );
+		$category_price_revenue_model = $price_category_form->getFieldValue( 'laterpay_category_price_revenue_model' );
 		$updated_post_ids             = null;
 
 		if ( ! $term ) {
@@ -437,8 +392,8 @@ class Pricing extends Base {
 
 		$category_id                = $term->term_id;
 		$category_price_model       = new CategoryPrice();
-		$category_price_id          = $category_price_model->get_price_id_by_category_id( $category_id );
-		$delocalized_category_price = $price_category_form->get_field_value( 'price' );
+		$category_price_id          = $category_price_model->getPriceIDByCategoryID( $category_id );
+		$delocalized_category_price = $price_category_form->getFieldValue( 'price' );
 
 		if ( empty( $category_id ) ) {
 			$event->setResult(
@@ -452,14 +407,14 @@ class Pricing extends Base {
 		}
 
 		if ( ! $post_category_id ) {
-			$category_price_model->set_category_price(
+			$category_price_model->setCategoryPrice(
 				$category_id,
 				$delocalized_category_price,
 				$category_price_revenue_model
 			);
-			$updated_post_ids = HelperPricing::applyCategoryPriceToPostsWithGlobalPrice( $category_id );
+			$updated_post_ids = \LaterPay\Helper\Pricing::applyCategoryPriceToPostsWithGlobalPrice( $category_id );
 		} else {
-			$category_price_model->set_category_price(
+			$category_price_model->setCategoryPrice(
 				$category_id,
 				$delocalized_category_price,
 				$category_price_revenue_model,
@@ -479,7 +434,7 @@ class Pricing extends Base {
 				'currency'            => $currency,
 				'category_id'         => $category_id,
 				'revenue_model'       => $category_price_revenue_model,
-				'revenue_model_label' => HelperPricing::getRevenueLabel( $category_price_revenue_model ),
+				'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel( $category_price_revenue_model ),
 				'updated_post_ids'    => $updated_post_ids,
 				'message'             => sprintf(
 					__( 'All posts in category %1$s have a default price of %2$s %3$s now.', 'laterpay' ),
@@ -510,25 +465,25 @@ class Pricing extends Base {
 			)
 		);
 
-		if ( ! $price_category_delete_form->is_valid( Globals::POST() ) ) {
+		if ( ! $price_category_delete_form->isValid( Request::post() ) ) {
 			throw new FormValidation(
 				get_class( $price_category_delete_form ),
-				$price_category_delete_form->get_errors()
+				$price_category_delete_form->getErrors()
 			);
 		}
 
-		$category_id = $price_category_delete_form->get_field_value( 'category_id' );
+		$category_id = $price_category_delete_form->getFieldValue( 'category_id' );
 
 		// delete the category_price
 		$category_price_model = new CategoryPrice();
-		$success              = $category_price_model->delete_prices_by_category_id( $category_id );
+		$success              = $category_price_model->deletePricesByCategoryID( $category_id );
 
 		if ( ! $success ) {
 			return;
 		}
 
 		// get all posts with the deleted $category_id and loop through them
-		$post_ids = HelperPricing::getPostIDsWithPriceByCategoryID( $category_id );
+		$post_ids = \LaterPay\Helper\Pricing::getPostIDsWithPriceByCategoryID( $category_id );
 		foreach ( $post_ids as $post_id ) {
 			// check, if the post has LaterPay pricing data
 			$post_price = get_post_meta( $post_id, 'laterpay_post_prices', true );
@@ -537,7 +492,7 @@ class Pricing extends Base {
 			}
 
 			// check, if the post uses a category default price
-			if ( $post_price['type'] !== HelperPricing::TYPE_CATEGORY_DEFAULT_PRICE ) {
+			if ( $post_price['type'] !== \LaterPay\Helper\Pricing::TYPE_CATEGORY_DEFAULT_PRICE ) {
 				continue;
 			}
 
@@ -547,7 +502,7 @@ class Pricing extends Base {
 			}
 
 			// update post data
-			HelperPricing::updatePostDataAfterCategoryDelete( $post_id );
+			\LaterPay\Helper\Pricing::updatePostDataAfterCategoryDelete( $post_id );
 		}
 
 		$event->setResult(
@@ -555,7 +510,7 @@ class Pricing extends Base {
 				'success' => true,
 				'message' => sprintf(
 					__( 'The default price for category %s was deleted.', 'laterpay' ),
-					$price_category_delete_form->get_field_value( 'category' )
+					$price_category_delete_form->getFieldValue( 'category' )
 				),
 			)
 		);
@@ -569,357 +524,7 @@ class Pricing extends Base {
 	 * @return array
 	 */
 	protected function getCategoryPrices( $category_ids ) {
-		return HelperPricing::getCategoryPriceDataByCategoryIDs( $category_ids );
-	}
-
-	/**
-	 * Update post prices in bulk.
-	 *
-	 * This function does not change the price type of a post.
-	 * It gets the price type of each post to be updated and updates the associated individual price, category default
-	 * price, or global default price.
-	 * It also ensures that the resulting price and revenue model is valid.
-	 *
-	 * @param Event $event
-	 *
-	 * @throws \LaterPay\Core\Exception\FormValidation
-	 *
-	 * @return void
-	 */
-	protected function changePostsPrice( Event $event ) {
-		$bulk_price_form = new BulkPrice( Globals::POST() );
-		$event->setResult(
-			array(
-				'success' => false,
-				'message' => __( 'An error occurred when trying to save your settings. Please try again.', 'laterpay' ),
-			)
-		);
-
-		if ( ! $bulk_price_form->is_valid() ) {
-			throw new FormValidation( get_class( $bulk_price_form ), $bulk_price_form->get_errors() );
-		}
-
-		$bulk_operation_id = $bulk_price_form->get_field_value( 'bulk_operation_id' );
-		if ( $bulk_operation_id !== null ) {
-			$operation_data = HelperPricing::get_bulk_operation_data_by_id( $bulk_operation_id );
-			if ( ! $bulk_price_form->is_valid( $operation_data ) ) {
-				return;
-			}
-		}
-
-		// get scope of posts to be processed from selector
-		$posts                = null;
-		$category_price_model = new CategoryPrice();
-		$selector             = $bulk_price_form->get_field_value( 'bulk_selector' );
-		$action               = $bulk_price_form->get_field_value( 'bulk_action' );
-		$change_unit          = $bulk_price_form->get_field_value( 'bulk_change_unit' );
-		$price                = $bulk_price_form->get_field_value( 'bulk_price' );
-		$is_percent           = ( $change_unit === 'percent' );
-		$default_currency     = $this->config->get( 'currency.code' );
-		$update_all           = ( $selector === 'all' );
-		$category_id          = null;
-		// flash message parts
-		$message_parts = array(
-			'all'         => __( 'The prices of all posts', 'laterpay' ),
-			'category'    => '',
-			'have_been'   => __( 'have been', 'laterpay' ),
-			'action'      => __( 'set', 'laterpay' ),
-			'preposition' => __( 'to', 'laterpay' ),
-			'amount'      => '',
-			'unit'        => '',
-		);
-
-		if ( ! $update_all ) {
-			$category_id = $bulk_price_form->get_field_value( 'bulk_category' );
-
-			if ( $category_id === null ) {
-				$category_id = $bulk_price_form->get_field_value( 'bulk_category_with_price' );
-			}
-
-			if ( $category_id !== null ) {
-				$category_name             = get_the_category_by_ID( $category_id );
-				$posts                     = HelperPricing::getPostIDsWithPriceByCategoryID( $category_id );
-				$message_parts['category'] = sprintf(
-					__( '%1$s %2$s', 'laterpay' ), str_replace( '_', ' ', $selector ),
-					$category_name
-				);
-			}
-		} else {
-			$posts = HelperPricing::getAllPostsWithPrice();
-		}
-
-		$price     = ( $price === null ) ? 0 : $price;
-		$new_price = HelperPricing::ensureValidPrice( $price );
-
-		// pre-post-processing actions - correct global and categories default prices, set flash message parts;
-		// run exactly once, independent of actual number of posts
-		switch ( $action ) {
-			case 'set':
-				$this->updateGlobalAndCategoriesPricesWithNewPrice( $new_price );
-				// set flash message parts
-				$message_parts['action']      = __( 'set', 'laterpay' );
-				$message_parts['preposition'] = __( 'to', 'laterpay' );
-				$message_parts['amount']      = View::formatNumber( HelperPricing::ensureValidPrice( $new_price ) );
-				$message_parts['unit']        = $default_currency;
-				break;
-
-			case 'increase':
-			case 'reduce':
-				$is_reduction = ( $action === 'reduce' );
-
-				// process global price
-				$global_price         = get_option( 'laterpay_global_price' );
-				$change_amount        = $is_percent ? $global_price * $price / 100 : $price;
-				$new_price            = $is_reduction ? $global_price - $change_amount : $global_price + $change_amount;
-				$global_price_revenue = HelperPricing::ensureValidRevenueModel(
-					get_option( 'laterpay_global_price_revenue_model' ),
-					$new_price
-				);
-				update_option( 'laterpay_global_price', HelperPricing::ensureValidPrice( $new_price ) );
-				update_option( 'laterpay_global_price_revenue_model', $global_price_revenue );
-
-				// process category default prices
-				$categories = $category_price_model->get_categories_with_defined_price();
-				if ( $categories ) {
-					foreach ( $categories as $category ) {
-						$change_amount = $is_percent ? $category->category_price * $price / 100 : $price;
-						$new_price     = $is_reduction ? $category->category_price - $change_amount : $category->category_price + $change_amount;
-						$new_price     = HelperPricing::ensureValidPrice( $new_price );
-						$revenue_model = HelperPricing::ensureValidRevenueModel(
-							$category->revenue_model,
-							$new_price
-						);
-						$category_price_model->set_category_price(
-							$category->category_id, $new_price, $revenue_model,
-							$category->id
-						);
-					}
-				}
-
-				// set flash message parts
-				$message_parts['action']      = $is_reduction ? __( 'decreased', 'laterpay' ) : __(
-					'increased',
-					'laterpay'
-				);
-				$message_parts['preposition'] = __( 'by', 'laterpay' );
-				$message_parts['amount']      = $is_percent ? $price : View::formatNumber( $price );
-				$message_parts['unit']        = $is_percent ? '%' : $change_unit;
-				break;
-
-			case 'free':
-				if ( ! $update_all && $category_id !== null ) {
-					$category_price_id = $category_price_model->get_price_id_by_category_id( $category_id );
-					$category_price_model->set_category_price( $category_id, $new_price, 'ppu', $category_price_id );
-				} elseif ( $update_all ) {
-					$this->updateGlobalAndCategoriesPricesWithNewPrice( $new_price );
-				}
-				$message_parts['all']         = __( 'All posts', 'laterpay' );
-				$message_parts['action']      = __( 'made free', 'laterpay' );
-				$message_parts['preposition'] = '';
-				break;
-
-			case 'reset':
-				$message_parts['action'] = __( 'reset', 'laterpay' );
-				if ( $update_all ) {
-					$category_price_model->delete_all_category_prices();
-					$new_price = get_option( 'laterpay_global_price' );
-					// set flash message parts
-					$message_parts['preposition'] = __( 'to global default price of', 'laterpay' );
-					$message_parts['amount']      = View::formatNumber( $new_price );
-					$message_parts['unit']        = $default_currency;
-				} else {
-					$new_price = $category_price_model->get_price_by_category_id( $category_id );
-					// set flash message parts
-					$message_parts['preposition'] = __( 'to category default price of', 'laterpay' );
-					$message_parts['amount']      = View::formatNumber( $new_price );
-					$message_parts['unit']        = $default_currency;
-				}
-				break;
-
-			default:
-				return;
-		}
-
-		// update post prices
-		if ( $posts ) {
-			foreach ( $posts as $post ) {
-				$post_id     = is_int( $post ) ? $post : $post->ID;
-				$post_meta   = get_post_meta( $post_id, 'laterpay_post_prices', true );
-				$meta_values = $post_meta ?: array();
-
-				$current_revenue_model = isset( $meta_values['revenue_model'] ) ? $meta_values['revenue_model'] : 'ppu';
-				$current_post_price    = HelperPricing::getPostPrice( $post_id );
-				$current_post_type     = HelperPricing::getPostPriceType( $post_id );
-				$post_type_is_global   = ( $current_post_type === HelperPricing::TYPE_GLOBAL_DEFAULT_PRICE );
-				$post_type_is_category = ( $current_post_type === HelperPricing::TYPE_CATEGORY_DEFAULT_PRICE );
-				$is_individual         = ( ! $post_type_is_global && ! $post_type_is_category );
-
-				$new_price = HelperPricing::ensureValidPrice( $price );
-
-				switch ( $action ) {
-					case 'increase':
-					case 'reduce':
-						if ( $is_individual ) {
-							$is_reduction  = ( $action === 'reduce' );
-							$change_amount = $is_percent ? $current_post_price * $price / 100 : $price;
-							$new_price     = $is_reduction ? $current_post_price - $change_amount : $current_post_price + $change_amount;
-						}
-						break;
-
-					case 'free':
-						if ( ! $update_all && ! $is_individual ) {
-							$meta_values['type']        = HelperPricing::TYPE_CATEGORY_DEFAULT_PRICE;
-							$meta_values['category_id'] = $category_id;
-							$new_price                  = $category_price_model->get_price_by_category_id( $category_id );
-						}
-						break;
-
-					case 'reset':
-						if ( $update_all ) {
-							$meta_values['type'] = HelperPricing::TYPE_GLOBAL_DEFAULT_PRICE;
-							$new_price           = get_option( 'laterpay_global_price' );
-						} else {
-							$meta_values['type']        = HelperPricing::TYPE_CATEGORY_DEFAULT_PRICE;
-							$meta_values['category_id'] = $category_id;
-							$new_price                  = $category_price_model->get_price_by_category_id( $category_id );
-						}
-						break;
-
-					default:
-						break;
-				}
-
-				// make sure the price is within the valid range
-				$meta_values['price'] = HelperPricing::ensureValidPrice( $new_price );
-				// adjust revenue model to new price, if required
-				$meta_values['revenue_model'] = HelperPricing::ensureValidRevenueModel(
-					$current_revenue_model,
-					$meta_values['price']
-				);
-
-				// save updated pricing data
-				update_post_meta(
-					$post_id,
-					'laterpay_post_prices',
-					$meta_values
-				);
-			}
-		}
-
-		// render flash message
-		$event->setResult(
-			array(
-				'success' => true,
-				'message' => trim( preg_replace( '/\s+/', ' ', implode( ' ', $message_parts ) ) ) . '.',
-			)
-		);
-	}
-
-	/**
-	 * Update global and category default prices with new price.
-	 *
-	 * @param string $price
-	 *
-	 * @return void
-	 */
-	protected function updateGlobalAndCategoriesPricesWithNewPrice( $price ) {
-		$global_revenue_model = HelperPricing::ensureValidRevenueModel(
-			get_option( 'laterpay_global_price_revenue_model' ),
-			$price
-		);
-		update_option( 'laterpay_global_price', $price );
-		update_option( 'laterpay_global_price_revenue_model', $global_revenue_model );
-
-		// update all category prices
-		$category_price_model = new CategoryPrice();
-		$categories           = $category_price_model->get_categories_with_defined_price();
-		$revenue_model        = HelperPricing::ensureValidRevenueModel( 'ppu', $price );
-		if ( $categories ) {
-			foreach ( $categories as $category ) {
-				$category_price_model->set_category_price(
-					$category->category_id, $price, $revenue_model,
-					$category->id
-				);
-			}
-		}
-	}
-
-	/**
-	 * Save bulk operation.
-	 *
-	 * @param Event $event
-	 *
-	 * @throws FormValidation
-	 *
-	 * @return void
-	 */
-	protected function saveBulkOperation( Event $event ) {
-		$save_bulk_operation_form = new BulkPrice( Globals::POST() );
-		$event->setResult(
-			array(
-				'success' => false,
-				'message' => __( 'An error occurred when trying to save your settings. Please try again.', 'laterpay' ),
-			)
-		);
-
-		if ( ! $save_bulk_operation_form->is_valid() ) {
-			throw new FormValidation(
-				get_class( $save_bulk_operation_form ),
-				$save_bulk_operation_form->get_errors()
-			);
-		}
-
-		// create data array
-		$data         = $save_bulk_operation_form->get_form_values( true, 'bulk_', array( 'bulk_message' ) );
-		$bulk_message = $save_bulk_operation_form->get_field_value( 'bulk_message' );
-
-		$event->setResult(
-			array(
-				'success' => true,
-				'data'    => array(
-					'id'      => HelperPricing::save_bulk_operation( $data, $bulk_message ),
-					'message' => $save_bulk_operation_form->get_field_value( 'bulk_message' ),
-				),
-				'message' => __( 'Bulk operation saved.', 'laterpay' ),
-			)
-		);
-	}
-
-	/**
-	 * Delete bulk operation.
-	 *
-	 * @param Event $event
-	 *
-	 * @throws FormValidation
-	 *
-	 * @return void
-	 */
-	protected function deleteBulkOperation( Event $event ) {
-		$remove_bulk_operation_form = new BulkPrice( Globals::POST() );
-		$event->setResult(
-			array(
-				'success' => false,
-				'message' => __( 'An error occurred when trying to save your settings. Please try again.', 'laterpay' ),
-			)
-		);
-
-		if ( ! $remove_bulk_operation_form->is_valid() ) {
-			throw new FormValidation(
-				get_class( $remove_bulk_operation_form ),
-				$remove_bulk_operation_form->get_errors()
-			);
-		}
-
-		$bulk_operation_id = $remove_bulk_operation_form->get_field_value( 'bulk_operation_id' );
-		$result            = HelperPricing::deleteBulkOperationByID( $bulk_operation_id );
-		if ( $result ) {
-			$event->setResult(
-				array(
-					'success' => true,
-					'message' => __( 'Bulk operation deleted.', 'laterpay' ),
-				)
-			);
-		}
+		return \LaterPay\Helper\Pricing::getCategoryPriceDataByCategoryIDs( $category_ids );
 	}
 
 	/**
@@ -930,7 +535,7 @@ class Pricing extends Base {
 	 * @return string
 	 */
 	public function renderTimePass( array $args = array() ) {
-		$defaults = TimePass::get_default_options();
+		$defaults = TimePass::getDefaultOptions();
 		$args     = array_merge( $defaults, $args );
 
 		$this->assign( 'laterpay_pass', $args );
@@ -953,22 +558,22 @@ class Pricing extends Base {
 	 * @return void
 	 */
 	protected function timePassSave( Event $event ) {
-		$save_time_pass_form = new Pass( Globals::POST() );
-		$time_pass_model     = new ModelTimePass();
+		$save_time_pass_form = new Pass( Request::post() );
+		$time_pass_model     = new \LaterPay\Model\TimePass();
 
 		$event->setResult(
 			array(
 				'success' => false,
-				'errors'  => $save_time_pass_form->get_errors(),
+				'errors'  => $save_time_pass_form->getErrors(),
 				'message' => __( 'An error occurred when trying to save the time pass. Please try again.', 'laterpay' ),
 			)
 		);
 
-		if ( ! $save_time_pass_form->is_valid() ) {
-			throw new FormValidation( get_class( $save_time_pass_form ), $save_time_pass_form->get_errors() );
+		if ( ! $save_time_pass_form->isValid() ) {
+			throw new FormValidation( get_class( $save_time_pass_form ), $save_time_pass_form->getErrors() );
 		}
 
-		$data = $save_time_pass_form->get_form_values(
+		$data = $save_time_pass_form->getFormValues(
 			true, null,
 			array( 'voucher_code', 'voucher_price', 'voucher_title' )
 		);
@@ -979,23 +584,23 @@ class Pricing extends Base {
 		}
 
 		// ensure valid revenue model
-		$data['revenue_model'] = HelperPricing::ensureValidRevenueModel(
+		$data['revenue_model'] = \LaterPay\Helper\Pricing::ensureValidRevenueModel(
 			$data['revenue_model'],
 			$data['price']
 		);
 
 		// update time pass data or create new time pass
-		$data    = $time_pass_model->update_time_pass( $data );
+		$data    = $time_pass_model->updateTimePass( $data );
 		$pass_id = $data['pass_id'];
 
 		// default vouchers data
 		$vouchers_data = array();
 
 		// set vouchers data
-		$voucher_codes = $save_time_pass_form->get_field_value( 'voucher_code' );
+		$voucher_codes = $save_time_pass_form->getFieldValue( 'voucher_code' );
 		if ( $voucher_codes && is_array( $voucher_codes ) ) {
-			$voucher_prices = $save_time_pass_form->get_field_value( 'voucher_price' );
-			$voucher_titles = $save_time_pass_form->get_field_value( 'voucher_title' );
+			$voucher_prices = $save_time_pass_form->getFieldValue( 'voucher_price' );
+			$voucher_titles = $save_time_pass_form->getFieldValue( 'voucher_title' );
 			foreach ( $voucher_codes as $idx => $code ) {
 				// normalize prices and format with 2 digits in form
 				$voucher_price          = isset( $voucher_prices[ $idx ] ) ? $voucher_prices[ $idx ] : 0;
@@ -1007,13 +612,13 @@ class Pricing extends Base {
 		}
 
 		// save vouchers for this pass
-		Voucher::save_pass_vouchers( $pass_id, $vouchers_data );
+		Voucher::savePassVouchers( $pass_id, $vouchers_data );
 
 		$data['category_name']   = get_the_category_by_ID( $data['access_category'] );
 		$html_data               = $data;
 		$data['price']           = number_format( $data['price'], 2, '.', '' );
 		$data['localized_price'] = View::formatNumber( $data['price'] );
-		$vouchers                = Voucher::get_time_pass_vouchers( $pass_id );
+		$vouchers                = Voucher::getTimePassVouchers( $pass_id );
 
 		$event->setResult(
 			array(
@@ -1034,17 +639,17 @@ class Pricing extends Base {
 	 * @return void
 	 */
 	protected function timePassDelete( Event $event ) {
-		$id = Globals::POST( 'id' );
+		$id = Request::post( 'id' );
 
 		if ( null !== $id ) {
 			$time_pass_id    = sanitize_text_field( $id );
-			$time_pass_model = new ModelTimePass();
+			$time_pass_model = new \LaterPay\Model\TimePass();
 
 			// remove time pass
-			$time_pass_model->delete_time_pass_by_id( $time_pass_id );
+			$time_pass_model->deleteTimePassByID( $time_pass_id );
 
 			// remove vouchers
-			Voucher::delete_voucher_code( $time_pass_id );
+			Voucher::deleteVoucherCode( $time_pass_id );
 
 			$event->setResult(
 				array(
@@ -1070,7 +675,7 @@ class Pricing extends Base {
 	 * @return string
 	 */
 	public function renderSubscription( array $args = array() ) {
-		$defaults = Subscription::get_default_options();
+		$defaults = Subscription::getDefaultOptions();
 		$args     = array_merge( $defaults, $args );
 
 		$this->assign( 'laterpay_subscription', $args );
@@ -1093,13 +698,13 @@ class Pricing extends Base {
 	 * @return void
 	 */
 	protected function subscriptionFormSave( Event $event ) {
-		$save_subscription_form = new FormSubscription( Globals::POST() );
-		$subscription_model     = new ModelSubscription();
+		$save_subscription_form = new \LaterPay\Form\Subscription( Request::post() );
+		$subscription_model     = new \LaterPay\Model\Subscription();
 
 		$event->setResult(
 			array(
 				'success' => false,
-				'errors'  => $save_subscription_form->get_errors(),
+				'errors'  => $save_subscription_form->getErrors(),
 				'message' => __(
 					'An error occurred when trying to save the subscription. Please try again.',
 					'laterpay'
@@ -1107,17 +712,17 @@ class Pricing extends Base {
 			)
 		);
 
-		if ( ! $save_subscription_form->is_valid() ) {
+		if ( ! $save_subscription_form->isValid() ) {
 			throw new FormValidation(
 				get_class( $save_subscription_form ),
-				$save_subscription_form->get_errors()
+				$save_subscription_form->getErrors()
 			);
 		}
 
-		$data = $save_subscription_form->get_form_values();
+		$data = $save_subscription_form->getFormValues();
 
 		// update subscription data or create new subscriptions
-		$data = $subscription_model->update_subscription( $data );
+		$data = $subscription_model->updateSubscription( $data );
 
 		$data['category_name']   = get_the_category_by_ID( $data['access_category'] );
 		$html_data               = $data;
@@ -1142,14 +747,14 @@ class Pricing extends Base {
 	 * @return void
 	 */
 	protected function subscriptionDelete( Event $event ) {
-		$id = Globals::POST( 'id' );
+		$id = Request::post( 'id' );
 
 		if ( null !== $id ) {
 			$sub_id             = sanitize_text_field( $id );
-			$subscription_model = new ModelSubscription();
+			$subscription_model = new \LaterPay\Model\Subscription();
 
 			// remove subscription
-			$subscription_model->delete_subscription_by_id( $sub_id );
+			$subscription_model->deleteSubscriptionByID( $sub_id );
 
 			$event->setResult(
 				array(
@@ -1175,7 +780,7 @@ class Pricing extends Base {
 	 * @return string
 	 */
 	protected function getTimePassesJson( array $time_passes_list = array() ) {
-		$time_passes_array = array( 0 => TimePass::get_default_options() );
+		$time_passes_array = array( 0 => TimePass::getDefaultOptions() );
 
 		foreach ( $time_passes_list as $time_pass ) {
 			if ( ! empty( $time_pass['access_category'] ) ) {
@@ -1195,7 +800,7 @@ class Pricing extends Base {
 	 * @return string
 	 */
 	protected function getSubscriptionsJson( array $subscriptions_list = array() ) {
-		$subscriptions_array = array( 0 => Subscription::get_default_options() );
+		$subscriptions_array = array( 0 => Subscription::getDefaultOptions() );
 
 		foreach ( $subscriptions_list as $subscription ) {
 			if ( ! empty( $subscription['access_category'] ) ) {
@@ -1218,7 +823,7 @@ class Pricing extends Base {
 	 */
 	protected function generateVoucherCode( Event $event ) {
 		$currency = Config::getCurrencyConfig();
-		$price    = Globals::POST( 'price' );
+		$price    = Request::post( 'price' );
 
 		$event->setResult(
 			array(
@@ -1241,34 +846,7 @@ class Pricing extends Base {
 		$event->setResult(
 			array(
 				'success' => true,
-				'code'    => Voucher::generate_voucher_code(),
-			)
-		);
-	}
-
-	/**
-	 * Save landing page URL the user is forwarded to after redeeming a gift card voucher.
-	 *
-	 * @param Event $event
-	 *
-	 * @throws FormValidation
-	 *
-	 * @return void
-	 */
-	protected function saveLandingPage( Event $event ) {
-		$landing_page_form = new LandingPage( Globals::POST() );
-
-		if ( ! $landing_page_form->is_valid() ) {
-			throw new FormValidation( get_class( $landing_page_form ), $landing_page_form->get_errors() );
-		}
-
-		// save URL and confirm with flash message, if the URL is valid
-		update_option( 'laterpay_landing_page', $landing_page_form->get_field_value( 'landing_url' ) );
-
-		$event->setResult(
-			array(
-				'success' => true,
-				'message' => __( 'Landing page saved.', 'laterpay' ),
+				'code'    => Voucher::generateVoucherCode(),
 			)
 		);
 	}
@@ -1284,14 +862,14 @@ class Pricing extends Base {
 	 * @return void
 	 */
 	protected function changePurchaseMode( Event $event ) {
-		$only_time_pass_purchase_mode = Globals::POST( 'only_time_pass_purchase_mode' );
+		$only_time_pass_purchase_mode = Request::post( 'only_time_pass_purchase_mode' );
 		$only_time_pass               = 0; // allow individual and time pass purchases
 
 		if ( null !== $only_time_pass_purchase_mode ) {
 			$only_time_pass = 1; // allow time pass purchases only
 		}
 
-		if ( $only_time_pass === 1 && ! TimePass::get_time_passes_count() ) {
+		if ( $only_time_pass === 1 && ! TimePass::getTimePassesCount() ) {
 			$event->setResult(
 				array(
 					'success' => false,

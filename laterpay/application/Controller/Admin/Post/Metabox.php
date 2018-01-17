@@ -5,13 +5,12 @@ namespace LaterPay\Controller\Admin\Post;
 use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\PostNotFound;
-use LaterPay\Helper\Post as HelperPost;
 use LaterPay\Form\DynamicPricingData;
 use LaterPay\Model\CategoryPrice;
 use LaterPay\Controller\Base;
 use LaterPay\Helper\Pricing;
-use LaterPay\Helper\Globals;
 use LaterPay\Helper\Config;
+use LaterPay\Core\Request;
 use LaterPay\Helper\User;
 use LaterPay\Core\Event;
 use LaterPay\Form\Post;
@@ -267,7 +266,7 @@ class Metabox extends Base {
 
 		// prefill teaser content of existing posts on edit with automatically generated excerpt, if it's empty
 		if ( ! $content ) {
-			$content = HelperPost::addTeaserToThePost( $post, null, false );
+			$content = \LaterPay\Helper\Post::addTeaserToThePost( $post, null, false );
 		}
 
 		$editor_id = 'postcueeditor';
@@ -368,7 +367,7 @@ class Metabox extends Base {
 			// if the post has a category defined, from which to use the category default price, then let's get that price
 			if ( $post_default_category > 0 ) {
 				$laterpay_category_model              = new CategoryPrice();
-				$category_default_price_revenue_model = (string) $laterpay_category_model->get_revenue_model_by_category_id( $post_default_category );
+				$category_default_price_revenue_model = (string) $laterpay_category_model->getRevenueModelByCategoryID( $post_default_category );
 			}
 		}
 
@@ -438,22 +437,22 @@ class Metabox extends Base {
 			throw new PostNotFound( $post_id );
 		}
 
-		$post_form = new Post( Globals::POST() );
+		$post_form = new Post( Request::post() );
 		$condition = array(
 			'verify_nonce' => array(
 				'action' => $this->config->get( 'plugin_base_name' ),
 			),
 		);
-		$post_form->add_validation( 'laterpay_teaser_content_box_nonce', $condition );
+		$post_form->addValidation( 'laterpay_teaser_content_box_nonce', $condition );
 
-		if ( ! $post_form->is_valid() ) {
-			throw new FormValidation( get_class( $post_form ), $post_form->get_errors() );
+		if ( ! $post_form->isValid() ) {
+			throw new FormValidation( get_class( $post_form ), $post_form->getErrors() );
 		}
 
 		// no rights to edit laterpay_edit_teaser_content -> do nothing
 		if ( User::can( 'laterpay_edit_teaser_content', $post_id ) ) {
-			$teaser = $post_form->get_field_value( 'laterpay_post_teaser' );
-			HelperPost::addTeaserToThePost( $post, $teaser );
+			$teaser = $post_form->getFieldValue( 'laterpay_post_teaser' );
+			\LaterPay\Helper\Post::addTeaserToThePost( $post, $teaser );
 		}
 
 		// no rights to edit laterpay_edit_individual_price -> do nothing
@@ -462,13 +461,13 @@ class Metabox extends Base {
 			$meta_values = array();
 
 			// apply global default price, if pricing type is not defined
-			$post_price_type     = $post_form->get_field_value( 'post_price_type' );
+			$post_price_type     = $post_form->getFieldValue( 'post_price_type' );
 			$type                = $post_price_type ?: Pricing::TYPE_GLOBAL_DEFAULT_PRICE;
 			$meta_values['type'] = $type;
 
 			// apply (static) individual price
 			if ( $type === Pricing::TYPE_INDIVIDUAL_PRICE ) {
-				$meta_values['price'] = $post_form->get_field_value( 'post-price' );
+				$meta_values['price'] = $post_form->getFieldValue( 'post-price' );
 			}
 
 			// apply revenue model
@@ -478,39 +477,39 @@ class Metabox extends Base {
 					Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
 				), true
 			) ) {
-				$meta_values['revenue_model'] = $post_form->get_field_value( 'post_revenue_model' );
+				$meta_values['revenue_model'] = $post_form->getFieldValue( 'post_revenue_model' );
 			}
 
 			// apply dynamic individual price
 			if ( $type === Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE ) {
-				$start_price = $post_form->get_field_value( 'start_price' );
-				$end_price   = $post_form->get_field_value( 'end_price' );
+				$start_price = $post_form->getFieldValue( 'start_price' );
+				$end_price   = $post_form->getFieldValue( 'end_price' );
 
 				if ( $start_price !== null && $end_price !== null ) {
 					list(
 						$meta_values['start_price'],
 						$meta_values['end_price'],
 						$meta_values['price_range_type']
-						) = Pricing::adjust_dynamic_price_points( $start_price, $end_price );
+						) = Pricing::adjustDynamicPricePoints( $start_price, $end_price );
 				}
 
-				if ( $post_form->get_field_value( 'change_start_price_after_days' ) ) {
-					$meta_values['change_start_price_after_days'] = $post_form->get_field_value( 'change_start_price_after_days' );
+				if ( $post_form->getFieldValue( 'change_start_price_after_days' ) ) {
+					$meta_values['change_start_price_after_days'] = $post_form->getFieldValue( 'change_start_price_after_days' );
 				}
 
-				if ( $post_form->get_field_value( 'transitional_period_end_after_days' ) ) {
-					$meta_values['transitional_period_end_after_days'] = $post_form->get_field_value( 'transitional_period_end_after_days' );
+				if ( $post_form->getFieldValue( 'transitional_period_end_after_days' ) ) {
+					$meta_values['transitional_period_end_after_days'] = $post_form->getFieldValue( 'transitional_period_end_after_days' );
 				}
 
-				if ( $post_form->get_field_value( 'reach_end_price_after_days' ) ) {
-					$meta_values['reach_end_price_after_days'] = $post_form->get_field_value( 'reach_end_price_after_days' );
+				if ( $post_form->getFieldValue( 'reach_end_price_after_days' ) ) {
+					$meta_values['reach_end_price_after_days'] = $post_form->getFieldValue( 'reach_end_price_after_days' );
 				}
 			}
 
 			// apply category default price of given category
 			if ( $type === Pricing::TYPE_CATEGORY_DEFAULT_PRICE ) {
-				if ( $post_form->get_field_value( 'post_default_category' ) ) {
-					$category_id                = $post_form->get_field_value( 'post_default_category' );
+				if ( $post_form->getFieldValue( 'post_default_category' ) ) {
+					$category_id                = $post_form->getFieldValue( 'post_default_category' );
 					$meta_values['category_id'] = $category_id;
 				}
 			}
@@ -593,7 +592,7 @@ class Metabox extends Base {
 			)
 		);
 
-		$post_id = Globals::POST( 'post_id' );
+		$post_id = Request::post( 'post_id' );
 
 		if ( null === $post_id ) {
 			throw new InvalidIncomingData( 'post_id' );
@@ -635,15 +634,15 @@ class Metabox extends Base {
 			)
 		);
 
-		if ( ! $dynamic_pricing_data_form->is_valid( Globals::POST() ) ) {
+		if ( ! $dynamic_pricing_data_form->isValid( Request::post() ) ) {
 			throw new FormValidation(
 				get_class( $dynamic_pricing_data_form ),
-				$dynamic_pricing_data_form->get_errors()
+				$dynamic_pricing_data_form->getErrors()
 			);
 		}
 
-		$post       = get_post( $dynamic_pricing_data_form->get_field_value( 'post_id' ) );
-		$post_price = $dynamic_pricing_data_form->get_field_value( 'post_price' );
+		$post       = get_post( $dynamic_pricing_data_form->getFieldValue( 'post_id' ) );
+		$post_price = $dynamic_pricing_data_form->getFieldValue( 'post_price' );
 
 		$event->setResult(
 			Pricing::getDynamicPrices( $post, $post_price ) + array( 'success' => true )
@@ -668,7 +667,7 @@ class Metabox extends Base {
 			)
 		);
 
-		$post_id = Globals::POST( 'post_id' );
+		$post_id = Request::post( 'post_id' );
 
 		if ( empty( $post_id ) ) {
 			throw new InvalidIncomingData( 'post_id' );

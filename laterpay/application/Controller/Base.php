@@ -1,5 +1,12 @@
 <?php
 
+namespace LaterPay\Controller;
+
+use LaterPay\Core\Event\SubscriberInterface;
+use LaterPay\Model\Config;
+use LaterPay\Core\Logger;
+use LaterPay\Core\View;
+
 /**
  * LaterPay base controller.
  *
@@ -7,35 +14,40 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Controller_Base extends LaterPay_Core_View implements LaterPay_Core_Event_SubscriberInterface {
-
-	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
-	 */
-	public static function get_subscribed_events() {
-		return array();
-	}
-
-	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_shared_events()
-	 */
-	public static function get_shared_events() {
-		return array();
-	}
+class Base extends View implements SubscriberInterface {
 
 	/**
 	 * Contains the logger instance.
 	 *
-	 * @var LaterPay_Core_Logger
+	 * @var Logger
 	 */
 	protected $logger;
 
 	/**
-	 * @param LaterPay_Model_Config $config
+	 * @param Config $config
 	 *
+	 * @return void
 	 */
 	public function __construct( $config = null ) {
 		$this->logger = laterpay_get_logger();
 		parent::__construct( $config );
+	}
+
+	/**
+	 * @see SubscriberInterface::getSubscribedEvents()
+	 *
+	 * @return array
+	 */
+	public static function getSubscribedEvents() {
+		return array();
+	}
+
+	/**
+	 * @see SubscriberInterface::getSharedEvents()
+	 *
+	 * @return array
+	 */
+	public static function getSharedEvents() {
+		return array();
 	}
 }
