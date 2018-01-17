@@ -1,5 +1,19 @@
 <?php
 
+namespace LaterPay\Controller\Admin;
+
+use LaterPay\Core\Exception\InvalidIncomingData;
+use LaterPay\Core\Exception\FormValidation;
+use LaterPay\Form\MerchantId;
+use LaterPay\Form\PluginMode;
+use LaterPay\Helper\Globals;
+use LaterPay\Form\TestMode;
+use LaterPay\Helper\Config;
+use LaterPay\Helper\View;
+use LaterPay\Form\ApiKey;
+use LaterPay\Form\Region;
+use LaterPay\Core\Event;
+
 /**
  * LaterPay account controller.
  *
@@ -7,38 +21,38 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
+class Account extends Base {
 
 	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
 	 *
 	 * @return array
 	 */
-	public static function get_subscribed_events() {
+	public static function getSubscribedEvents() {
 		return array(
 			'wp_ajax_laterpay_account' => array(
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'laterpay_on_ajax_send_json', 300 ),
-				array( 'process_ajax_requests' ),
+				array( 'processAjaxRequests' ),
 				array( 'laterpay_on_ajax_user_can_activate_plugins', 200 ),
 			),
 		);
 	}
 
 	/**
-	 * @see LaterPay_Core_View::load_assets
+	 * @see \LaterPay\Core\View::loadAssets
 	 *
 	 * @return void
 	 */
-	public function load_assets() {
-		parent::load_assets();
+	public function loadAssets() {
+		parent::loadAssets();
 
 		// load page-specific JS
 		wp_register_script(
 			'laterpay-backend-account',
-			$this->config->js_url . 'laterpay-backend-account.js',
+			$this->config->get( 'js_url' ) . 'laterpay-backend-account.js',
 			array( 'jquery' ),
-			$this->config->version,
+			$this->config->get( 'version' ),
 			true
 		);
 		wp_enqueue_script( 'laterpay-backend-account' );
@@ -49,19 +63,25 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 			'lpVars',
 			array(
 				'i18nApiKeyInvalid'     => __( 'The API key you entered is not a valid LaterPay API key!', 'laterpay' ),
-				'i18nMerchantIdInvalid' => __( 'The Merchant ID you entered is not a valid LaterPay Merchant ID!', 'laterpay' ),
-				'i18nPreventUnload'     => __( 'LaterPay does not work properly with invalid API credentials.', 'laterpay' ),
+				'i18nMerchantIdInvalid' => __(
+					'The Merchant ID you entered is not a valid LaterPay Merchant ID!',
+					'laterpay'
+				),
+				'i18nPreventUnload'     => __(
+					'LaterPay does not work properly with invalid API credentials.',
+					'laterpay'
+				),
 			)
 		);
 	}
 
 	/**
-	 * @see LaterPay_Core_View::render_page
+	 * @see \LaterPay\Core\View::render_page
 	 *
 	 * @return void
 	 */
 	public function render_page() {
-		$this->load_assets();
+		$this->loadAssets();
 
 		$view_args = array(
 			'sandbox_merchant_id'            => get_option( 'laterpay_sandbox_merchant_id' ),
@@ -71,8 +91,8 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 			'region'                         => get_option( 'laterpay_region' ),
 			'plugin_is_in_live_mode'         => $this->config->get( 'is_in_live_mode' ),
 			'plugin_is_in_visible_test_mode' => get_option( 'laterpay_is_in_visible_test_mode' ),
-			'top_nav'                        => $this->get_menu(),
-			'admin_menu'                     => LaterPay_Helper_View::get_admin_menu(),
+			'top_nav'                        => $this->getMenu(),
+			'admin_menu'                     => View::getAdminMenu(),
 		);
 
 		$this->assign( 'laterpay', $view_args );
@@ -83,27 +103,27 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 	/**
 	 * Process Ajax requests from account tab.
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @throws \InvalidArgumentException
-	 * @throws LaterPay_Core_Exception_InvalidIncomingData
-	 * @throws LaterPay_Core_Exception_FormValidation
+	 * @throws InvalidIncomingData
+	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	public static function process_ajax_requests( LaterPay_Core_Event $event ) {
-		$event->set_result(
+	public static function processAjaxRequests( Event $event ) {
+		$event->setResult(
 			array(
 				'success' => false,
 				'message' => __( 'An error occurred when trying to save your settings. Please try again.', 'laterpay' ),
 			)
 		);
 
-		$form = LaterPay_Helper_Globals::post( 'form' );
+		$form = Globals::POST( 'form' );
 
 		if ( null === $form ) {
 			// invalid request
-			throw new LaterPay_Core_Exception_InvalidIncomingData( 'form' );
+			throw new InvalidIncomingData( 'form' );
 		}
 
 		if ( function_exists( 'check_admin_referer' ) ) {
@@ -112,35 +132,35 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 
 		switch ( sanitize_text_field( $form ) ) {
 			case 'laterpay_sandbox_merchant_id':
-				$event->set_argument( 'is_live', false );
-				self::update_merchant_id( $event );
+				$event->setArgument( 'is_live', false );
+				static::updateMerchantId( $event );
 				break;
 
 			case 'laterpay_sandbox_api_key':
-				$event->set_argument( 'is_live', false );
-				self::update_api_key( $event );
+				$event->setArgument( 'is_live', false );
+				static::updateApiKey( $event );
 				break;
 
 			case 'laterpay_live_merchant_id':
-				$event->set_argument( 'is_live', true );
-				self::update_merchant_id( $event );
+				$event->setArgument( 'is_live', true );
+				static::updateMerchantId( $event );
 				break;
 
 			case 'laterpay_live_api_key':
-				$event->set_argument( 'is_live', true );
-				self::update_api_key( $event );
+				$event->setArgument( 'is_live', true );
+				static::updateApiKey( $event );
 				break;
 
 			case 'laterpay_plugin_mode':
-				self::update_plugin_mode( $event );
+				static::updatePluginMode( $event );
 				break;
 
 			case 'laterpay_test_mode':
-				self::update_plugin_visibility_in_test_mode( $event );
+				static::updatePluginVisibilityInTestMode( $event );
 				break;
 
 			case 'laterpay_region_change':
-				self::change_region( $event );
+				static::changeRegion( $event );
 				break;
 
 			default:
@@ -151,25 +171,26 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 	/**
 	 * Update LaterPay Merchant ID, required for making test transactions against Sandbox or Live environments.
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @throws \InvalidArgumentException
-	 * @throws LaterPay_Core_Exception_FormValidation
+	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	protected static function update_merchant_id( LaterPay_Core_Event $event ) {
+	protected static function updateMerchantId( Event $event ) {
 		$is_live = null;
-		if ( $event->has_argument( 'is_live' ) ) {
-			$is_live = $event->get_argument( 'is_live' );
+
+		if ( $event->hasArgument( 'is_live' ) ) {
+			$is_live = $event->getArgument( 'is_live' );
 		}
-		$merchant_id_form = new LaterPay_Form_MerchantId( LaterPay_Helper_Globals::post() );
+		$merchant_id_form = new MerchantId( Globals::POST() );
 		$merchant_id      = $merchant_id_form->get_field_value( 'merchant_id' );
 		$merchant_id_type = $is_live ? 'live' : 'sandbox';
 
 		if ( empty( $merchant_id ) ) {
 			update_option( sprintf( 'laterpay_%s_merchant_id', $merchant_id_type ), '' );
-			$event->set_result(
+			$event->setResult(
 				array(
 					'success' => true,
 					'message' => sprintf(
@@ -178,11 +199,12 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 					),
 				)
 			);
+
 			return;
 		}
 
-		if ( ! $merchant_id_form->is_valid( LaterPay_Helper_Globals::post() ) ) {
-			$event->set_result(
+		if ( ! $merchant_id_form->is_valid( Globals::POST() ) ) {
+			$event->setResult(
 				array(
 					'success' => false,
 					'message' => sprintf(
@@ -191,11 +213,11 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 					),
 				)
 			);
-			throw new LaterPay_Core_Exception_FormValidation( get_class( $merchant_id_form ), $merchant_id_form->get_errors() );
+			throw new FormValidation( get_class( $merchant_id_form ), $merchant_id_form->get_errors() );
 		}
 
 		update_option( sprintf( 'laterpay_%s_merchant_id', $merchant_id_type ), $merchant_id );
-		$event->set_result(
+		$event->setResult(
 			array(
 				'success' => true,
 				'message' => sprintf(
@@ -209,27 +231,28 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 	/**
 	 * Update LaterPay API Key, required for making test transactions against Sandbox or Live environments.
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @throws \InvalidArgumentException
-	 * @throws LaterPay_Core_Exception_FormValidation
+	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	protected static function update_api_key( LaterPay_Core_Event $event ) {
+	protected static function updateApiKey( Event $event ) {
 		$is_live = null;
-		if ( $event->has_argument( 'is_live' ) ) {
-			$is_live = $event->get_argument( 'is_live' );
+
+		if ( $event->hasArgument( 'is_live' ) ) {
+			$is_live = $event->getArgument( 'is_live' );
 		}
 
-		$api_key_form     = new LaterPay_Form_ApiKey( LaterPay_Helper_Globals::post() );
+		$api_key_form     = new ApiKey( Globals::POST() );
 		$api_key          = $api_key_form->get_field_value( 'api_key' );
 		$api_key_type     = $is_live ? 'live' : 'sandbox';
 		$transaction_type = $is_live ? 'REAL' : 'TEST';
 
 		if ( empty( $api_key ) ) {
 			update_option( sprintf( 'laterpay_%s_api_key', $api_key_type ), '' );
-			$event->set_result(
+			$event->setResult(
 				array(
 					'success' => true,
 					'message' => sprintf(
@@ -238,11 +261,12 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 					),
 				)
 			);
+
 			return;
 		}
 
-		if ( ! $api_key_form->is_valid( LaterPay_Helper_Globals::post() ) ) {
-			$event->set_result(
+		if ( ! $api_key_form->is_valid( Globals::POST() ) ) {
+			$event->setResult(
 				array(
 					'success' => false,
 					'message' => sprintf(
@@ -251,11 +275,11 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 					),
 				)
 			);
-			throw new LaterPay_Core_Exception_FormValidation( get_class( $api_key_form ), $api_key_form->get_errors() );
+			throw new FormValidation( get_class( $api_key_form ), $api_key_form->get_errors() );
 		}
 
 		update_option( sprintf( 'laterpay_%s_api_key', $api_key_type ), $api_key );
-		$event->set_result(
+		$event->setResult(
 			array(
 				'success' => true,
 				'message' => sprintf(
@@ -269,21 +293,21 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 	/**
 	 * Toggle LaterPay plugin mode between TEST and LIVE.
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
-	 * @throws LaterPay_Core_Exception_FormValidation
+	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	protected static function update_plugin_mode( LaterPay_Core_Event $event ) {
-		$plugin_mode_form = new LaterPay_Form_PluginMode();
+	protected static function updatePluginMode( Event $event ) {
+		$plugin_mode_form = new PluginMode();
 
-		if ( ! $plugin_mode_form->is_valid( LaterPay_Helper_Globals::post() ) ) {
+		if ( ! $plugin_mode_form->is_valid( Globals::POST() ) ) {
 			array(
 				'success' => false,
 				'message' => __( 'Error occurred. Incorrect data provided.', 'laterpay' ),
 			);
-			throw new LaterPay_Core_Exception_FormValidation( get_class( $plugin_mode_form ), $plugin_mode_form->get_errors() );
+			throw new FormValidation( get_class( $plugin_mode_form ), $plugin_mode_form->get_errors() );
 		}
 
 		$plugin_mode = $plugin_mode_form->get_field_value( 'plugin_is_in_live_mode' );
@@ -291,39 +315,50 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 
 		if ( $result ) {
 			if ( get_option( 'laterpay_plugin_is_in_live_mode' ) ) {
-				$event->set_result(
+				$event->setResult(
 					array(
 						'success' => true,
 						'mode'    => 'live',
-						'message' => __( 'The LaterPay plugin is in LIVE mode now. All payments are actually booked and credited to your account.', 'laterpay' ),
+						'message' => __(
+							'The LaterPay plugin is in LIVE mode now. All payments are actually booked and credited to your account.',
+							'laterpay'
+						),
 					)
 				);
+
 				return;
 			}
 
 			if ( get_option( 'plugin_is_in_visible_test_mode' ) ) {
-				$event->set_result(
+				$event->setResult(
 					array(
 						'success' => true,
 						'mode'    => 'test',
-						'message' => __( 'The LaterPay plugin is in visible TEST mode now. Payments are only simulated and not actually booked.', 'laterpay' ),
+						'message' => __(
+							'The LaterPay plugin is in visible TEST mode now. Payments are only simulated and not actually booked.',
+							'laterpay'
+						),
 					)
 				);
+
 				return;
 			}
 
-			$event->set_result(
+			$event->setResult(
 				array(
 					'success' => true,
 					'mode'    => 'test',
-					'message' => __( 'The LaterPay plugin is in invisible TEST mode now. Payments are only simulated and not actually booked.', 'laterpay' ),
+					'message' => __(
+						'The LaterPay plugin is in invisible TEST mode now. Payments are only simulated and not actually booked.',
+						'laterpay'
+					),
 				)
 			);
 
 			return;
 		}
 
-		$event->set_result(
+		$event->setResult(
 			array(
 				'success' => false,
 				'mode'    => 'test',
@@ -333,41 +368,42 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 	}
 
 	/**
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
-	 * @throws LaterPay_Core_Exception_FormValidation
+	 * @throws \LaterPay\Core\Exception\FormValidation
 	 *
 	 * @return void
 	 */
-	protected static function change_region( LaterPay_Core_Event $event ) {
-		$region_form = new LaterPay_Form_Region();
+	protected static function changeRegion( Event $event ) {
+		$region_form = new Region();
 
-		if ( ! $region_form->is_valid( LaterPay_Helper_Globals::post() ) ) {
-			$event->set_result(
+		if ( ! $region_form->is_valid( Globals::POST() ) ) {
+			$event->setResult(
 				array(
 					'success' => false,
 					'message' => __( 'Error occurred. Incorrect data provided.', 'laterpay' ),
 				)
 			);
-			throw new LaterPay_Core_Exception_FormValidation( get_class( $region_form ), $region_form->get_errors() );
+			throw new FormValidation( get_class( $region_form ), $region_form->get_errors() );
 		}
 
 		$result = update_option( 'laterpay_region', $region_form->get_field_value( 'laterpay_region' ) );
 
 		if ( ! $result ) {
-			$event->set_result(
+			$event->setResult(
 				array(
 					'success' => false,
 					'message' => __( 'Failed to change region settings.', 'laterpay' ),
 				)
 			);
+
 			return;
 		}
 
-		$event->set_result(
+		$event->setResult(
 			array(
 				'success' => true,
-				'creds'   => LaterPay_Helper_Config::prepare_sandbox_creds(),
+				'creds'   => Config::prepareSandboxCredentials(),
 				'message' => __( 'The LaterPay region was changed successfully.', 'laterpay' ),
 			)
 		);
@@ -376,24 +412,27 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 	/**
 	 * Toggle LaterPay plugin test mode between INVISIBLE and VISIBLE.
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
-	 * @throws LaterPay_Core_Exception_FormValidation
+	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	public static function update_plugin_visibility_in_test_mode( LaterPay_Core_Event $event ) {
-		$plugin_test_mode_form = new LaterPay_Form_TestMode();
+	public static function updatePluginVisibilityInTestMode( Event $event ) {
+		$plugin_test_mode_form = new TestMode();
 
-		if ( ! $plugin_test_mode_form->is_valid( LaterPay_Helper_Globals::post() ) ) {
-			$event->set_result(
+		if ( ! $plugin_test_mode_form->is_valid( Globals::POST() ) ) {
+			$event->setResult(
 				array(
 					'success' => false,
 					'mode'    => 'test',
 					'message' => __( 'An error occurred. Incorrect data provided.', 'laterpay' ),
 				)
 			);
-			throw new LaterPay_Core_Exception_FormValidation( get_class( $plugin_test_mode_form ), $plugin_test_mode_form->get_errors() );
+			throw new FormValidation(
+				get_class( $plugin_test_mode_form ),
+				$plugin_test_mode_form->get_errors()
+			);
 		}
 
 		$is_in_visible_test_mode = $plugin_test_mode_form->get_field_value( 'plugin_is_in_visible_test_mode' );
@@ -402,13 +441,14 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 		if ( $has_invalid_credentials ) {
 			update_option( 'laterpay_is_in_visible_test_mode', 0 );
 
-			$event->set_result(
+			$event->setResult(
 				array(
 					'success' => false,
 					'mode'    => 'test',
 					'message' => __( 'The LaterPay plugin needs valid API credentials to work.', 'laterpay' ),
 				)
 			);
+
 			return;
 		}
 
@@ -420,7 +460,7 @@ class LaterPay_Controller_Admin_Account extends LaterPay_Controller_Admin_Base {
 			$message = __( 'The plugin is in <strong>invisible</strong> test mode now.', 'laterpay' );
 		}
 
-		$event->set_result(
+		$event->setResult(
 			array(
 				'success' => true,
 				'mode'    => 'test',

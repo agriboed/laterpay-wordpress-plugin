@@ -1,5 +1,10 @@
 <?php
 
+namespace LaterPay\Controller\Admin;
+
+use LaterPay\Helper\Globals;
+use LaterPay\Helper\View;
+
 /**
  * LaterPay menu controller.
  *
@@ -7,7 +12,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Controller_Admin_Base extends LaterPay_Controller_Base {
+class Base extends \LaterPay\Controller\Base {
 
 	/**
 	 * Render the navigation for the plugin backend.
@@ -17,18 +22,18 @@ class LaterPay_Controller_Admin_Base extends LaterPay_Controller_Base {
 	 *
 	 * @return string $html
 	 */
-	public function get_menu( $file = null, $view_dir = null ) {
+	public function getMenu( $file = null, $view_dir = null ) {
 		if ( null === $file ) {
 			$file = 'backend/partials/navigation';
 		}
 
 		$view_args = array(
-			'menu'         => LaterPay_Helper_View::get_admin_menu(),
-			'current_page' => LaterPay_Helper_Globals::get( 'page' ) ?: LaterPay_Helper_View::$pluginPage,
-			'plugin_page'  => LaterPay_Helper_View::$pluginPage,
+			'menu'         => View::getAdminMenu(),
+			'current_page' => Globals::GET( 'page' ) ?: View::$pluginPage,
+			'plugin_page'  => View::$pluginPage,
 		);
 
 		$this->assign( 'laterpay', $view_args );
-		return $this->get_text_view( $file, $view_dir );
+		return $this->getTextView( $file, $view_dir );
 	}
 }
