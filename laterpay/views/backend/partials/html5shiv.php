@@ -8,12 +8,11 @@ $close_comment = '<![endif]-->';
 $open_tag      = '<script {attributes}>';
 $close_tag     = '</script>';
 ?>
-<?php echo laterpay_sanitized( $open_comment ); ?>
+<?php laterpay_sanitize_output( $open_comment , true); ?>
 
 <?php foreach ( $laterpay['scripts'] as $script ) : ?>
-<?php echo laterpay_sanitized( str_replace( '{attributes}', 'src="' . $script . '"', $open_tag ) ); ?>
-<?php echo laterpay_sanitized( $close_tag ); ?>
+<?php laterpay_sanitize_output( str_replace( '{attributes}', 'src="' . $script . '"', $open_tag ), true ); ?>
+<?php laterpay_sanitize_output( $close_tag, true ); ?>
 <?php endforeach; ?>
 
-<?php
-echo laterpay_sanitized( $close_comment );
+<?php laterpay_sanitize_output( $close_comment, true );

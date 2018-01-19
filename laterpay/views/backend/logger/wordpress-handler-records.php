@@ -50,7 +50,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<?php foreach ( $tab['content'] as $key => $value ) : ?>
 						<tr>
 							<th class="lp_debugger-content__table-th"><?php laterpay_sanitize_output( $key, true); ?></th>
-							<td class="lp_debugger-content__table-td"><?php print_r( $value ); ?></td>
+							<td class="lp_debugger-content__table-td"></td>
 						</tr>
 					<?php endforeach; ?>
 				</table>
