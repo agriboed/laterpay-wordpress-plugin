@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Form;
+
+use LaterPay\Helper\Config;
+
 /**
  * LaterPay category price form class.
  *
@@ -7,8 +11,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Form_PriceCategory extends LaterPay_Form_Abstract {
-
+class PriceCategory extends FormAbstract {
 
 	/**
 	 * Implementation of abstract method.
@@ -16,9 +19,9 @@ class LaterPay_Form_PriceCategory extends LaterPay_Form_Abstract {
 	 * @return void
 	 */
 	public function init() {
-		$currency = LaterPay_Helper_Config::get_currency_config();
+		$currency = Config::getCurrencyConfig();
 
-		$this->set_field(
+		$this->setField(
 			'form',
 			array(
 				'validators' => array(
@@ -32,7 +35,7 @@ class LaterPay_Form_PriceCategory extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'action',
 			array(
 				'validators' => array(
@@ -46,7 +49,7 @@ class LaterPay_Form_PriceCategory extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'category_id',
 			array(
 				'validators'  => array(
@@ -59,7 +62,7 @@ class LaterPay_Form_PriceCategory extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'_wpnonce',
 			array(
 				'validators' => array(
@@ -73,7 +76,7 @@ class LaterPay_Form_PriceCategory extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'laterpay_category_price_revenue_model',
 			array(
 				'validators'      => array(
@@ -116,7 +119,7 @@ class LaterPay_Form_PriceCategory extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'category',
 			array(
 				'validators' => array(
@@ -129,7 +132,7 @@ class LaterPay_Form_PriceCategory extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'price',
 			array(
 				'validators' => array(

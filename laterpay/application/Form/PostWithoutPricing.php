@@ -1,5 +1,8 @@
 <?php
 
+namespace LaterPay\Form;
+
+
 /**
  * LaterPay plugin mode form class for saving post data without pricing parameters.
  *
@@ -7,7 +10,8 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Form_PostWithoutPricing extends LaterPay_Form_Abstract {
+class PostWithoutPricing extends FormAbstract {
+
 
 
 	/**
@@ -16,7 +20,7 @@ class LaterPay_Form_PostWithoutPricing extends LaterPay_Form_Abstract {
 	 * @return void
 	 */
 	public function init() {
-		$this->set_field(
+		$this->setField(
 			'_wpnonce',
 			array(
 				'validators' => array(
@@ -30,7 +34,7 @@ class LaterPay_Form_PostWithoutPricing extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'laterpay_teaser_content_box_nonce',
 			array(
 				'validators' => array(
@@ -44,7 +48,7 @@ class LaterPay_Form_PostWithoutPricing extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'laterpay_post_teaser',
 			array(
 				'validators' => array(
@@ -56,7 +60,7 @@ class LaterPay_Form_PostWithoutPricing extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'post_default_category',
 			array(
 				'validators'  => array(

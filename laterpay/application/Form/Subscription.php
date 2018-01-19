@@ -1,5 +1,10 @@
 <?php
 
+namespace LaterPay\Form;
+
+use LaterPay\Helper\Config;
+use LaterPay\Helper\TimePass;
+
 /**
  * LaterPay subscription save form class.
  *
@@ -7,7 +12,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
+class Subscription extends FormAbstract {
 
 
 	/**
@@ -16,9 +21,9 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 	 * @return void
 	 */
 	public function init() {
-		$currency = LaterPay_Helper_Config::get_currency_config();
+		$currency = Config::getCurrencyConfig();
 
-		$this->set_field(
+		$this->setField(
 			'_wpnonce',
 			array(
 				'validators' => array(
@@ -32,7 +37,7 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'id',
 			array(
 				'validators' => array(
@@ -45,7 +50,7 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'duration',
 			array(
 				'validators' => array(
@@ -58,12 +63,12 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'period',
 			array(
 				'validators'  => array(
 					'is_int',
-					'in_array' => array_keys( LaterPay_Helper_TimePass::get_period_options() ),
+					'in_array' => array_keys( TimePass::getPeriodOptions() ),
 					'depends'  => array(
 						array(
 							'field'      => 'duration',
@@ -110,12 +115,12 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'access_to',
 			array(
 				'validators'  => array(
 					'is_int',
-					'in_array' => array_keys( LaterPay_Helper_TimePass::get_access_options() ),
+					'in_array' => array_keys( TimePass::getAccessOptions() ),
 				),
 				'filters'     => array(
 					'to_int',
@@ -125,7 +130,7 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'access_category',
 			array(
 				'validators' => array(
@@ -138,7 +143,7 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'price',
 			array(
 				'validators' => array(
@@ -165,7 +170,7 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'title',
 			array(
 				'validators' => array(
@@ -178,7 +183,7 @@ class LaterPay_Form_Subscription extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'description',
 			array(
 				'validators' => array(

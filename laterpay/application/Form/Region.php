@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Form;
+
+use LaterPay\Form\FormAbstract;
+
 /**
  * LaterPay region form class.
  *
@@ -7,7 +11,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Form_Region extends LaterPay_Form_Abstract {
+class Region extends FormAbstract {
 
 
 	/**
@@ -16,7 +20,7 @@ class LaterPay_Form_Region extends LaterPay_Form_Abstract {
 	 * @return void
 	 */
 	public function init() {
-		$this->set_field(
+		$this->setField(
 			'form',
 			array(
 				'validators' => array(
@@ -30,7 +34,7 @@ class LaterPay_Form_Region extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'action',
 			array(
 				'validators' => array(
@@ -44,7 +48,7 @@ class LaterPay_Form_Region extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'_wpnonce',
 			array(
 				'validators' => array(
@@ -58,7 +62,7 @@ class LaterPay_Form_Region extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'laterpay_region',
 			array(
 				'validators' => array(

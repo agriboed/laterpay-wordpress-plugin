@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Form;
+
 /**
  * LaterPay merchant ID form class.
  *
@@ -7,67 +9,68 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Form_MerchantId extends LaterPay_Form_Abstract {
-    /**
+class MerchantId extends FormAbstract {
+
+	/**
 	 * Implementation of abstract method.
 	 *
 	 * @return void
 	 */
 	public function init() {
-		$this->set_field(
+		$this->setField(
 			'form',
 			array(
 				'validators' => array(
 					'is_string',
 					'cmp' => array(
 						array(
-							'like' => 'merchant_id'
-						)
-					)
-				)
+							'like' => 'merchant_id',
+						),
+					),
+				),
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'action',
 			array(
 				'validators' => array(
 					'is_string',
 					'cmp' => array(
 						array(
-							'eq' => 'laterpay_account'
-						)
-					)
-				)
+							'eq' => 'laterpay_account',
+						),
+					),
+				),
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'_wpnonce',
 			array(
 				'validators' => array(
 					'is_string',
 					'cmp' => array(
 						array(
-							'ne' => null
-						)
-					)
-				)
+							'ne' => null,
+						),
+					),
+				),
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'merchant_id',
 			array(
 				'validators'      => array(
 					'is_string',
-					'match' => '/[a-zA-Z0-9\-]{22}/'
+					'match' => '/[a-zA-Z0-9\-]{22}/',
 				),
 				'filters'         => array(
 					'to_string',
-					'text'
+					'text',
 				),
-				'not_strict_name' => true
+				'not_strict_name' => true,
 			)
 		);
 	}

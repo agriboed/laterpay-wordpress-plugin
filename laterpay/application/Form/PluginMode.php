@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Form;
+
 /**
  * LaterPay plugin mode form class.
  *
@@ -7,8 +9,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Form_PluginMode extends LaterPay_Form_Abstract {
-
+class PluginMode extends FormAbstract {
 
 	/**
 	 * Implementation of abstract method.
@@ -16,7 +17,7 @@ class LaterPay_Form_PluginMode extends LaterPay_Form_Abstract {
 	 * @return void
 	 */
 	public function init() {
-		$this->set_field(
+		$this->setField(
 			'form',
 			array(
 				'validators' => array(
@@ -30,7 +31,7 @@ class LaterPay_Form_PluginMode extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'action',
 			array(
 				'validators' => array(
@@ -44,7 +45,7 @@ class LaterPay_Form_PluginMode extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'_wpnonce',
 			array(
 				'validators' => array(
@@ -58,7 +59,7 @@ class LaterPay_Form_PluginMode extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'plugin_is_in_live_mode',
 			array(
 				'validators' => array(

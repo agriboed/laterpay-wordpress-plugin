@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Form;
+
+use LaterPay\Helper\Config;
+
 /**
  * LaterPay dynamic pricing data form class.
  *
@@ -7,7 +11,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Form_DynamicPricingData extends LaterPay_Form_Abstract {
+class DynamicPricingData extends FormAbstract {
 
 
 	/**
@@ -16,9 +20,9 @@ class LaterPay_Form_DynamicPricingData extends LaterPay_Form_Abstract {
 	 * @return void
 	 */
 	public function init() {
-		$currency = LaterPay_Helper_Config::get_currency_config();
+		$currency = Config::getCurrencyConfig();
 
-		$this->set_field(
+		$this->setField(
 			'action',
 			array(
 				'validators' => array(
@@ -32,7 +36,7 @@ class LaterPay_Form_DynamicPricingData extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'post_id',
 			array(
 				'validators' => array(
@@ -45,7 +49,7 @@ class LaterPay_Form_DynamicPricingData extends LaterPay_Form_Abstract {
 			)
 		);
 
-		$this->set_field(
+		$this->setField(
 			'post_price',
 			array(
 				'validators' => array(
