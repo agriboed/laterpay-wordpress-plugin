@@ -15,7 +15,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "LaterPay\\": "application/"
+            "LaterPay\\": "laterpay/application/"
         }
     },
     "require": {
