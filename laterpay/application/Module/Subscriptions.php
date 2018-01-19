@@ -1,5 +1,14 @@
 <?php
 
+namespace LaterPay\Module;
+
+use LaterPay\Core\Event\SubscriberInterface;
+use LaterPay\Helper\Subscription;
+use LaterPay\Helper\View;
+use LaterPay\Helper\User;
+use LaterPay\Helper\Post;
+use LaterPay\Core\Event;
+
 /**
  * LaterPay Subscriptions class
  *
@@ -7,25 +16,25 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Module_Subscriptions extends LaterPay_Core_View implements LaterPay_Core_Event_SubscriberInterface {
+class Subscriptions extends \LaterPay\Core\View implements SubscriberInterface {
 
 	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_shared_events()
+	 * @see SubscriberInterface::getSharedEvents()
 	 */
-	public static function get_shared_events() {
+	public static function getSharedEvents() {
 		return array();
 	}
 
 	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 * @see SubscriberInterface::getSubscribedEvents()
 	 */
-	public static function get_subscribed_events() {
+	public static function getSubscribedEvents() {
 		return array(
 			'laterpay_time_passes'              => array(
-				array( 'render_subscriptions_list', 15 ),
+				array( 'renderSubscriptionsList', 15 ),
 			),
 			'laterpay_purchase_overlay_content' => array(
-				array( 'on_purchase_overlay_content', 6 ),
+				array( 'onPurchaseOverlayContent', 6 ),
 			),
 		);
 	}
@@ -33,13 +42,13 @@ class LaterPay_Module_Subscriptions extends LaterPay_Core_View implements LaterP
 	/**
 	 * Callback to render a LaterPay subscriptions inside time pass widget.
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @return void
 	 */
-	public function render_subscriptions_list( LaterPay_Core_Event $event ) {
-		if ( $event->has_argument( 'post' ) ) {
-			$post = $event->get_argument( 'post' );
+	public function renderSubscriptionsList( Event $event ) {
+		if ( $event->hasArgument( 'post' ) ) {
+			$post = $event->getArgument( 'post' );
 		} else {
 			$post = get_post();
 		}
@@ -48,9 +57,9 @@ class LaterPay_Module_Subscriptions extends LaterPay_Core_View implements LaterP
 		$is_homepage = is_front_page() && is_home();
 
 		$view_args = array(
-			'subscriptions' => LaterPay_Helper_Subscription::get_subscriptions_list_by_post_id(
+			'subscriptions' => Subscription::getSubscriptionsListByPostID(
 				! $is_homepage && ! empty( $post ) ? $post->ID : null,
-				$this->get_purchased_subscriptions(),
+				$this->getPurchasedSubscriptions(),
 				true
 			),
 		);
@@ -58,34 +67,34 @@ class LaterPay_Module_Subscriptions extends LaterPay_Core_View implements LaterP
 		$this->assign( 'laterpay_sub', $view_args );
 
 		// prepare subscriptions layout
-		$subscriptions = LaterPay_Helper_View::remove_extra_spaces( $this->get_text_view( 'frontend/partials/widget/subscriptions' ) );
+		$subscriptions = View::removeExtraSpaces( $this->getTextView( 'frontend/partials/widget/subscriptions' ) );
 
-		$event->set_argument( 'subscriptions', $subscriptions );
+		$event->setArgument( 'subscriptions', $subscriptions );
 	}
 
 	/**
 	 * Render subscription HTML.
 	 *
-	 * @param array $pass
+	 * @param array $args
 	 *
 	 * @return string
 	 */
-	public function render_subscription( $args = array() ) {
+	public function renderSubscription( array $args = array() ) {
 		$defaults = array(
 			'id'          => 0,
-			'title'       => LaterPay_Helper_Subscription::get_default_options( 'title' ),
-			'description' => LaterPay_Helper_Subscription::get_description(),
-			'price'       => LaterPay_Helper_Subscription::get_default_options( 'price' ),
+			'title'       => Subscription::getDefaultOptions( 'title' ),
+			'description' => Subscription::getDescription(),
+			'price'       => Subscription::getDefaultOptions( 'price' ),
 			'url'         => '',
 		);
 
 		$args = array_merge( $defaults, $args );
 
 		if ( ! empty( $args['id'] ) ) {
-			$args['url'] = LaterPay_Helper_Subscription::get_subscription_purchase_link( $args['id'] );
+			$args['url'] = Subscription::getSubscriptionPurchaseLink( $args['id'] );
 		}
 
-		$args['preview_post_as_visitor'] = LaterPay_Helper_User::preview_post_as_visitor( get_post() );
+		$args['preview_post_as_visitor'] = User::previewPostAsVisitor( get_post() );
 
 		$this->assign( 'laterpay_subscription', $args );
 		$this->assign(
@@ -94,28 +103,30 @@ class LaterPay_Module_Subscriptions extends LaterPay_Core_View implements LaterP
 			)
 		);
 
-		$string = $this->get_text_view( 'backend/partials/subscription' );
-
-		return $string;
+		return $this->getTextView( 'backend/partials/subscription' );
 	}
 
 	/**
 	 * Get subscriptions data
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @return void
 	 */
-	public function on_purchase_overlay_content( LaterPay_Core_Event $event ) {
-		$data = $event->get_result();
-		$post = $event->get_argument( 'post' );
+	public function onPurchaseOverlayContent( Event $event ) {
+		$data = $event->getResult();
+		$post = $event->getArgument( 'post' );
+
+		if ( null === $post ) {
+			return;
+		}
 
 		// default value
 		$data['subscriptions'] = array();
 
-		$subscriptions = LaterPay_Helper_Subscription::get_subscriptions_list_by_post_id(
+		$subscriptions = Subscription::getSubscriptionsListByPostID(
 			$post->ID,
-			$this->get_purchased_subscriptions(),
+			$this->getPurchasedSubscriptions(),
 			true
 		);
 
@@ -124,13 +135,13 @@ class LaterPay_Module_Subscriptions extends LaterPay_Core_View implements LaterP
 			$data['subscriptions'][] = array(
 				'title'       => $subscription['title'],
 				'description' => $subscription['description'],
-				'price'       => LaterPay_Helper_View::format_number( $subscription['price'] ),
-				'url'         => LaterPay_Helper_Subscription::get_subscription_purchase_link( $subscription['id'] ),
+				'price'       => View::formatNumber( $subscription['price'] ),
+				'url'         => Subscription::getSubscriptionPurchaseLink( $subscription['id'] ),
 				'revenue'     => 'sub',
 			);
 		}
 
-		$event->set_result( $data );
+		$event->setResult( $data );
 	}
 
 	/**
@@ -138,8 +149,8 @@ class LaterPay_Module_Subscriptions extends LaterPay_Core_View implements LaterP
 	 *
 	 * @return array of time pass ids with access
 	 */
-	protected function get_purchased_subscriptions() {
-		$access                  = LaterPay_Helper_Post::get_access_state();
+	protected function getPurchasedSubscriptions() {
+		$access                  = Post::getAccessState();
 		$purchased_subscriptions = array();
 
 		// get time passes with access
@@ -148,7 +159,7 @@ class LaterPay_Module_Subscriptions extends LaterPay_Core_View implements LaterP
 			if ( $access_value === true ) {
 				$access_key_exploded = explode( '_', $access_key );
 				// if this is time pass key - store time pass id
-				if ( $access_key_exploded[0] === LaterPay_Helper_Subscription::TOKEN ) {
+				if ( $access_key_exploded[0] === Subscription::TOKEN ) {
 					$purchased_subscriptions[] = $access_key_exploded[1];
 				}
 			}

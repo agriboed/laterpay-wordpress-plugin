@@ -1,5 +1,21 @@
 <?php
 
+namespace LaterPay\Module;
+
+use LaterPay\Core\Event\SubscriberInterface;
+use LaterPay\Core\View as CoreView;
+use LaterPay\Core\Request;
+use LaterPay\Core\Event;
+use LaterPay\Helper\Config;
+use LaterPay\Helper\Voucher;
+use LaterPay\Helper\View;
+use LaterPay\Helper\User;
+use LaterPay\Helper\TimePass;
+use LaterPay\Helper\Pricing;
+use LaterPay\Helper\Post;
+use LaterPay_Client;
+use LaterPay_Client_Signing;
+
 /**
  * LaterPay TimePasses class
  *
@@ -7,48 +23,48 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_Core_Event_SubscriberInterface {
+class TimePasses extends CoreView implements SubscriberInterface {
 
 	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_shared_events()
+	 * @see SubscriberInterface::getSharedEvents()
 	 */
-	public static function get_shared_events() {
+	public static function getSharedEvents() {
 		return array();
 	}
 
 	/**
-	 * @see LaterPay_Core_Event_SubscriberInterface::get_subscribed_events()
+	 * @see SubscriberInterface::getSubscribedEvents()
 	 */
-	public static function get_subscribed_events() {
+	public static function getSubscribedEvents() {
 		return array(
 			'laterpay_post_content'                => array(
-				array( 'modify_post_content', 5 ),
+				array( 'modifyPostContent', 5 ),
 			),
 			'laterpay_time_passes'                 => array(
-				array( 'on_timepass_render', 20 ),
-				array( 'the_time_passes_widget', 10 ),
+				array( 'onTimePassRender', 20 ),
+				array( 'theTimePassesWidget', 10 ),
 			),
 			'laterpay_time_pass_render'            => array(
-				array( 'render_time_pass' ),
+				array( 'renderTimePass' ),
 			),
 			'laterpay_loaded'                      => array(
-				array( 'buy_time_pass', 10 ),
+				array( 'buyTimePass', 10 ),
 			),
 			'laterpay_shortcode_time_passes'       => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'render_time_passes_widget' ),
+				array( 'renderTimePassesWidget' ),
 			),
 			'laterpay_explanatory_overlay_content' => array(
-				array( 'on_explanatory_overlay_content', 5 ),
+				array( 'onExplanatoryOverlayContent', 5 ),
 			),
 			'laterpay_purchase_overlay_content'    => array(
-				array( 'on_purchase_overlay_content', 8 ),
+				array( 'onPurchaseOverlayContent', 8 ),
 			),
 			'laterpay_purchase_button'             => array(
-				array( 'check_only_time_pass_purchases_allowed', 200 ),
+				array( 'checkOnlyTimePassPurchasesAllowed', 200 ),
 			),
 			'laterpay_purchase_link'               => array(
-				array( 'check_only_time_pass_purchases_allowed', 200 ),
+				array( 'checkOnlyTimePassPurchasesAllowed', 200 ),
 			),
 		);
 	}
@@ -62,7 +78,7 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 	 *
 	 * @return bool true|false
 	 */
-	protected function has_permission( $post_id ) {
+	protected function hasPermission( $post_id ) {
 		// autosave -> do nothing
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			return false;
@@ -80,7 +96,7 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 		}
 
 		// current post type is not enabled for LaterPay -> do nothing
-		if ( ! in_array( $post->post_type, $this->config->get( 'content.enabled_post_types' ) ) ) {
+		if ( ! in_array( $post->post_type, $this->config->get( 'content.enabled_post_types' ), true ) ) {
 			return false;
 		}
 
@@ -93,24 +109,20 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 	 *
 	 * @wp-hook laterpay_time_passes
 	 *
-	 * @var string $introductory_text     additional text rendered at the top of the widget
-	 * @var string $call_to_action_text   additional text rendered after the time passes and before the voucher code input
-	 * @var int    $time_pass_id          id of one time pass to be rendered instead of all time passes
-	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @return void
 	 */
-	public function the_time_passes_widget( LaterPay_Core_Event $event ) {
-		if ( $event->has_argument( 'post' ) ) {
-			$post = $event->get_argument( 'post' );
+	public function theTimePassesWidget( Event $event ) {
+		if ( $event->hasArgument( 'post' ) ) {
+			$post = $event->getArgument( 'post' );
 		} else {
 			$post = get_post();
 		}
 
 		$is_homepage = is_front_page() && is_home();
 
-		list( $introductory_text, $call_to_action_text, $time_pass_id ) = $event->get_arguments() + array( '', '', null );
+		list($introductory_text, $call_to_action_text, $time_pass_id) = $event->getArguments() + array( '', '', null );
 		if ( empty( $introductory_text ) ) {
 			$introductory_text = '';
 		}
@@ -119,16 +131,16 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 		}
 
 		// get time passes list
-		$time_passes_with_access = $this->get_time_passes_with_access();
+		$time_passes_with_access = $this->getTimePassesWithAccess();
 
 		if ( isset( $time_pass_id ) ) {
-			if ( in_array( $time_pass_id, $time_passes_with_access ) ) {
+			if ( in_array( (string) $time_pass_id, $time_passes_with_access, true ) ) {
 				return;
 			}
-			$time_passes_list = array( LaterPay_Helper_TimePass::get_time_pass_by_id( $time_pass_id, true ) );
+			$time_passes_list = array( TimePass::getTimePassByID( $time_pass_id, true ) );
 		} else {
 			// check, if we are on the homepage or on a post / page page
-			$time_passes_list = LaterPay_Helper_TimePass::get_time_passes_list_by_post_id(
+			$time_passes_list = TimePass::getTimePassesListByPostID(
 				! $is_homepage && ! empty( $post ) ? $post->ID : null,
 				$time_passes_with_access,
 				true
@@ -136,7 +148,7 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 		}
 
 		// get subscriptions
-		$subscriptions = $event->get_argument( 'subscriptions' );
+		$subscriptions = $event->getArgument( 'subscriptions' );
 
 		// don't render the widget, if there are no time passes and no subsriptions
 		if ( ! count( $time_passes_list ) && ! count( $subscriptions ) ) {
@@ -144,7 +156,7 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 		}
 
 		// check, if the time passes to be rendered have vouchers
-		$has_vouchers = LaterPay_Helper_Voucher::passes_have_vouchers( $time_passes_list );
+		$has_vouchers = Voucher::passesHaveVouchers( $time_passes_list );
 
 		$view_args = array(
 			'passes_list'                   => $time_passes_list,
@@ -155,35 +167,37 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 		);
 
 		$this->assign( 'laterpay_widget', $view_args );
-		$html  = $event->get_result();
-		$html .= LaterPay_Helper_View::remove_extra_spaces( $this->get_text_view( 'frontend/partials/widget/time-passes' ) );
+		$html  = $event->getResult();
+		$html .= View::removeExtraSpaces( $this->getTextView( 'frontend/partials/widget/time-passes' ) );
 
-		$event->set_result( $html );
+		$event->setResult( $html );
 	}
 
 	/**
 	 * Execute before processing time pass widget
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
-	 * @return void;
+	 * @return void
 	 */
-	public function on_timepass_render( LaterPay_Core_Event $event ) {
-		if ( $event->has_argument( 'post' ) ) {
-			$post = $event->get_argument( 'post' );
+	public function onTimePassRender( Event $event ) {
+		if ( $event->hasArgument( 'post' ) ) {
+			$post = $event->getArgument( 'post' );
 		} else {
 			$post = get_post();
 		}
 
 		// disable if no post specified
 		if ( $post === null ) {
-			$event->stop_propagation();
+			$event->stopPropagation();
+
 			return;
 		}
 
 		// disable in purchase mode
 		if ( get_option( 'laterpay_teaser_mode' ) === '2' ) {
-			$event->stop_propagation();
+			$event->stopPropagation();
+
 			return;
 		}
 
@@ -194,17 +208,19 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 		// prevent execution, if the current post is not the given post and we are not on the homepage,
 		// or the action was called a second time,
 		// or the post is free and we can't show the time pass widget on free posts
-		if ( LaterPay_Helper_Pricing::is_purchasable() === false && ! $is_homepage ||
+		if ( ( Pricing::isPurchasable() === false && ! $is_homepage ) ||
 			did_action( 'laterpay_time_passes' ) > 1 ||
-			LaterPay_Helper_Pricing::is_purchasable() === null && ! $show_widget_on_free_posts
+			( Pricing::isPurchasable() === null && ! $show_widget_on_free_posts )
 		) {
-			$event->stop_propagation();
+			$event->stopPropagation();
+
 			return;
 		}
 
 		// don't display widget on a search or multiposts page, if it is positioned automatically
-		if ( ! is_singular() && ! $time_passes_positioned_manually ) {
-			$event->stop_propagation();
+		if ( ! $time_passes_positioned_manually && ! is_singular() ) {
+			$event->stopPropagation();
+
 			return;
 		}
 	}
@@ -216,21 +232,21 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 	 *
 	 * @return string
 	 */
-	public function render_time_pass( $pass = array() ) {
+	public function renderTimePass( array $pass = array() ) {
 		$defaults = array(
 			'pass_id'     => 0,
-			'title'       => LaterPay_Helper_TimePass::get_default_options( 'title' ),
-			'description' => LaterPay_Helper_TimePass::get_description(),
-			'price'       => LaterPay_Helper_TimePass::get_default_options( 'price' ),
+			'title'       => TimePass::getDefaultOptions( 'title' ),
+			'description' => TimePass::getDescription(),
+			'price'       => TimePass::getDefaultOptions( 'price' ),
 			'url'         => '',
 		);
 
 		$laterpay_pass = array_merge( $defaults, $pass );
 		if ( ! empty( $laterpay_pass['pass_id'] ) ) {
-			$laterpay_pass['url'] = LaterPay_Helper_TimePass::get_laterpay_purchase_link( $laterpay_pass['pass_id'] );
+			$laterpay_pass['url'] = TimePass::getLaterpayPurchaseLink( $laterpay_pass['pass_id'] );
 		}
 
-		$laterpay_pass['preview_post_as_visitor'] = LaterPay_Helper_User::preview_post_as_visitor( get_post() );
+		$laterpay_pass['preview_post_as_visitor'] = User::previewPostAsVisitor( get_post() );
 
 		$args = array(
 			'standard_currency' => $this->config->get( 'currency.code' ),
@@ -238,9 +254,7 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 		$this->assign( 'laterpay', $args );
 		$this->assign( 'laterpay_pass', $laterpay_pass );
 
-		$string = $this->get_text_view( 'backend/partials/time-pass' );
-
-		return $string;
+		return $this->getTextView( 'backend/partials/time-pass' );
 	}
 
 	/**
@@ -248,8 +262,8 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 	 *
 	 * @return array of time pass ids with access
 	 */
-	protected function get_time_passes_with_access() {
-		$access                  = LaterPay_Helper_Post::get_access_state();
+	protected function getTimePassesWithAccess() {
+		$access                  = Post::getAccessState();
 		$time_passes_with_access = array();
 
 		// get time passes with access
@@ -258,7 +272,7 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 			if ( $access_value === true ) {
 				$access_key_exploded = explode( '_', $access_key );
 				// if this is time pass key - store time pass id
-				if ( $access_key_exploded[0] === LaterPay_Helper_TimePass::PASS_TOKEN ) {
+				if ( $access_key_exploded[0] === TimePass::PASS_TOKEN ) {
 					$time_passes_with_access[] = $access_key_exploded[1];
 				}
 			}
@@ -270,21 +284,20 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 	/**
 	 * Save time pass info after purchase.
 	 *
-	 * @wp-hook template_reditect
+	 * @wp-hook template_redirect
 	 *
-	 * @return  void
+	 * @return void
 	 */
-	public function buy_time_pass() {
-		$request_method = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( $_SERVER['REQUEST_METHOD'] ) : '';
-		$request        = new LaterPay_Core_Request();
-		$pass_id        = $request->get_param( 'pass_id' );
-		$link           = $request->get_param( 'link' );
+	public function buyTimePass() {
+		$request_method = null !== Request::server( 'REQUEST_METHOD' ) ? sanitize_text_field( Request::server( 'REQUEST_METHOD' ) ) : '';
+		$pass_id        = Request::get( 'pass_id' );
+		$link           = Request::get( 'link' );
 
-		if ( ! isset( $pass_id ) || ! isset( $link ) ) {
+		if ( null === $pass_id || null === $link ) {
 			return;
 		}
 
-		$client_options  = LaterPay_Helper_Config::get_php_client_options();
+		$client_options  = Config::getPHPClientOptions();
 		$laterpay_client = new LaterPay_Client(
 			$client_options['cp_key'],
 			$client_options['api_key'],
@@ -293,28 +306,32 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 			$client_options['token_name']
 		);
 
-		if ( LaterPay_Client_Signing::verify( $request->get_param( 'hmac' ), $laterpay_client->get_api_key(), $request->get_data( 'get' ), get_permalink(), $request_method ) ) {
+		if ( LaterPay_Client_Signing::verify(
+			Request::get( 'hmac' ), $laterpay_client->get_api_key(),
+			Request::get(), get_permalink(), $request_method
+		) ) {
 			// check token
-			if ( $lptoken = $request->get_param( 'lptoken' ) ) {
+			$lptoken = Request::get( 'lptoken' );
+			if ( null !== $lptoken ) {
 				$laterpay_client->set_token( $lptoken );
 			}
 
-			$code    = null;
-			$voucher = $request->get_param( 'voucher' );
-			$pass_id = LaterPay_Helper_TimePass::get_untokenized_time_pass_id( $pass_id );
+			$voucher = Request::get( 'voucher' );
+			$pass_id = TimePass::getUntokenizedTimePassID( $pass_id );
 
 			// process vouchers
-			if ( ! LaterPay_Helper_Voucher::check_voucher_code( $voucher ) ) {
-				if ( ! LaterPay_Helper_Voucher::check_voucher_code( $voucher, true ) ) {
+			if ( ! Voucher::checkVoucherCode( $voucher ) ) {
+				if ( ! Voucher::checkVoucherCode( $voucher, true ) ) {
 					// save the pre-generated gift code as valid voucher code now that the purchase is complete
-					$gift_cards             = LaterPay_Helper_Voucher::get_time_pass_vouchers( $pass_id, true );
+					$gift_cards             = Voucher::getTimePassVouchers( $pass_id, true );
 					$gift_cards[ $voucher ] = array(
 						'price' => 0,
 						'title' => null,
 					);
-					LaterPay_Helper_Voucher::save_pass_vouchers( $pass_id, $gift_cards, true );
+					Voucher::savePassVouchers( $pass_id, $gift_cards, true );
 					// set cookie to store information that gift card was purchased
-					setcookie(
+					$func = 'setcookie';
+					$func(
 						'laterpay_purchased_gift_card',
 						$voucher . '|' . $pass_id,
 						time() + 30,
@@ -322,14 +339,14 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 					);
 				} else {
 					// update gift code statistics
-					LaterPay_Helper_Voucher::update_voucher_statistic( $pass_id, $voucher, true );
+					Voucher::updateVoucherStatistic( $pass_id, $voucher, true );
 				}
 			} else {
 				// update voucher statistics
-				LaterPay_Helper_Voucher::update_voucher_statistic( $pass_id, $voucher );
+				Voucher::updateVoucherStatistic( $pass_id, $voucher );
 			}
 
-			wp_redirect( $link );
+			wp_safe_redirect( $link );
 			// exit script after redirect was set
 			exit;
 		}
@@ -340,13 +357,13 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 	 *
 	 * @wp-hook the_content
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
-	 * @return string $content
+	 * @return void
 	 */
-	public function modify_post_content( LaterPay_Core_Event $event ) {
-		if ( $event->has_argument( 'post' ) ) {
-			$post = $event->get_argument( 'post' );
+	public function modifyPostContent( Event $event ) {
+		if ( $event->hasArgument( 'post' ) ) {
+			$post = $event->getArgument( 'post' );
 		} else {
 			$post = get_post();
 		}
@@ -359,19 +376,19 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 		if ( $timepasses_positioned_manually ) {
 			return;
 		}
-		$content = $event->get_result();
+		$content = $event->getResult();
 
 		$only_time_passes_allowed = get_option( 'laterpay_only_time_pass_purchases_allowed' );
 
 		if ( $only_time_passes_allowed ) {
 			$content .= laterpay_sanitize_output( __( 'Buy a time pass to read the full content.', 'laterpay' ) );
 		}
-		$time_pass_event = new LaterPay_Core_Event();
-		$time_pass_event->set_echo( false );
+		$time_pass_event = new Event();
+		$time_pass_event->setEchoOutput( false );
 		laterpay_event_dispatcher()->dispatch( 'laterpay_time_passes', $time_pass_event );
-		$content .= $time_pass_event->get_result();
+		$content .= $time_pass_event->getResult();
 
-		$event->set_result( $content );
+		$event->setResult( $content );
 	}
 
 	/**
@@ -389,13 +406,12 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 	 * or:
 	 * [laterpay_time_passes call_to_action_text="Get yours now!"]
 	 *
-	 * @var array $atts
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
-	 * @return string
+	 * @return void
 	 */
-	public function render_time_passes_widget( LaterPay_Core_Event $event ) {
-		list( $atts ) = $event->get_arguments();
+	public function renderTimePassesWidget( Event $event ) {
+		list($atts) = $event->getArguments();
 
 		$data = shortcode_atts(
 			array(
@@ -405,31 +421,35 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 			), $atts
 		);
 
-		if ( isset( $data['id'] ) && ! LaterPay_Helper_TimePass::get_time_pass_by_id( $data['id'], true ) ) {
-			$error_message = LaterPay_Helper_View::get_error_message( __( 'Wrong time pass id or no time passes specified.', 'laterpay' ), $atts );
-			$event->set_result( $error_message );
-			$event->stop_propagation();
+		if ( isset( $data['id'] ) && ! TimePass::getTimePassByID( $data['id'], true ) ) {
+			$error_message = View::getErrorMessage(
+				__( 'Wrong time pass id or no time passes specified.', 'laterpay' ),
+				$atts
+			);
+			$event->setResult( $error_message );
+			$event->stopPropagation();
+
 			return;
 		}
 
-		// $introductory_text, $call_to_action_text, $time_pass_id
-		$timepass_event = new LaterPay_Core_Event( array( $data['introductory_text'], $data['call_to_action_text'], $data['id'] ) );
-		$timepass_event->set_echo( false );
+		$timepass_event = new Event( array( $data['introductory_text'], $data['call_to_action_text'], $data['id'] ) );
+		$timepass_event->setEchoOutput( false );
 		laterpay_event_dispatcher()->dispatch( 'laterpay_time_passes', $timepass_event );
 
-		$html = $timepass_event->get_result();
-		$event->set_result( $html );
+		$html = $timepass_event->getResult();
+		$event->setResult( $html );
 	}
 
 	/**
 	 * Collect content of benefits overlay.
 	 *
-	 * @param LaterPay_Core_Event $event
-	 * @var string                $revenue_model       LaterPay revenue model applied to content
+	 * @param Event $event
+	 *
+	 * @var string $revenue_model LaterPay revenue model applied to content
 	 *
 	 * @return void
 	 */
-	public function on_explanatory_overlay_content( LaterPay_Core_Event $event ) {
+	public function onExplanatoryOverlayContent( Event $event ) {
 		$only_time_passes_allowed = get_option( 'laterpay_only_time_pass_purchases_allowed' );
 
 		// determine overlay title to show
@@ -443,34 +463,37 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 				),
 				array(
 					'title' => __( 'Read Immediately', 'laterpay' ),
-					'text'  => __( 'Immediately access your content. <br>A time pass is not a subscription, it expires automatically.', 'laterpay' ),
+					'text'  => __(
+						'Immediately access your content. <br>A time pass is not a subscription, it expires automatically.',
+						'laterpay'
+					),
 					'class' => 'lp_benefit--use-immediately',
 				),
 			);
 			$overlay_content  = array(
 				'title'    => $overlay_title,
 				'benefits' => $overlay_benefits,
-				'action'   => $this->get_text_view( 'frontend/partials/widget/time-passes-link' ),
+				'action'   => $this->getTextView( 'frontend/partials/widget/time-passes-link' ),
 			);
-			$event->set_result( $overlay_content );
+			$event->setResult( $overlay_content );
 		}
 	}
 
 	/**
 	 * Get timepasses data
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 *
 	 * @return void
 	 */
-	public function on_purchase_overlay_content( LaterPay_Core_Event $event ) {
-		$data = $event->get_result();
-		$post = $event->get_argument( 'post' );
+	public function onPurchaseOverlayContent( Event $event ) {
+		$data = $event->getResult();
+		$post = $event->getArgument( 'post' );
 
 		// default value
 		$data['timepasses'] = array();
 
-		$timepasses = LaterPay_Helper_TimePass::get_time_passes_list_by_post_id(
+		$timepasses = TimePass::getTimePassesListByPostID(
 			$post->ID,
 			null,
 			true
@@ -482,24 +505,24 @@ class LaterPay_Module_TimePasses extends LaterPay_Core_View implements LaterPay_
 				'id'          => (int) $timepass['pass_id'],
 				'title'       => $timepass['title'],
 				'description' => $timepass['description'],
-				'price'       => LaterPay_Helper_View::format_number( $timepass['price'] ),
-				'url'         => LaterPay_Helper_TimePass::get_laterpay_purchase_link( $timepass['pass_id'] ),
+				'price'       => View::formatNumber( $timepass['price'] ),
+				'url'         => TimePass::getLaterpayPurchaseLink( $timepass['pass_id'] ),
 				'revenue'     => $timepass['revenue_model'],
 			);
 		}
 
-		$event->set_result( $data );
+		$event->setResult( $data );
 	}
 
 	/**
 	 * Hide purchase information if only time-passes are allowed
 	 *
-	 * @param LaterPay_Core_Event $event
+	 * @param Event $event
 	 */
-	public function check_only_time_pass_purchases_allowed( LaterPay_Core_Event $event ) {
+	public function checkOnlyTimePassPurchasesAllowed( Event $event ) {
 		$only_time_passes_allowed = get_option( 'laterpay_only_time_pass_purchases_allowed' );
 		if ( $only_time_passes_allowed ) {
-			$event->stop_propagation();
+			$event->stopPropagation();
 		}
 	}
 }
