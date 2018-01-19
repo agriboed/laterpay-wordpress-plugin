@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Model;
+
 /**
  * Simple property object.
  *
@@ -16,19 +18,19 @@
  *
  * Usage:
  *
- * $properties = new LaterPay_Model_Config;
+ * $properties = new LaterPay\Model\LaterPay_Model_Config;
  * $john->set( 'first_name', 'John' )
  *      ->set( 'last_name', 'Doe' )
  *      ->set( 'phone', 123456789 )
  *      ->freeze(); // no further changes.
  *
  * // John's daughter with the same last name.
- * $mildred = new LaterPay_Model_Config;
+ * $mildred = new LaterPay\Model\LaterPay_Model_Config;
  * $mildred->set_parent( $john )
  *         ->set( 'first_name', 'Mildred' );
  *
  */
-class LaterPay_Model_Config {
+class Config {
 
 	/**
 	 * List of properties.
@@ -42,9 +44,9 @@ class LaterPay_Model_Config {
 	 *
 	 * Used if a name is not available in this instance.
 	 *
-	 * @type LaterPay_Model_Config
+	 * @type Config
 	 */
-	protected $parent = null;
+	protected $parent;
 
 	/**
 	 * Record of deleted properties.
@@ -60,7 +62,7 @@ class LaterPay_Model_Config {
 	 * Write and delete protection.
 	 *
 	 * @see  freeze()
-	 * @see  is_frozen()
+	 * @see  isFrozen()
 	 * @type bool
 	 */
 	protected $frozen = false;
@@ -76,7 +78,7 @@ class LaterPay_Model_Config {
 	 * @param  string $name
 	 * @param  mixed $value
 	 *
-	 * @return void|LaterPay_Model_Config
+	 * @return mixed|Config
 	 */
 	public function set( $name, $value ) {
 		if ( $this->frozen ) {
@@ -94,7 +96,7 @@ class LaterPay_Model_Config {
 	 *
 	 * @param array|object $var
 	 *
-	 * @return void|LaterPay_Model_Config
+	 * @return mixed|Config
 	 */
 	public function import( $var ) {
 		if ( $this->frozen ) {
@@ -146,7 +148,7 @@ class LaterPay_Model_Config {
 	 *
 	 * @return array
 	 */
-	public function get_section( $section ) {
+	public function getSection( $section ) {
 		// set section
 		$this->section = $section;
 
@@ -173,12 +175,12 @@ class LaterPay_Model_Config {
 	 *
 	 * @return array
 	 */
-	public function get_all( $use_parent = false ) {
+	public function getAll( $use_parent = false ) {
 		if ( ! $use_parent ) {
 			return $this->properties;
 		}
 
-		$parent_properties = $this->parent->get_all( true );
+		$parent_properties = $this->parent->getAll( true );
 		$all               = array_merge( $parent_properties, $this->properties );
 
 		// strip out properties existing in the parent but deleted in this instance.
@@ -217,7 +219,9 @@ class LaterPay_Model_Config {
 	 *
 	 * @param string $name
 	 *
-	 * @return void|LaterPay_Model_Config
+	 * @throws \Exception
+	 *
+	 * @return mixed|Config
 	 */
 	public function delete( $name ) {
 		if ( $this->frozen ) {
@@ -233,11 +237,13 @@ class LaterPay_Model_Config {
 	/**
 	 * Set parent object. Properties of this object will be inherited.
 	 *
-	 * @param LaterPay_Model_Config $object
+	 * @param Config $object
 	 *
-	 * @return LaterPay_Model_Config
+	 * @throws \Exception
+	 *
+	 * @return Config
 	 */
-	public function set_parent( LaterPay_Model_Config $object ) {
+	public function setParent( Config $object ) {
 		if ( $this->frozen ) {
 			return $this->stop( 'This object has been frozen. You cannot change the parent anymore.' );
 		}
@@ -252,14 +258,14 @@ class LaterPay_Model_Config {
 	 *
 	 * @return boolean
 	 */
-	public function has_parent() {
+	public function hasParent() {
 		return null === $this->parent;
 	}
 
 	/**
 	 * Lock write access to this object's instance. Forever.
 	 *
-	 * @return LaterPay_Model_Config
+	 * @return Config
 	 */
 	public function freeze() {
 		$this->frozen = true;
@@ -272,7 +278,7 @@ class LaterPay_Model_Config {
 	 *
 	 * @return boolean
 	 */
-	public function is_frozen() {
+	public function isFrozen() {
 		return $this->frozen;
 	}
 
@@ -281,12 +287,10 @@ class LaterPay_Model_Config {
 	 *
 	 * Might be replaced by a child class.
 	 *
-	 * @param string $msg  Error message. Always be specific.
+	 * @param string $msg Error message. Always be specific.
 	 * @param string $code Re-use the same code to group error messages.
 	 *
-	 * @throws Exception
-	 *
-	 * @return void|WP_Error
+	 * @return mixed
 	 */
 	protected function stop( $msg, $code = '' ) {
 		if ( '' === $code ) {
@@ -294,13 +298,11 @@ class LaterPay_Model_Config {
 		}
 
 		if ( class_exists( 'WP_Error' ) ) {
-			return new WP_Error( $code, $msg );
+			return new \WP_Error( $code, $msg );
 		}
 
-		throw new Exception( $msg, $code );
+		return false;
 	}
-
-	# ==== Magic functions ==== #
 
 	/**
 	 * Wrapper for set().
@@ -308,9 +310,11 @@ class LaterPay_Model_Config {
 	 * @see    set()
 	 *
 	 * @param  string $name
-	 * @param  mixed  $value
+	 * @param  mixed $value
 	 *
-	 * @return LaterPay_Model_Config
+	 * @throws \Exception
+	 *
+	 * @return Config
 	 */
 	public function __set( $name, $value ) {
 		return $this->set( $name, $value );
@@ -341,5 +345,4 @@ class LaterPay_Model_Config {
 	public function __isset( $name ) {
 		return $this->has( $name );
 	}
-
 }

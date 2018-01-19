@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Model;
+
+use LaterPay\Helper\Cache;
+
 /**
  * LaterPay subscription model.
  *
@@ -7,8 +11,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Model_Subscription {
-
+class Subscription extends ModelAbstract {
 
 	/**
 	 * Name of PostViews table.
@@ -20,25 +23,24 @@ class LaterPay_Model_Subscription {
 	public $table;
 
 	/**
-	 * Constructor for class LaterPay_Model_TimePass, load table name.
+	 * Constructor for class LaterPay\Model\LaterPay_Model_TimePass, load table name.
+	 *
+	 * @return void
 	 */
-	function __construct() {
-		global $wpdb;
-
-		$this->table = $wpdb->prefix . 'laterpay_subscriptions';
+	public function __construct() {
+		parent::__construct();
+		$this->table = $this->db->prefix . 'laterpay_subscriptions';
 	}
 
 	/**
 	 * Get time pass data.
 	 *
-	 * @param int  $id subscription id
+	 * @param int $id subscription id
 	 * @param bool $ignore_deleted ignore deleted subscriptions
 	 *
 	 * @return array $time_pass array of subscriptions data
 	 */
-	public function get_subscription( $id, $ignore_deleted = false ) {
-		global $wpdb;
-
+	public function getSubscription( $id, $ignore_deleted = false ) {
 		$sql = "
             SELECT
                 *
@@ -56,7 +58,7 @@ class LaterPay_Model_Subscription {
 
 		$sql .= ';';
 
-		return $wpdb->get_row( $wpdb->prepare( $sql, (int) $id ), ARRAY_A );
+		return $this->db->get_row( $this->db->prepare( $sql, (int) $id ), ARRAY_A );
 	}
 
 	/**
@@ -66,14 +68,12 @@ class LaterPay_Model_Subscription {
 	 *
 	 * @return array $data array of saved/updated subscription data
 	 */
-	public function update_subscription( $data ) {
-		global $wpdb;
-
+	public function updateSubscription( $data ) {
 		// leave only the required keys
-		$data = array_intersect_key( $data, LaterPay_Helper_Subscription::get_default_options() );
+		$data = array_intersect_key( $data, \LaterPay\Helper\Subscription::getDefaultOptions() );
 
 		// fill values that weren't set from defaults
-		$data = array_merge( LaterPay_Helper_Subscription::get_default_options(), $data );
+		$data = array_merge( \LaterPay\Helper\Subscription::getDefaultOptions(), $data );
 
 		// pass_id is a primary key, set by autoincrement
 		$id = $data['id'];
@@ -92,14 +92,14 @@ class LaterPay_Model_Subscription {
 		);
 
 		if ( empty( $id ) ) {
-			$wpdb->insert(
+			$this->db->insert(
 				$this->table,
 				$data,
 				$format
 			);
-			$data['id'] = $wpdb->insert_id;
+			$data['id'] = $this->db->insert_id;
 		} else {
-			$wpdb->update(
+			$this->db->update(
 				$this->table,
 				$data,
 				array( 'id' => $id ),
@@ -110,7 +110,7 @@ class LaterPay_Model_Subscription {
 		}
 
 		// purge cache
-		LaterPay_Helper_Cache::purge_cache();
+		Cache::purgeCache();
 
 		return $data;
 	}
@@ -120,8 +120,8 @@ class LaterPay_Model_Subscription {
 	 *
 	 * @return array of subscriptions
 	 */
-	public function get_active_subscriptions() {
-		return $this->get_all_subscriptions( true );
+	public function getActiveSubscriptions() {
+		return $this->getAllSubscriptions( true );
 	}
 
 	/**
@@ -131,9 +131,7 @@ class LaterPay_Model_Subscription {
 	 *
 	 * @return array list of subscriptions
 	 */
-	public function get_all_subscriptions( $ignore_deleted = false ) {
-		global $wpdb;
-
+	public function getAllSubscriptions( $ignore_deleted = false ) {
 		$sql = "
             SELECT
                 *
@@ -153,21 +151,19 @@ class LaterPay_Model_Subscription {
             ;
         ';
 
-		return $wpdb->get_results( $sql, ARRAY_A );
+		return $this->db->get_results( $sql, ARRAY_A );
 	}
 
 	/**
 	 * Get all subscriptions that apply to a given post by its category ids.
 	 *
 	 * @param null $term_ids array of category ids
-	 * @param bool $exclude  categories to be excluded from the list
+	 * @param bool $exclude categories to be excluded from the list
 	 * @param bool $ignore_deleted ignore deleted subscriptions
 	 *
 	 * @return array $subscriptions list of subscriptions
 	 */
-	public function get_subscriptions_by_category_ids( $term_ids = null, $exclude = null, $ignore_deleted = false ) {
-		global $wpdb;
-
+	public function getSubscriptionsByCategoryIDs( $term_ids = null, $exclude = null, $ignore_deleted = false ) {
 		$sql = "
             SELECT
                 *
@@ -207,9 +203,7 @@ class LaterPay_Model_Subscription {
             ;
         ';
 
-		$subscriptions = $wpdb->get_results( $sql, ARRAY_A );
-
-		return $subscriptions;
+		return $this->db->get_results( $sql, ARRAY_A );
 	}
 
 	/**
@@ -219,17 +213,15 @@ class LaterPay_Model_Subscription {
 	 *
 	 * @return int|false the number of rows updated, or false on error
 	 */
-	public function delete_subscription_by_id( $id ) {
-		global $wpdb;
-
+	public function deleteSubscriptionByID( $id ) {
 		$where = array(
 			'id' => (int) $id,
 		);
 
-		$result = $wpdb->update( $this->table, array( 'is_deleted' => 1 ), $where, array( '%d' ), array( '%d' ) );
+		$result = $this->db->update( $this->table, array( 'is_deleted' => 1 ), $where, array( '%d' ), array( '%d' ) );
 
 		// purge cache
-		LaterPay_Helper_Cache::purge_cache();
+		Cache::purgeCache();
 
 		return $result;
 	}
@@ -239,9 +231,7 @@ class LaterPay_Model_Subscription {
 	 *
 	 * @return int number of defined subscriptions
 	 */
-	public function get_subscriptions_count() {
-		global $wpdb;
-
+	public function getSubscriptionsCount() {
 		$sql = "
             SELECT
                 count(*) AS subs
@@ -252,7 +242,7 @@ class LaterPay_Model_Subscription {
             ;
         ";
 
-		$list = $wpdb->get_results( $sql );
+		$list = $this->db->get_results( $sql );
 
 		return $list[0]->subs;
 	}
