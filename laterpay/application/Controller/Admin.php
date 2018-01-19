@@ -2,12 +2,11 @@
 
 namespace LaterPay\Controller;
 
-use LaterPay\Helper\Pricing as HelperPricing;
 use LaterPay\Controller\Admin\Appearance;
 use LaterPay\Controller\Admin\Pricing;
 use LaterPay\Controller\Admin\Account;
 use LaterPay\Model\CategoryPrice;
-use LaterPay\Helper\Globals;
+use LaterPay\Core\Request;
 use LaterPay\Helper\User;
 use LaterPay\Helper\View;
 use LaterPay\Core\Event;
@@ -78,7 +77,7 @@ class Admin extends Base {
 			'laterpay_admin_enqueue_scripts' => array(
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'laterpay_on_plugin_is_active', 200 ),
-				array( 'add_plugin_admin_assets' ),
+				array( 'addPluginAdminAssets' ),
 				array( 'add_admin_pointers_script' ),
 			),
 			'laterpay_delete_term_taxonomy'  => array(
@@ -213,7 +212,7 @@ class Admin extends Base {
 	 * @return void
 	 */
 	public function addHTML5shivToAdminHead( Event $event ) {
-		$event->setEcho( true );
+		$event->setEchoOutput( true );
 		$view_args = array(
 			'scripts' => array(
 				'//html5shim.googlecode.com/svn/trunk/html5.js',
@@ -221,7 +220,7 @@ class Admin extends Base {
 		);
 		$this->assign( 'laterpay', $view_args );
 
-		$event->setResult( laterpay_sanitized( $this->getTextView( 'backend/partials/html5shiv' ) ) );
+		$event->setResult( $this->getTextView( 'backend/partials/html5shiv' ) );
 	}
 
 	/**
@@ -234,8 +233,8 @@ class Admin extends Base {
 	public function run( $tab = '' ) {
 		$this->loadAssets();
 
-		if ( null !== Globals::GET( 'tab' ) ) {
-			$tab = sanitize_text_field( Globals::GET( 'tab' ) );
+		if ( null !== Request::get( 'tab' ) ) {
+			$tab = sanitize_text_field( Request::get( 'tab' ) );
 		}
 
 		// return default tab, if no specific tab is requested
@@ -678,7 +677,7 @@ class Admin extends Base {
 
 		$this->assign( 'laterpay', $view_args );
 		$result  = $event->getResult();
-		$result .= laterpay_sanitized( $this->getTextView( 'backend/partials/pointer-scripts' ) );
+		$result .= $this->getTextView( 'backend/partials/pointer-scripts' );
 		$event->setResult( $result );
 	}
 
@@ -698,7 +697,7 @@ class Admin extends Base {
 		wp_enqueue_style( 'laterpay-admin' );
 
 		// apply colors config
-		View::apply_colors( 'laterpay-admin' );
+		View::applyColors( 'laterpay-admin' );
 	}
 
 	/**
@@ -724,7 +723,7 @@ class Admin extends Base {
 	 * @return array $pointers
 	 */
 	public static function getPointersToBeShown() {
-		$dismissed_pointers = explode( ',', (string) User::get_user_meta( 'dismissed_wp_pointers' ) );
+		$dismissed_pointers = explode( ',', (string) User::getUserMeta( 'dismissed_wp_pointers' ) );
 		$pointers           = array();
 
 		if ( ! in_array( static::ADMIN_MENU_POINTER, $dismissed_pointers, true ) ) {
@@ -743,8 +742,6 @@ class Admin extends Base {
 
 	/**
 	 * Return all pointer constants from current class.
-	 *
-	 * @throws \ReflectionException
 	 *
 	 * @return array $pointers
 	 */
@@ -778,14 +775,14 @@ class Admin extends Base {
 		$category_id = $args[0];
 
 		$category_price_model = new CategoryPrice();
-		$category_price_model->delete_prices_by_category_id( $category_id );
+		$category_price_model->deletePricesByCategoryID( $category_id );
 
 		// get posts by category price id
-		$post_ids = HelperPricing::getPostsByCategoryPriceID( $category_id );
+		$post_ids = \LaterPay\Helper\Pricing::getPostsByCategoryPriceID( $category_id );
 
 		foreach ( array_keys( $post_ids ) as $post_id ) {
 			// update post prices
-			HelperPricing::updatePostDataAfterCategoryDelete( $post_id );
+			\LaterPay\Helper\Pricing::updatePostDataAfterCategoryDelete( $post_id );
 		}
 	}
 

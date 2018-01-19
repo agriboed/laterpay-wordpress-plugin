@@ -5,10 +5,10 @@ namespace LaterPay\Controller;
 use LaterPay\Model\CategoryPrice;
 use LaterPay\Helper\Appearance;
 use LaterPay\Core\Capability;
-use LaterPay\Helper\Globals;
 use LaterPay\Helper\Pricing;
 use LaterPay\Model\TimePass;
 use LaterPay\Helper\Config;
+use LaterPay\Core\Request;
 use LaterPay\Helper\Cache;
 use LaterPay\Helper\View;
 use LaterPay\Core\Event;
@@ -103,7 +103,7 @@ class Install extends Base {
 		// deactivate plugin, if requirements are not fulfilled
 		if ( count( $notices ) > 0 ) {
 			// suppress 'Plugin activated' notice
-			Globals::unsetGET( 'activate' );
+			Request::unsetGET( 'activate' );
 
 			deactivate_plugins( $this->config->plugin_base_name );
 			$notices[] = __(
@@ -612,13 +612,13 @@ class Install extends Base {
 
 		// update time pass revenues
 		$time_pass_model = new TimePass();
-		$time_passes     = $time_pass_model->get_all_time_passes();
+		$time_passes     = $time_pass_model->getAllTimePasses();
 
 		if ( $time_passes ) {
 			foreach ( $time_passes as $time_pass ) {
 				if ( $time_pass['revenue_model'] === 'ppul' ) {
 					$time_pass['revenue_model'] = 'ppu';
-					$time_pass_model->update_time_pass( $time_pass );
+					$time_pass_model->updateTimePass( $time_pass );
 				}
 			}
 		}
@@ -632,12 +632,12 @@ class Install extends Base {
 
 		// update category revenues
 		$category_price_model          = new CategoryPrice();
-		$categories_with_defined_price = $category_price_model->get_categories_with_defined_price();
+		$categories_with_defined_price = $category_price_model->getCategoriesWithDefinedPrice();
 
 		if ( $categories_with_defined_price ) {
 			foreach ( $categories_with_defined_price as $category ) {
 				if ( $category->revenue_model === 'ppul' ) {
-					$category_price_model->set_category_price(
+					$category_price_model->setCategoryPrice(
 						$category->category_id,
 						$category->category_price,
 						'ppu',
@@ -679,7 +679,7 @@ class Install extends Base {
 	public function doInstallation() {
 		global $wpdb;
 
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		$table_terms_price   = $wpdb->prefix . 'laterpay_terms_price';
 		$table_passes        = $wpdb->prefix . 'laterpay_passes';
@@ -780,7 +780,7 @@ class Install extends Base {
 
 		// update capabilities
 		$laterpay_capabilities = new Capability();
-		$laterpay_capabilities->populate_roles();
+		$laterpay_capabilities->populateRoles();
 
 		// perform data updates
 		$this->maybeUpdateMetaKeys();
@@ -809,6 +809,6 @@ class Install extends Base {
 		list($roles) = $event->getArguments() + array( array() );
 		// update capabilities
 		$laterpay_capabilities = new Capability();
-		$laterpay_capabilities->update_roles( (array) $roles );
+		$laterpay_capabilities->updateRoles( (array) $roles );
 	}
 }
