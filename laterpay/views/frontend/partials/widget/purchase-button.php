@@ -41,5 +41,5 @@ if ( isset( $laterpay['link_text'] ) ) {
 }
 ?>
 
-<div><a <?php echo laterpay_sanitized( $arg_str ); ?>><?php echo laterpay_sanitize_output( $link_text ); ?></a></div>
-<div><a class="lp_bought_notification" href="<?php echo $laterpay['identify_url']; ?>"><?php echo $laterpay['notification_text']; ?></a></div>
+<div><a <?php laterpay_sanitize_output( $arg_str , true); ?>><?php echo esc_html( $link_text ); ?></a></div>
+<div><a class="lp_bought_notification" href="<?php echo esc_url($laterpay['identify_url']); ?>"><?php echo esc_html( $laterpay['notification_text']); ?></a></div>

@@ -26,7 +26,7 @@ foreach ( $args as $key => $value ) {
 	$arg_str .= ' ' . $key . '="' . esc_attr( $value ) . '" ';
 }
 
-if ( $laterpay['revenue_model'] == 'sis' ) :
+if ( $laterpay['revenue_model'] === 'sis' ) :
 	$link_text = sprintf(
 		__( 'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small>', 'laterpay' ),
 		View::formatNumber( $laterpay['price'] ),
@@ -45,4 +45,4 @@ if ( isset( $laterpay['link_text'] ) ) {
 }
 ?>
 
-<a <?php echo laterpay_sanitized( $arg_str ); ?>><?php echo laterpay_sanitize_output( $link_text ); ?></a>
+<a <?php laterpay_sanitize_output( $arg_str, true); ?>><?php laterpay_sanitize_output( $link_text, true ); ?></a>

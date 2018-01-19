@@ -6,6 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <?php foreach ( $laterpay_sub['subscriptions'] as $subscription ) : ?>
-	<?php echo laterpay_sanitized( $this->render_subscription( $subscription ) ); ?>
+	<?php laterpay_sanitize_output( $this->render_subscription( $subscription ), true ); ?>
 <?php
 endforeach;

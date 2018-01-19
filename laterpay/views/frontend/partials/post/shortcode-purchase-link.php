@@ -6,5 +6,4 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <a href="<?php echo esc_url_raw( $laterpay['url'] ); ?>"
-   class="lp_button"
-   ><?php echo laterpay_sanitize_output( __( 'View', 'laterpay' ) ); ?></a>
+   class="lp_button"><?php echo esc_html( __( 'View', 'laterpay' ) ); ?></a>
