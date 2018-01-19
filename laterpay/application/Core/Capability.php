@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Core;
+
 /**
  * LaterPay core capabilities.
  *
@@ -7,9 +9,12 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Capability {
+class Capability {
 
-	protected $allowed_capabilities = array(
+	/**
+	 * @var array
+	 */
+	protected static $allowed_capabilities = array(
 		'laterpay_edit_individual_price',
 		'laterpay_edit_teaser_content',
 		'laterpay_has_full_access_to_content',
@@ -20,8 +25,8 @@ class LaterPay_Core_Capability {
 	 *
 	 * @return void
 	 */
-	public function populate_roles() {
-		$this->populate_roles_0951();
+	public function populateRoles() {
+		$this->populateRoles0951();
 	}
 
 	/**
@@ -31,7 +36,7 @@ class LaterPay_Core_Capability {
 	 *
 	 * @return void
 	 */
-	public function update_roles( array $roles ) {
+	public function updateRoles( array $roles ) {
 		foreach ( $roles as $role => $capabilities ) {
 			$role = get_role( $role );
 			if ( empty( $role ) ) {
@@ -40,7 +45,7 @@ class LaterPay_Core_Capability {
 			if ( is_array( $capabilities ) && isset( $capabilities['add'] ) ) {
 				$collection = (array) $capabilities['add'];
 				foreach ( $collection as $capability ) {
-					if ( ! $role->has_cap( $capability ) && in_array( $capability, $this->allowed_capabilities ) ) {
+					if ( ! $role->has_cap( $capability ) && in_array( $capability, static::$allowed_capabilities, true ) ) {
 						$role->add_cap( $capability );
 					}
 				}
@@ -48,7 +53,7 @@ class LaterPay_Core_Capability {
 			if ( is_array( $capabilities ) && isset( $capabilities['remove'] ) ) {
 				$collection = (array) $capabilities['remove'];
 				foreach ( $collection as $capability ) {
-					if ( $role->has_cap( $capability ) && in_array( $capability, $this->allowed_capabilities ) ) {
+					if ( $role->has_cap( $capability ) && in_array( $capability, static::$allowed_capabilities, true ) ) {
 						$role->remove_cap( $capability );
 					}
 				}
@@ -57,11 +62,11 @@ class LaterPay_Core_Capability {
 	}
 
 	/**
-	* Create and modify LaterPay roles.
-	*
-	* @return void
-	*/
-	protected function populate_roles_0951() {
+	 * Create and modify LaterPay roles.
+	 *
+	 * @return void
+	 */
+	protected function populateRoles0951() {
 		$roles = array( 'administrator', 'editor' );
 		foreach ( $roles as $role ) {
 			$role = get_role( $role );

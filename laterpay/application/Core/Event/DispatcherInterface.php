@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Core\Event;
+
+use LaterPay\Core\Event;
+
 /**
  * LaterPay Event Dispatcher Interface.
  *
@@ -7,17 +11,17 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-interface LaterPay_Core_Event_DispatcherInterface {
+interface DispatcherInterface {
 
 	/**
 	 * Dispatches an event to all registered listeners.
 	 *
 	 * @param string $event_name The name of the event to dispatch.
-	 * @param LaterPay_Core_Event|array|null $args The event to pass to the event handlers/listeners.
+	 * @param Event|array|null $args The event to pass to the event handlers/listeners.
 	 *
-	 * @return LaterPay_Core_Event
+	 * @return Event
 	 */
-	public function dispatch( $event_name, $args = null );
+	public function dispatch( $event_name, $args = null);
 
 	/**
 	 * Adds an event listener that listens on the specified events.
@@ -29,7 +33,7 @@ interface LaterPay_Core_Event_DispatcherInterface {
 	 *
 	 * @return null
 	 */
-	public function add_listener( $event_name, $listener, $priority = 0 );
+	public function addListener( $event_name, $listener, $priority = 0);
 
 	/**
 	 * Removes an event listener from the specified events.
@@ -39,7 +43,7 @@ interface LaterPay_Core_Event_DispatcherInterface {
 	 *
 	 * @return mixed
 	 */
-	public function remove_listener( $event_name, $listener );
+	public function removeListener( $event_name, $listener);
 
 	/**
 	 * Gets the listeners of a specific event or all listeners.
@@ -48,7 +52,7 @@ interface LaterPay_Core_Event_DispatcherInterface {
 	 *
 	 * @return mixed
 	 */
-	public function get_listeners( $event_name = null );
+	public function getListeners( $event_name = null);
 
 	/**
 	 * Checks whether an event has any registered listeners.
@@ -57,7 +61,7 @@ interface LaterPay_Core_Event_DispatcherInterface {
 	 *
 	 * @return mixed
 	 */
-	public function has_listeners( $event_name = null );
+	public function hasListeners( $event_name = null);
 
 	/**
 	 * Adds an event subscriber.
@@ -65,14 +69,14 @@ interface LaterPay_Core_Event_DispatcherInterface {
 	 * The subscriber is asked for all the events he is
 	 * interested in and added as a listener for these events.
 	 *
-	 * @param LaterPay_Core_Event_SubscriberInterface $subscriber The subscriber.
+	 * @param SubscriberInterface $subscriber The subscriber.
 	 */
-	public function add_subscriber( LaterPay_Core_Event_SubscriberInterface $subscriber);
+	public function addSubscriber( SubscriberInterface $subscriber);
 
 	/**
 	 * Removes an event subscriber.
 	 *
-	 * @param LaterPay_Core_Event_SubscriberInterface $subscriber The subscriber
+	 * @param SubscriberInterface $subscriber The subscriber
 	 */
-	public function remove_subscriber( LaterPay_Core_Event_SubscriberInterface $subscriber);
+	public function removeSubscriber( SubscriberInterface $subscriber);
 }

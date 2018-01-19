@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Core\Exception;
+
+use LaterPay\Core\Exception;
+
 /**
  * LaterPay form validation exception.
  *
@@ -7,11 +11,13 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Exception_FormValidation extends LaterPay_Core_Exception {
+class FormValidation extends Exception {
 
 	/**
 	 * @param string $form
 	 * @param array $errors
+	 *
+	 * @return void
 	 */
 	public function __construct( $form, $errors = array() ) {
 		$this->setContext( $errors );

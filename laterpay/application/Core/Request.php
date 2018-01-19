@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Core;
+
 /**
  * LaterPay core request.
  *
@@ -7,83 +9,117 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Request extends LaterPay_Core_Entity {
-
-
-	/**
-	 * POST method
-	 *
-	 * @var string
-	 */
-	const POST = 'POST';
+class Request {
 
 	/**
-	 * PUT method
-	 *
-	 * @var string
+	 * @var array
 	 */
-	const PUT = 'PUT';
+	protected static $post;
 
 	/**
-	 * GET method
-	 *
-	 * @var string
+	 * @var array
 	 */
-	const GET = 'GET';
+	protected static $get;
 
 	/**
-	 * HEAD method
-	 *
-	 * @var string
+	 * @var array
 	 */
-	const HEAD = 'HEAD';
+	protected static $cookie;
 
 	/**
-	 * DELETE method
-	 *
-	 * @var string
+	 * @var array
 	 */
-	const DELETE = 'DELETE';
+	protected static $files;
 
 	/**
-	 * PATCH method
-	 *
-	 * @link http://tools.ietf.org/html/rfc5789
-	 *
-	 * @var string
+	 * @var array
 	 */
-	const PATCH = 'PATCH';
+	protected static $server;
 
-	public function _construct() {
-		parent::_construct();
-		$this->set_data( 'get', $_GET );
-		$this->set_data( 'post', $_POST );
-		$this->set_data( 'cookie', $_COOKIE );
-		$this->set_data( 'server', $_SERVER );
-		$this->set_data( 'env', $_ENV );
+	/**
+	 *
+	 */
+	public static function createFromGlobals() {
+		static::$post   = $GLOBALS['_POST'];
+		static::$get    = $GLOBALS['_GET'];
+		static::$cookie = $GLOBALS['_COOKIE'];
+		static::$files  = $GLOBALS['_FILES'];
+		static::$server = $GLOBALS['_SERVER'];
 	}
 
 	/**
-	 * Retrieve a parameter.
+	 * Method returns value from super global array _POST
+	 * @param null $key
 	 *
-	 * Retrieves a parameter from the instance. Priority is in the order of
-	 * userland parameters $_GET, $_POST.
-	 * If a parameter matching the $key is not found, null is returned.
-	 *
-	 * @param mixed $key
-	 * @param mixed $default Default value to use if key not found
-	 *
-	 * @return mixed
+	 * @return array|mixed|null
 	 */
-	public function get_param( $key, $default = null ) {
-		if ( isset( $this->_data[ $key ] ) ) {
-			return $this->_data[ $key ];
-		} elseif ( isset( $this->_data['get'] ) && isset( $this->_data['get'][ $key ] ) ) {
-			return $this->_data['get'][ $key ];
-		} elseif ( isset( $this->_data['post'] ) && isset( $this->_data['post'][ $key ] ) ) {
-			return $this->_data['get'][ $key ];
+	public static function post( $key = null ) {
+		static::createFromGlobals();
+
+		if ( null === $key ) {
+			return static::$post;
 		}
 
-		return $default;
+		return isset( static::$post[ $key ] ) ? static::$post[ $key ] : null;
+	}
+
+	/**
+	 * Method returns value from the super global array _GET
+	 *
+	 * @param null $key
+	 *
+	 * @return null|mixed
+	 */
+	public static function get( $key = null ) {
+		static::createFromGlobals();
+
+		if ( null === $key ) {
+			return static::$get;
+		}
+
+		return isset( static::$get[ $key ] ) ? static::$get[ $key ] : null;
+	}
+
+	/**
+	 * @param null $key
+	 *
+	 * @return null|mixed
+	 */
+	public static function cookie( $key = null ) {
+		static::createFromGlobals();
+
+		if ( null === $key ) {
+			return static::$cookie;
+		}
+
+		return isset( static::$cookie[ $key ] ) ? static::$cookie[ $key ] : null;
+	}
+
+	/**
+	 * @param null $key
+	 *
+	 * @return null|mixed
+	 */
+	public static function server( $key = null ) {
+		static::createFromGlobals();
+
+		if ( null === $key ) {
+			return static::$server;
+		}
+
+		return isset( static::$server[ $key ] ) ? static::$server[ $key ] : null;
+	}
+
+	/**
+	 * @param null $key
+	 *
+	 * @return void
+	 */
+	public static function unsetGET( $key = null ) {
+		if ( null === $key ) {
+			return null;
+		}
+
+		unset( $GLOBALS['_GET'][ $key ] );
 	}
 }

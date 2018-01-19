@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Core\Logger\Processor;
+
 /**
  * LaterPay core logger processor memory.
  *
@@ -7,8 +9,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Logger_Processor_Memory {
-
+class Memory {
 
 	/**
 	 * @var boolean If true, get the real size of memory allocated from system. Else, only the memory used by emalloc() is reported.
@@ -21,7 +22,7 @@ class LaterPay_Core_Logger_Processor_Memory {
 	protected $use_formatting;
 
 	/**
-	 * @param boolean $real_usage     Set this to true to get the real size of memory allocated from system
+	 * @param boolean $real_usage Set this to true to get the real size of memory allocated from system
 	 * @param boolean $use_formatting If true, then format memory size to human readable string (MB, KB, B depending on size)
 	 */
 	public function __construct( $real_usage = true, $use_formatting = true ) {
@@ -36,7 +37,7 @@ class LaterPay_Core_Logger_Processor_Memory {
 	 *
 	 * @return string|int Formatted string if $this->use_formatting is true, otherwise return $bytes as is
 	 */
-	protected function format_bytes( $bytes ) {
+	protected function formatBytes( $bytes ) {
 		$bytes = (int) $bytes;
 
 		if ( ! $this->use_formatting ) {

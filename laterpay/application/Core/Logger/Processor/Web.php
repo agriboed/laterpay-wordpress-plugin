@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Core\Logger\Processor;
+
+use LaterPay\Core\Request;
+
 /**
  * LaterPay core logger processor web.
  *
@@ -7,8 +11,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Logger_Processor_Web implements LaterPay_Core_Logger_Processor_Interface {
-
+class Web implements ProcessorInterface {
 
 	/**
 	 * @var array|\ArrayAccess
@@ -27,12 +30,16 @@ class LaterPay_Core_Logger_Processor_Web implements LaterPay_Core_Logger_Process
 	);
 
 	/**
-	 * @param array|\ArrayAccess $server_data  Array or object w/ ArrayAccess that provides access to the $_SERVER data
+	 * @param array|\ArrayAccess $server_data Array or object w/ ArrayAccess that provides access to the $_SERVER data
 	 * @param array|null         extra_fields Extra field names to be added (all available by default)
+	 *
+	 * @throws \UnexpectedValueException
+	 *
+	 * @return void
 	 */
 	public function __construct( $server_data = null, array $extra_fields = null ) {
 		if ( $server_data === null ) {
-			$this->server_data = array_map( 'sanitize_text_field', $_SERVER );
+			$this->server_data = array_map( 'sanitize_text_field', Request::server() );
 		} elseif ( is_array( $server_data ) || $server_data instanceof \ArrayAccess ) {
 			$this->server_data = $server_data;
 		} else {
@@ -41,7 +48,7 @@ class LaterPay_Core_Logger_Processor_Web implements LaterPay_Core_Logger_Process
 
 		if ( $extra_fields !== null ) {
 			foreach ( array_keys( $this->extra_fields ) as $fieldName ) {
-				if ( ! in_array( $fieldName, $extra_fields ) ) {
+				if ( ! in_array( $fieldName, $extra_fields, true ) ) {
 					unset( $this->extra_fields[ $fieldName ] );
 				}
 			}

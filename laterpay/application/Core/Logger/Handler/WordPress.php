@@ -1,5 +1,10 @@
 <?php
 
+namespace LaterPay\Core\Logger\Handler;
+
+use LaterPay\Core\Request;
+use LaterPay\Core\Logger;
+
 /**
  * LaterPay core logger handler WordPress.
  *
@@ -7,8 +12,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handler_Abstract {
-
+class WordPress extends HandlerAbstract {
 
 	/**
 	 *
@@ -19,20 +23,20 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 	/**
 	 * @param integer $level The minimum logging level at which this handler will be triggered
 	 */
-	public function __construct( $level = LaterPay_Core_Logger::DEBUG ) {
+	public function __construct( $level = Logger::DEBUG ) {
 		parent::__construct( $level );
 
-		add_action( 'wp_footer', array( $this, 'render_records' ), 1000 );
-		add_action( 'admin_footer', array( $this, 'render_records' ), 1000 );
-		add_action( 'wp_enqueue_scripts', array( $this, 'load_assets' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'load_assets' ) );
+		add_action( 'wp_footer', array( $this, 'renderRecords' ), 1000 );
+		add_action( 'admin_footer', array( $this, 'renderRecords' ), 1000 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'loadAssets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'loadAssets' ) );
 		add_action( 'admin_bar_menu', array( $this, 'admin_bar_menu' ), 1000 );
 	}
 
 	/**
 	 * Added element into wp menu
 	 *
-	 * @global type $wp_admin_bar
+	 * @global $wp_admin_bar
 	 *
 	 * @return void
 	 */
@@ -45,6 +49,9 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 			'title'  => __( 'LaterPay Debugger', 'laterpay' ),
 		);
 
+		/**
+		 * @var \WP_Admin_Bar
+		 */
 		$wp_admin_bar->add_menu( $args );
 	}
 
@@ -61,6 +68,7 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 		}
 
 		$this->records[] = $record;
+
 		return true;
 	}
 
@@ -72,7 +80,7 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 	 *
 	 * @return void
 	 */
-	public function load_assets() {
+	public function loadAssets() {
 		wp_register_style(
 			'laterpay-debugger',
 			$this->config->get( 'css_url' ) . 'laterpay-debugger.css',
@@ -100,48 +108,49 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 	 *
 	 * @return void
 	 */
-	public function render_records() {
+	public function renderRecords() {
 		$view_args = array(
 			'memory_peak'       => memory_get_peak_usage() / pow( 1024, 2 ),
 			'records'           => $this->records,
-			'tabs'              => $this->get_tabs(),
-			'formatted_records' => $this->get_formatter()->format_batch( $this->records ),
+			'tabs'              => $this->getTabs(),
+			'formatted_records' => $this->getFormatter()->formatBatch( $this->records ),
 		);
 
 		$this->assign( 'laterpay_records', $view_args );
 
-		echo laterpay_sanitized( $this->get_text_view( 'backend/logger/wordpress-handler-records' ) );
+		laterpay_sanitize_output( $this->getTextView( 'backend/logger/wordpress-handler-records' ), true );
 	}
 
 	/**
 	 * @return array $tabs
 	 */
-	protected function get_tabs() {
-		$events = laterpay_event_dispatcher()->get_debug_data();
+	protected function getTabs() {
+		$events = laterpay_event_dispatcher()->getDebugData();
+
 		return array(
 			array(
 				'name'    => __( 'Requests', 'laterpay' ),
-				'content' => array_merge( $_GET, $_POST ),
+				'content' => array_merge( Request::get(), Request::post() ),
 				'type'    => 'array',
 			),
 			array(
-				'name'    => sprintf( __( 'Cookies<span class="lp_badge">%s</span>', 'laterpay' ), count( $_COOKIE ) ),
-				'content' => $_COOKIE,
+				'name'    => sprintf( __( 'Cookies<span class="lp_badge">%s</span>', 'laterpay' ), count( Request::cookie() ) ),
+				'content' => Request::cookie(),
 				'type'    => 'array',
 			),
 			array(
 				'name'    => __( 'System Config', 'laterpay' ),
-				'content' => $this->get_system_info(),
+				'content' => $this->getSystemInfo(),
 				'type'    => 'array',
 			),
 			array(
 				'name'    => __( 'Plugin Config', 'laterpay' ),
-				'content' => $this->config->get_all(),
+				'content' => $this->config->getAll(),
 				'type'    => 'array',
 			),
 			array(
 				'name'    => sprintf( __( 'Plugin Hooks<span class="lp_badge">%s</span>', 'laterpay' ), count( $events ) ),
-				'content' => $this->get_formatter()->format_batch( $events ),
+				'content' => $this->getFormatter()->formatBatch( $events ),
 				'type'    => 'html',
 			),
 		);
@@ -152,13 +161,13 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 	 *
 	 * @return array
 	 */
-	public function get_system_info() {
+	public function getSystemInfo() {
 		// get theme data
 		$theme_data = wp_get_theme();
 		$theme      = $theme_data->Name . ' ' . $theme_data->Version;
 
 		if ( ! function_exists( 'get_plugins' ) ) {
-			include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+			include_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
 		// get active plugin data
@@ -167,12 +176,14 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 		$plugins           = array();
 
 		foreach ( $installed_plugins as $plugin_path => $plugin ) {
-			if ( ! in_array( $plugin_path, $active_plugins ) ) {
+			if ( ! in_array( $plugin_path, $active_plugins, true ) ) {
 				continue;
 			}
 
-			array_push( $plugins, $plugin['Name'] . ' ' . $plugin['Version'] );
+			$plugins[] = $plugin['Name'] . ' ' . $plugin['Version'];
 		}
+
+		$network_plugins = array();
 
 		// get active network plugin data
 		if ( is_multisite() ) {
@@ -187,7 +198,7 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 
 				$network_plugin = get_plugin_data( $plugin_path );
 
-				array_push( $network_plugins, $network_plugin['Name'] . ' ' . $network_plugin['Version'] );
+				$network_plugins[] = $network_plugin['Name'] . ' ' . $network_plugin['Version'];
 			}
 		}
 
@@ -195,7 +206,7 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 		$system_info = array(
 			'WordPress version'      => get_bloginfo( 'version' ),
 			'Multisite'              => is_multisite() ? __( 'yes', 'laterpay' ) : __( 'no', 'laterpay' ),
-			'WordPress memory limit' => ( $this->let_to_num( WP_MEMORY_LIMIT ) / 1024 ) . ' MB',
+			'WordPress memory limit' => ( static::letToNum( WP_MEMORY_LIMIT ) / 1024 ) . ' MB',
 			'Active plugins'         => implode( ', ', $plugins ),
 			'Network active plugins' => is_multisite() ? $network_plugins : __( 'none', 'laterpay' ),
 			'Registered post types'  => implode( ', ', get_post_types( array( 'public' => true ) ) ),
@@ -203,7 +214,7 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 			'PHP version'            => PHP_VERSION,
 			'PHP memory limit'       => ini_get( 'memory_limit' ),
 			'PHP modules'            => implode( ', ', get_loaded_extensions() ),
-			'Web server info'        => isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( $_SERVER['SERVER_SOFTWARE'] ) : '',
+			'Web server info'        => null !== Request::server( 'SERVER_SOFTWARE' ) ? sanitize_text_field( Request::server( 'SERVER_SOFTWARE' ) ) : '',
 		);
 
 		return $system_info;
@@ -212,11 +223,11 @@ class LaterPay_Core_Logger_Handler_WordPress extends LaterPay_Core_Logger_Handle
 	/**
 	 * Convert sizes.
 	 *
-	 * @param unknown $v
+	 * @param string $v
 	 *
 	 * @return int|string
 	 */
-	static function let_to_num( $v ) {
+	public static function letToNum( $v ) {
 		$l   = substr( $v, -1 );
 		$ret = substr( $v, 0, -1 );
 

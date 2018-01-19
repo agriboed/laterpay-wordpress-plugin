@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Core\Auth;
+
 /**
  * Auth_Hmac provides tokenizer using OpenSSL extension.
  *
@@ -7,8 +9,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Auth_Hmac {
-
+class Hmac {
 
 	/**
 	 * @const int time of live for token in seconds
@@ -16,15 +17,15 @@ class LaterPay_Core_Auth_Hmac {
 	const VALID_PERIOD = 86400; // 24 hrs
 
 	/**
-	 * @var LaterPay_Core_Auth_Hmac instance of class
+	 * @var Hmac instance of class
 	 */
-	protected static $_instance = null;
+	protected static $_instance;
 
 	/**
 	 * @var string secret key for token generation
 	 */
 
-	protected static $privateKey = null;
+	protected static $privateKey;
 	/**
 	 * @var string used algorithm for creation of hash
 	 */
@@ -39,28 +40,29 @@ class LaterPay_Core_Auth_Hmac {
 	 * constructor for class Token
 	 *
 	 * @param string $privateKey File name of private pem key
-	 * @param boolean  $isPacked   key must be packed
+	 * @param boolean $isPacked key must be packed
 	 *
-	 * @throws Exception
-	 * @return \LaterPay_Core_Auth_Hmac
+	 * @throws \Exception
+	 *
+	 * @return void
 	 */
 	public function __construct( $privateKey = null, $isPacked = false ) {
-		if ( ( $privateKey === null ) && ( self::$privateKey === null ) ) {
+		if ( ( $privateKey === null ) && ( static::$privateKey === null ) ) {
 
 			if ( defined( 'LATERPAY_HMAC_KEY_SECRET' ) ) {
-				self::$privateKey = LATERPAY_HMAC_KEY_SECRET;
+				static::$privateKey = LATERPAY_HMAC_KEY_SECRET;
 			} else {
 				if ( defined( 'LATERPAY_HMAC_KEY_BYTECODE' ) ) {
-					self::$privateKey = pack( 'H*', LATERPAY_HMAC_KEY_BYTECODE );
+					static::$privateKey = pack( 'H*', LATERPAY_HMAC_KEY_BYTECODE );
 				} else {
-					throw new Exception( 'no secret key for token generator' );
+					throw new \Exception( 'no secret key for token generator' );
 				}
 			}
 		} else {
 			if ( $isPacked ) {
-				self::$privateKey = pack( 'H*', $privateKey );
+				static::$privateKey = pack( 'H*', $privateKey );
 			} else {
-				self::$privateKey = $privateKey;
+				static::$privateKey = $privateKey;
 			}
 		}
 	}
@@ -77,42 +79,41 @@ class LaterPay_Core_Auth_Hmac {
 			$data = implode( '', $data );
 		}
 
-		$crypt = new Crypt_Hash( self::$hashAlgo );
-		$crypt->setKey( self::$privateKey );
-		$hash = bin2hex( $crypt->hash( $data ) );
+		$crypt = new \Crypt_Hash( static::$hashAlgo );
+		$crypt->setKey( static::$privateKey );
 
-		return $hash;
+		return bin2hex( $crypt->hash( $data ) );
 	}
 
 	/**
 	 * Verify data and sign.
 	 *
-	 * @param string|array  $data data to be verified
-	 * @param string        $sign Sign string
+	 * @param string|array $data data to be verified
+	 * @param string $sign Sign string
 	 *
 	 * @return number|boolean
 	 */
 	public function verify( $data, $sign ) {
 		$signV = $this->sign( $data );
 
-		return ( ! empty( $sign ) ) && ( $sign === $signV );
+		return ! empty( $sign ) && ( $sign === $signV );
 	}
 
 	/**
 	 * generate token based on phone and time
 	 *
-	 * @param string  $data
-	 * @param string  $ts   Unix timestamp of token
+	 * @param string $data
+	 * @param string $ts Unix timestamp of token
 	 *
 	 * @return string
 	 */
 	public function get_token( $data, $ts ) {
-		$ts      = $ts;
 		$fresult = $this->sign( array( $data, $ts ) );
-		if ( self::$useBase64 ) {
+
+		if ( static::$useBase64 ) {
 			$fresult = base64_encode( $fresult );
 			$fresult = strtr( $fresult, '+/', '-_' );
-			$fresult = urlencode( $fresult );
+			$fresult = rawurlencode( $fresult );
 		}
 
 		return $fresult;
@@ -121,9 +122,9 @@ class LaterPay_Core_Auth_Hmac {
 	/**
 	 * Validate token
 	 *
-	 * @param string  $data  data
-	 * @param string  $ts    Time in seconds
-	 * @param string  $token Token string
+	 * @param string $data data
+	 * @param string $ts Time in seconds
+	 * @param string $token Token string
 	 *
 	 * @return boolean
 	 */
@@ -131,15 +132,17 @@ class LaterPay_Core_Auth_Hmac {
 		$now = time();
 
 		$fresult = false;
-		if ( ( $now - $ts ) < self::VALID_PERIOD ) {
-			if ( self::$useBase64 ) {
+
+		if ( ( $now - $ts ) < static::VALID_PERIOD ) {
+			if ( static::$useBase64 ) {
 				$temp = urldecode( $token );
 				$temp = strtr( $temp, '-_', '+/' );
 				$temp = base64_decode( $temp );
 			} else {
 				$temp = $token;
 			}
-			$fresult = ( $this->verify( array( $data ), $temp ) );
+
+			$fresult = $this->verify( array( $data ), $temp );
 		}
 
 		return $fresult;
@@ -148,13 +151,15 @@ class LaterPay_Core_Auth_Hmac {
 	/**
 	 * Retrieve instance
 	 *
-	 * @return LaterPay_Core_Auth_Hmac
+	 * @throws \Exception
+	 *
+	 * @return self
 	 */
 	public static function get_instance() {
-		if ( null === self::$_instance ) {
-			self::$_instance = new self();
+		if ( null === static::$_instance ) {
+			static::$_instance = new self();
 		}
 
-		return self::$_instance;
+		return static::$_instance;
 	}
 }

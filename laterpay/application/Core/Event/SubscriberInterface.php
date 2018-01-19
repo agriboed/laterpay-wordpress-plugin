@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Core\Event;
+
 /**
  * LaterPay Event Subscriber Interface.
  *
@@ -7,7 +9,8 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-interface LaterPay_Core_Event_SubscriberInterface {
+interface SubscriberInterface {
+
 	/**
 	 * Returns an array of event names this subscriber wants to listen to.
 	 *
@@ -26,7 +29,7 @@ interface LaterPay_Core_Event_SubscriberInterface {
 	 *
 	 * @return array The event names to listen to
 	 */
-	public static function get_subscribed_events();
+	public static function getSubscribedEvents();
 
 	/**
 	 * Returns an array of shared event names this subscriber wants to distribute.
@@ -36,5 +39,5 @@ interface LaterPay_Core_Event_SubscriberInterface {
 	 *
 	 * @return array The shared event names to distribute
 	 */
-	public static function get_shared_events();
+	public static function getSharedEvents();
 }

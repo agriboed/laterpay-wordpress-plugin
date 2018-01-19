@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Core\Logger\Formatter;
+
 /**
  * LaterPay logger formatter normalizer.
  *
@@ -7,8 +9,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_Formatter_Interface {
-
+class Normalizer implements FormatterInterface {
 
 	/**
 	 * @const string default date format
@@ -22,6 +23,8 @@ class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_
 
 	/**
 	 * @param string $date_format The format of the timestamp: one supported by DateTime::format
+	 *
+	 * @return void
 	 */
 	public function __construct( $date_format = null ) {
 		$this->date_format = ( $date_format === null ) ? self::SIMPLE_DATE : $date_format;
@@ -30,7 +33,7 @@ class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_
 	/**
 	 * Equile to normalize method
 	 *
-	 * @param array $recordRecord data
+	 * @param array $record data
 	 *
 	 * @return string
 	 */
@@ -43,7 +46,7 @@ class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_
 	 *
 	 * @return array
 	 */
-	public function format_batch( array $records ) {
+	public function formatBatch( array $records ) {
 		foreach ( $records as $key => $record ) {
 			$records[ $key ] = $this->format( $record );
 		}
@@ -56,7 +59,7 @@ class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_
 	 *
 	 * @param mixed $data - incoming variable for normalizing
 	 *
-	 * @return string
+	 * @return string|array
 	 */
 	protected function normalize( $data ) {
 		if ( null === $data || is_scalar( $data ) ) {
@@ -83,11 +86,11 @@ class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_
 		}
 
 		if ( is_object( $data ) ) {
-			if ( $data instanceof Exception ) {
-				return $this->normalize_exception( $data );
+			if ( $data instanceof \Exception ) {
+				return $this->normalizeException( $data );
 			}
 
-			return sprintf( '[object] (%s: %s)', get_class( $data ), $this->to_json( $data, true ) );
+			return sprintf( '[object] (%s: %s)', get_class( $data ), $this->toJSON( $data, true ) );
 		}
 
 		if ( is_resource( $data ) ) {
@@ -100,11 +103,11 @@ class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_
 	/**
 	 * Special method for normalizing exception.
 	 *
-	 * @param Exception $e
+	 * @param \Exception $e
 	 *
-	 * @return string
+	 * @return string|array
 	 */
-	protected function normalize_exception( Exception $e ) {
+	protected function normalizeException( \Exception $e ) {
 		$data = array(
 			'class'   => get_class( $e ),
 			'message' => $e->getMessage(),
@@ -116,12 +119,14 @@ class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_
 			if ( isset( $frame['file'] ) ) {
 				$data['trace'][] = $frame['file'] . ':' . $frame['line'];
 			} else {
-				$data['trace'][] = json_encode( $frame );
+				$data['trace'][] = wp_json_encode( $frame );
 			}
 		}
 
-		if ( $previous = $e->getPrevious() ) {
-			$data['previous'] = $this->normalize_exception( $previous );
+		$previous = $e->getPrevious();
+
+		if ( $previous ) {
+			$data['previous'] = $this->normalizeException( $previous );
 		}
 
 		return $data;
@@ -130,25 +135,25 @@ class LaterPay_Core_Logger_Formatter_Normalizer implements LaterPay_Core_Logger_
 	/**
 	 * Convert variable into JSON.
 	 *
-	 * @param mixed  $data
-	 * @param bool   $ignoreErrors - ignore errors or not
+	 * @param mixed $data
+	 * @param bool $ignoreErrors - ignore errors or not
 	 *
 	 * @return string
 	 */
-	protected function to_json( $data, $ignoreErrors = false ) {
+	protected function toJSON( $data, $ignoreErrors = false ) {
 		// suppress json_encode errors since it's twitchy with some inputs
 		if ( $ignoreErrors ) {
-			if ( version_compare( PHP_VERSION, '5.4.0', '>=' ) ) {
-				return @json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+			if ( PHP_VERSION_ID >= 50400 ) {
+				return wp_json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 			}
 
-			return @json_encode( $data );
+			return wp_json_encode( $data );
 		}
 
-		if ( version_compare( PHP_VERSION, '5.4.0', '>=' ) ) {
-			return json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		if ( PHP_VERSION_ID >= 50400 ) {
+			return wp_json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		}
 
-		return json_encode( $data );
+		return wp_json_encode( $data );
 	}
 }

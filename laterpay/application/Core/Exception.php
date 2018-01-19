@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Core;
+
 /**
  * LaterPay core exception.
  *
@@ -7,7 +9,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Exception extends Exception {
+class Exception extends \Exception {
 
 	/**
 	 * Context
@@ -25,7 +27,9 @@ class LaterPay_Core_Exception extends Exception {
 
 	/**
 	 * Set context
+	 *
 	 * @param array $data
+	 *
 	 * @return void
 	 */
 	public function setContext( array $data = array() ) {

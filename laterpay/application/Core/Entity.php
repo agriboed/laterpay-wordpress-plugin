@@ -1,5 +1,8 @@
 <?php
 
+namespace LaterPay\Core;
+
+
 /**
  * LaterPay core entity.
  *
@@ -7,62 +10,61 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Entity {
-
+class Entity {
 
 	/**
 	 * Object attributes
 	 *
 	 * @var array
 	 */
-	protected $_data = array();
+	protected $data = array();
 
 	/**
 	 * Data changes flag (true after set_data|unset_data call)
 	 *
 	 * @var $_has_dataChange boolean
 	 */
-	protected $_has_data_changes = false;
+	protected $hasDataChanges = false;
 
 	/**
 	 * Original data loaded
 	 *
 	 * @var array
 	 */
-	protected $_origData;
+	protected $originalData;
 
 	/**
 	 * Name of object id field
 	 *
 	 * @var string
 	 */
-	protected $_idFieldName = null;
+	protected $idFieldName;
 
 	/**
 	 * Setter / getter underscore transformation cache
 	 *
 	 * @var array
 	 */
-	protected static $_underscoreCache = array();
+	protected static $underscoreCache = array();
 
 	/**
 	 * Object deleted flag
 	 *
 	 * @var boolean
 	 */
-	protected $_is_deleted = false;
+	protected $isDeleted = false;
 
 	/**
 	 * Map short fields names to their full names
 	 *
 	 * @var array
 	 */
-	protected $_oldFieldsMap = array();
+	protected $oldFieldsMap = array();
 
 	/**
 	 * Map of fields to sync to other fields upon changing their data
 	 */
-	protected $_syncFieldsMap = array();
+	protected $syncFieldsMap = array();
 
 	/**
 	 * Constructor
@@ -72,32 +74,32 @@ class LaterPay_Core_Entity {
 	 *
 	 */
 	public function __construct() {
-		$this->_init_old_fields_map();
-		if ( $this->_oldFieldsMap ) {
-			$this->_prepare_sync_map_for_fields();
+		$this->initOldFieldsMap();
+		if ( $this->oldFieldsMap ) {
+			$this->prepareSyncMapForFields();
 		}
 
 		$args = func_get_args();
 		if ( empty( $args[0] ) ) {
 			$args[0] = array();
 		}
-		$this->_data = $args[0];
-		$this->_add_full_names();
+		$this->data = $args[0];
+		$this->addFullNames();
 
-		$this->_construct();
+		$this->init();
 	}
 
 	/**
 	 *
 	 * @return void
 	 */
-	protected function _add_full_names() {
-		$existing_short_keys = array_intersect( $this->_syncFieldsMap, array_keys( $this->_data ) );
+	protected function addFullNames() {
+		$existing_short_keys = array_intersect( $this->syncFieldsMap, array_keys( $this->data ) );
 
 		if ( ! empty( $existing_short_keys ) ) {
 			foreach ( $existing_short_keys as $key ) {
-				$fullFieldName                 = array_search( $key, $this->_syncFieldsMap );
-				$this->_data[ $fullFieldName ] = $this->_data[ $key ];
+				$fullFieldName                = array_search( $key, $this->syncFieldsMap, true );
+				$this->data[ $fullFieldName ] = $this->data[ $key ];
 			}
 		}
 	}
@@ -108,18 +110,18 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return void
 	 */
-	protected function _init_old_fields_map() {
+	protected function initOldFieldsMap() {
 	}
 
 	/**
 	 * Called after old fields are initiated. Forms synchronization map to sync old fields and new fields.
 	 *
-	 * @return LaterPay_Core_Entity
+	 * @return Entity
 	 */
-	protected function _prepare_sync_map_for_fields() {
-		$old2New              = $this->_oldFieldsMap;
-		$new2Old              = array_flip( $this->_oldFieldsMap );
-		$this->_syncFieldsMap = array_merge( $old2New, $new2Old );
+	protected function prepareSyncMapForFields() {
+		$old2New             = $this->oldFieldsMap;
+		$new2Old             = array_flip( $this->oldFieldsMap );
+		$this->syncFieldsMap = array_merge( $old2New, $new2Old );
 
 		return $this;
 	}
@@ -127,9 +129,9 @@ class LaterPay_Core_Entity {
 	/**
 	 * Internal constructor not dependent on parameters. Can be used for object initialization.
 	 *
-	 * @return  LaterPay_Core_Entity
 	 */
-	protected function _construct() { }
+	protected function init() {
+	}
 
 	/**
 	 * Set _is_deleted flag value (if $is_deleted parameter is defined) and return current flag value.
@@ -138,10 +140,10 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return boolean
 	 */
-	public function is_deleted( $is_deleted = null ) {
-		$result = $this->_is_deleted;
-		if ( ! is_null( $is_deleted ) ) {
-			$this->_is_deleted = $is_deleted;
+	public function isDeleted( $is_deleted = null ) {
+		$result = $this->isDeleted;
+		if ( null !== $is_deleted ) {
+			$this->isDeleted = $is_deleted;
 		}
 
 		return $result;
@@ -152,8 +154,8 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return boolean
 	 */
-	public function has_data_changes() {
-		return $this->_has_data_changes;
+	public function hasDataChanges() {
+		return $this->hasDataChanges;
 	}
 
 	/**
@@ -161,10 +163,10 @@ class LaterPay_Core_Entity {
 	 *
 	 * @param string $name
 	 *
-	 * @return LaterPay_Core_Entity
+	 * @return Entity
 	 */
-	public function set_id_field_name( $name ) {
-		$this->_idFieldName = $name;
+	public function setIdFieldName( $name ) {
+		$this->idFieldName = $name;
 
 		return $this;
 	}
@@ -174,8 +176,8 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return string
 	 */
-	public function get_id_field_name() {
-		return $this->_idFieldName;
+	public function getIdFieldName() {
+		return $this->idFieldName;
 	}
 
 	/**
@@ -183,9 +185,9 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return mixed
 	 */
-	public function get_id() {
-		if ( $this->get_id_field_name() ) {
-			return $this->_get_data( $this->get_id_field_name() );
+	public function getId() {
+		if ( $this->getIdFieldName() ) {
+			return $this->_get_data( $this->getIdFieldName() );
 		}
 
 		return $this->_get_data( 'id' );
@@ -196,13 +198,13 @@ class LaterPay_Core_Entity {
 	 *
 	 * @param mixed $value
 	 *
-	 * @return LaterPay_Core_Entity
+	 * @return Entity
 	 */
-	public function set_id( $value ) {
-		if ( $this->get_id_field_name() ) {
-			$this->set_data( $this->get_id_field_name(), $value );
+	public function setId( $value ) {
+		if ( $this->getIdFieldName() ) {
+			$this->setData( $this->getIdFieldName(), $value );
 		} else {
-			$this->set_data( 'id', $value );
+			$this->setData( 'id', $value );
 		}
 
 		return $this;
@@ -215,11 +217,11 @@ class LaterPay_Core_Entity {
 	 *
 	 * @param array $arr
 	 *
-	 * @return LaterPay_Core_Entity
+	 * @return Entity
 	 */
-	public function add_data( array $arr ) {
+	public function addData( array $arr ) {
 		foreach ( $arr as $index => $value ) {
-			$this->set_data( $index, $value );
+			$this->setData( $index, $value );
 		}
 
 		return $this;
@@ -233,22 +235,26 @@ class LaterPay_Core_Entity {
 	 *
 	 * If $key is an array, it will overwrite all the data in the object.
 	 *
-	 * @param string|array  $key
-	 * @param mixed         $value
+	 * @param string|array $key
+	 * @param mixed $value
 	 *
-	 * @return LaterPay_Core_Entity
+	 * @return Entity
 	 */
-	public function set_data( $key, $value = null ) {
-		$this->_has_data_changes = true;
+	public function setData( $key, $value = null ) {
+		$this->hasDataChanges = true;
 
 		if ( is_array( $key ) ) {
-			$this->_data = $key;
-			$this->_add_full_names();
+			$this->data = $key;
+			$this->addFullNames();
 		} else {
-			$this->_data[ $key ] = $value;
-			if ( isset( $this->_syncFieldsMap[ $key ] ) ) {
-				$fullFieldName                 = $this->_syncFieldsMap[ $key ];
-				$this->_data[ $fullFieldName ] = $value;
+			$this->data[ $key ] = $value;
+
+			/**
+			 * @var $key string
+			 */
+			if ( isset( $this->syncFieldsMap[ $key ] ) ) {
+				$fullFieldName                = $this->syncFieldsMap[ $key ];
+				$this->data[ $fullFieldName ] = $value;
 			}
 		}
 
@@ -262,18 +268,18 @@ class LaterPay_Core_Entity {
 	 *
 	 * @param null|string $key
 	 *
-	 * @return LaterPay_Core_Entity
+	 * @return Entity
 	 */
-	public function unset_data( $key = null ) {
-		$this->_has_data_changes = true;
+	public function unsetData( $key = null ) {
+		$this->hasDataChanges = true;
 
-		if ( is_null( $key ) ) {
-			$this->_data = array();
+		if ( null === $key ) {
+			$this->data = array();
 		} else {
-			unset( $this->_data[ $key ] );
-			if ( isset( $this->_syncFieldsMap[ $key ] ) ) {
-				$fullFieldName = $this->_syncFieldsMap[ $key ];
-				unset( $this->_data[ $fullFieldName ] );
+			unset( $this->data[ $key ] );
+			if ( isset( $this->syncFieldsMap[ $key ] ) ) {
+				$fullFieldName = $this->syncFieldsMap[ $key ];
+				unset( $this->data[ $fullFieldName ] );
 			}
 		}
 
@@ -287,15 +293,15 @@ class LaterPay_Core_Entity {
 	 *
 	 * @param null|string $key
 	 *
-	 * @return LaterPay_Core_Entity
+	 * @return Entity
 	 */
-	public function unset_old_data( $key = null ) {
-		if ( is_null( $key ) ) {
-			foreach ( $this->_syncFieldsMap as $key => $newFieldName ) {
-				unset( $this->_data[ $key ] );
+	public function unsetOldData( $key = null ) {
+		if ( null === $key ) {
+			foreach ( array_keys( $this->syncFieldsMap ) as $k ) {
+				unset( $this->data[ $k ] );
 			}
 		} else {
-			unset( $this->_data[ $key ] );
+			unset( $this->data[ $key ] );
 		}
 
 		return $this;
@@ -315,18 +321,17 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return array
 	 */
-	public function get_data( $key = '', $index = null ) {
+	public function getData( $key = '', $index = null ) {
 		if ( $key === '' ) {
-			return $this->_data;
+			return $this->data;
 		}
 
 		$default = null;
 
-		// accept a/b/c as ['a']['b']['c']
 		if ( strpos( $key, '/' ) ) {
 			$keyArr = explode( '/', $key );
-			$data   = $this->_data;
-			foreach ( $keyArr as $i => $k ) {
+			$data   = $this->data;
+			foreach ( $keyArr as $k ) {
 				if ( $k === '' ) {
 					return $default;
 				}
@@ -335,7 +340,7 @@ class LaterPay_Core_Entity {
 						return $default;
 					}
 					$data = $data[ $k ];
-				} elseif ( $data instanceof Varien_Object ) {
+				} elseif ( $data instanceof \Varien_Object ) {
 					$data = $data->get_data( $k );
 				} else {
 					return $default;
@@ -346,12 +351,12 @@ class LaterPay_Core_Entity {
 		}
 
 		// legacy functionality for $index
-		if ( isset( $this->_data[ $key ] ) ) {
-			if ( is_null( $index ) ) {
-				return $this->_data[ $key ];
+		if ( isset( $this->data[ $key ] ) ) {
+			if ( null === $index ) {
+				return $this->data[ $key ];
 			}
 
-			$value = $this->_data[ $key ];
+			$value = $this->data[ $key ];
 			if ( is_array( $value ) ) {
 				// use any existing data, even if it's empty
 				if ( isset( $value[ $index ] ) ) {
@@ -368,7 +373,7 @@ class LaterPay_Core_Entity {
 				}
 
 				return $aux;
-			} elseif ( $value instanceof Varien_Object ) {
+			} elseif ( $value instanceof \Varien_Object ) {
 				return $value->get_data( $index );
 			}
 
@@ -386,8 +391,8 @@ class LaterPay_Core_Entity {
 	 * @return  mixed
 	 */
 	protected function _get_data( $key ) {
-		if ( isset( $this->_data[ $key ] ) ) {
-			$aux = $this->_data[ $key ];
+		if ( isset( $this->data[ $key ] ) ) {
+			$aux = $this->data[ $key ];
 		} else {
 			$aux = null;
 		}
@@ -399,12 +404,12 @@ class LaterPay_Core_Entity {
 	 * Set object data by calling setter method.
 	 *
 	 * @param string $key
-	 * @param mixed  $args
+	 * @param mixed $args
 	 *
-	 * @return Varien_Object
+	 * @return self
 	 */
-	public function set_data_using_method( $key, $args = array() ) {
-		$method = 'set' . $this->_camelize( $key );
+	public function set_data_using_method( $key, array $args = array() ) {
+		$method = 'set' . $this->camelize( $key );
 		$this->$method( $args );
 
 		return $this;
@@ -414,12 +419,12 @@ class LaterPay_Core_Entity {
 	 * Get object data by key by calling getter method.
 	 *
 	 * @param string $key
-	 * @param mixed  $args
+	 * @param mixed $args
 	 *
 	 * @return mixed
 	 */
 	public function get_data_using_method( $key, $args = null ) {
-		$method = 'get' . $this->_camelize( $key );
+		$method = 'get' . $this->camelize( $key );
 
 		return $this->$method( $args );
 	}
@@ -428,16 +433,16 @@ class LaterPay_Core_Entity {
 	 * Get data or set default value, if value is not available.
 	 *
 	 * @param string $key
-	 * @param mixed  $default
+	 * @param mixed $default
 	 *
 	 * @return mixed
 	 */
 	public function get_data_set_default( $key, $default ) {
-		if ( ! isset( $this->_data[ $key ] ) ) {
-			$this->_data[ $key ] = $default;
+		if ( ! isset( $this->data[ $key ] ) ) {
+			$this->data[ $key ] = $default;
 		}
 
-		return $this->_data[ $key ];
+		return $this->data[ $key ];
 	}
 
 	/**
@@ -450,10 +455,10 @@ class LaterPay_Core_Entity {
 	 */
 	public function has_data( $key = '' ) {
 		if ( empty( $key ) || ! is_string( $key ) ) {
-			return ! empty( $this->_data );
+			return ! empty( $this->data );
 		}
 
-		return array_key_exists( $key, $this->_data );
+		return array_key_exists( $key, $this->data );
 	}
 
 	/**
@@ -465,13 +470,13 @@ class LaterPay_Core_Entity {
 	 */
 	public function to_array( array $arrAttributes = array() ) {
 		if ( empty( $arrAttributes ) ) {
-			return $this->_data;
+			return $this->data;
 		}
 
 		$arrRes = array();
 		foreach ( $arrAttributes as $attribute ) {
-			if ( isset( $this->_data[ $attribute ] ) ) {
-				$arrRes[ $attribute ] = $this->_data[ $attribute ];
+			if ( isset( $this->data[ $attribute ] ) ) {
+				$arrRes[ $attribute ] = $this->data[ $attribute ];
 			} else {
 				$arrRes[ $attribute ] = null;
 			}
@@ -501,8 +506,8 @@ class LaterPay_Core_Entity {
 	/**
 	 * Convert object attributes to XML.
 	 *
-	 * @param array  $arrAttributes array of required attributes
-	 * @param string $rootName      name of the root element
+	 * @param array $arrAttributes array of required attributes
+	 * @param string $rootName name of the root element
 	 * @param boolean $addOpenTag
 	 * @param boolean $addCdata
 	 *
@@ -519,7 +524,7 @@ class LaterPay_Core_Entity {
 			$xml .= '<' . $rootName . '>' . "\n";
 		}
 
-		$xmlModel = new Varien_Simplexml_Element( '<node></node>' );
+		$xmlModel = new \Varien_Simplexml_Element( '<node></node>' );
 
 		$arrData = $this->to_array( $arrAttributes );
 		foreach ( $arrData as $fieldName => $fieldValue ) {
@@ -548,9 +553,8 @@ class LaterPay_Core_Entity {
 	 */
 	public function to_json( array $arrAttributes = array() ) {
 		$arrData = $this->to_array( $arrAttributes );
-		$json    = json_encode( $arrData );
 
-		return $json;
+		return wp_json_encode( $arrData );
 	}
 
 	/**
@@ -564,11 +568,11 @@ class LaterPay_Core_Entity {
 	 */
 	public function to_string( $format = '' ) {
 		if ( empty( $format ) ) {
-			$str = implode( ', ', $this->get_data() );
+			$str = implode( ', ', $this->getData() );
 		} else {
 			preg_match_all( '/\{\{([a-z0-9_]+)\}\}/is', $format, $matches );
 			foreach ( $matches[1] as $var ) {
-				$format = str_replace( '{{' . $var . '}}', $this->get_data( $var ), $format );
+				$format = str_replace( '{{' . $var . '}}', $this->getData( $var ), $format );
 			}
 			$str = $format;
 		}
@@ -580,7 +584,7 @@ class LaterPay_Core_Entity {
 	 * Get / set attribute wrapper.
 	 *
 	 * @param string $method
-	 * @param array  $args
+	 * @param array $args
 	 *
 	 * @return mixed
 	 */
@@ -593,7 +597,8 @@ class LaterPay_Core_Entity {
 				} else {
 					$aux = null;
 				}
-				$data = $this->get_data( $key, $aux );
+				$data = $this->getData( $key, $aux );
+
 				return $data;
 
 			case 'set':
@@ -603,20 +608,24 @@ class LaterPay_Core_Entity {
 				} else {
 					$aux = null;
 				}
-				$data = $this->set_data( $key, $aux );
+				$data = $this->setData( $key, $aux );
+
 				return $data;
 
 			case 'uns':
-				$key    = $this->_underscore( substr( $method, 3 ) );
-				$result = $this->unset_data( $key );
-				return $result;
+				$key = $this->_underscore( substr( $method, 3 ) );
+
+				return $this->unsetData( $key );
 
 			case 'has':
 				$key = $this->_underscore( substr( $method, 3 ) );
-				return isset( $this->_data[ $key ] );
+
+				return isset( $this->data[ $key ] );
 		}
 
-		throw new Varien_Exception( 'Invalid method ' . get_class( $this ) . '::' . $method . '(' . print_r( $args, 1 ) . ')' );
+		throw new \Varien_Exception(
+			'Invalid method ' . get_class( $this ) . '::' . $method
+		);
 	}
 
 	/**
@@ -629,7 +638,7 @@ class LaterPay_Core_Entity {
 	public function __get( $var ) {
 		$var = $this->_underscore( $var );
 
-		return $this->get_data( $var );
+		return $this->getData( $var );
 	}
 
 	/**
@@ -642,7 +651,7 @@ class LaterPay_Core_Entity {
 	public function __set( $var, $value ) {
 		$var = $this->_underscore( $var );
 
-		$this->set_data( $var, $value );
+		$this->setData( $var, $value );
 	}
 
 	/**
@@ -651,7 +660,7 @@ class LaterPay_Core_Entity {
 	 * @return boolean
 	 */
 	public function is_empty() {
-		if ( empty( $this->_data ) ) {
+		if ( empty( $this->data ) ) {
 			return true;
 		}
 
@@ -669,13 +678,13 @@ class LaterPay_Core_Entity {
 	 * @return string
 	 */
 	protected function _underscore( $name ) {
-		if ( isset( self::$_underscoreCache[ $name ] ) ) {
-			return self::$_underscoreCache[ $name ];
+		if ( isset( self::$underscoreCache[ $name ] ) ) {
+			return self::$underscoreCache[ $name ];
 		}
 
 		$result = strtolower( preg_replace( '/(.)([A-Z])/', '$1_$2', $name ) );
 
-		self::$_underscoreCache[ $name ] = $result;
+		self::$underscoreCache[ $name ] = $result;
 
 		return $result;
 	}
@@ -687,38 +696,35 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return string the string in camelCase
 	 */
-	protected function _camelize( $name ) {
-		return uc_words( $name, '' );
+	protected function camelize( $name ) {
+		return ucwords( $name, '' );
 	}
 
 	/**
 	 * Serialize object attributes.
 	 *
-	 * @param array  $attributes
+	 * @param array $attributes
 	 * @param string $valueSeparator
 	 * @param string $fieldSeparator
 	 * @param string $quote
 	 *
 	 * @return string $serialized_object_attributes
 	 */
-	public function serialize( $attributes = array(), $valueSeparator = '=', $fieldSeparator = ' ', $quote = '"' ) {
-		$serialized_object_attributes = '';
-		$data                         = array();
+	public function serialize( array $attributes = array(), $valueSeparator = '=', $fieldSeparator = ' ', $quote = '"' ) {
+		$data = array();
 
 		if ( empty( $attributes ) ) {
-			$attributes = array_keys( $this->_data );
+			$attributes = array_keys( $this->data );
 		}
 
-		foreach ( $this->_data as $key => $value ) {
-			if ( in_array( $key, $attributes ) ) {
+		foreach ( $this->data as $key => $value ) {
+			if ( in_array( $key, $attributes, true ) ) {
 				$data[] = $key . $valueSeparator . $quote . $value . $quote;
 			}
 		}
 
 		// convert array to string
-		$serialized_object_attributes = implode( $fieldSeparator, $data );
-
-		return $serialized_object_attributes;
+		return implode( $fieldSeparator, $data );
 	}
 
 	/**
@@ -728,13 +734,13 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return mixed
 	 */
-	public function get_original_data( $key = null ) {
-		if ( is_null( $key ) ) {
-			return $this->_origData;
+	public function getOriginalData( $key = null ) {
+		if ( null === $key ) {
+			return $this->originalData;
 		}
 
-		if ( isset( $this->_origData[ $key ] ) ) {
-			$aux = $this->_origData[ $key ];
+		if ( isset( $this->originalData[ $key ] ) ) {
+			$aux = $this->originalData[ $key ];
 		} else {
 			$aux = null;
 		}
@@ -746,15 +752,15 @@ class LaterPay_Core_Entity {
 	 * Initialize object's original data.
 	 *
 	 * @param string $key
-	 * @param mixed  $data
+	 * @param mixed $data
 	 *
-	 * @return Varien_Object
+	 * @return self
 	 */
-	public function set_original_data( $key = null, $data = null ) {
-		if ( is_null( $key ) ) {
-			$this->_origData = $this->_data;
+	public function setOriginalData( $key = null, $data = null ) {
+		if ( null === $key ) {
+			$this->originalData = $this->data;
 		} else {
-			$this->_origData[ $key ] = $data;
+			$this->originalData[ $key ] = $data;
 		}
 
 		return $this;
@@ -767,11 +773,11 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return boolean
 	 */
-	public function data_has_changed_for( $field ) {
-		$newData  = $this->get_data( $field );
-		$origData = $this->get_original_data( $field );
+	public function dataHasChangedFor( $field ) {
+		$newData  = $this->getData( $field );
+		$origData = $this->getOriginalData( $field );
 
-		return $newData != $origData;
+		return $newData !== $origData;
 	}
 
 	/**
@@ -779,10 +785,10 @@ class LaterPay_Core_Entity {
 	 *
 	 * @param boolean $value
 	 *
-	 * @return Varien_Object
+	 * @return self
 	 */
-	public function set_data_changes( $value ) {
-		$this->_has_data_changes = (bool) $value;
+	public function setDataChanges( $value ) {
+		$this->hasDataChanges = (bool) $value;
 
 		return $this;
 	}
@@ -793,10 +799,10 @@ class LaterPay_Core_Entity {
 	 * @param mixed $data
 	 * @param array $objects
 	 *
-	 * @return string
+	 * @return string|array
 	 */
 	public function debug( $data = null, &$objects = array() ) {
-		if ( is_null( $data ) ) {
+		if ( null === $data ) {
 			$hash = spl_object_hash( $this );
 
 			if ( ! empty( $objects[ $hash ] ) ) {
@@ -804,7 +810,7 @@ class LaterPay_Core_Entity {
 			}
 
 			$objects[ $hash ] = true;
-			$data             = $this->get_data();
+			$data             = $this->getData();
 		}
 
 		$debug = array();
@@ -813,7 +819,7 @@ class LaterPay_Core_Entity {
 				$debug[ $key ] = $value;
 			} elseif ( is_array( $value ) ) {
 				$debug[ $key ] = $this->debug( $value, $objects );
-			} elseif ( $value instanceof Varien_Object ) {
+			} elseif ( $value instanceof \Varien_Object ) {
 				$debug[ $key . ' (' . get_class( $value ) . ')' ] = $value->debug( null, $objects );
 			}
 		}
@@ -826,11 +832,11 @@ class LaterPay_Core_Entity {
 	 *
 	 * @link http://www.php.net/manual/en/arrayaccess.offsetset.php
 	 *
-	 * @param string  $offset
-	 * @param mixed   $value
+	 * @param string $offset
+	 * @param mixed $value
 	 */
-	public function offset_set( $offset, $value ) {
-		$this->_data[ $offset ] = $value;
+	public function offsetSet( $offset, $value ) {
+		$this->data[ $offset ] = $value;
 	}
 
 	/**
@@ -842,8 +848,8 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return boolean
 	 */
-	public function offset_exists( $offset ) {
-		return isset( $this->_data[ $offset ] );
+	public function offsetExists( $offset ) {
+		return isset( $this->data[ $offset ] );
 	}
 
 	/**
@@ -853,8 +859,8 @@ class LaterPay_Core_Entity {
 	 *
 	 * @param string $offset
 	 */
-	public function offset_unset( $offset ) {
-		unset( $this->_data[ $offset ] );
+	public function offsetUnset( $offset ) {
+		unset( $this->data[ $offset ] );
 	}
 
 	/**
@@ -866,9 +872,9 @@ class LaterPay_Core_Entity {
 	 *
 	 * @return mixed
 	 */
-	public function offset_get( $offset ) {
-		if ( isset( $this->_data[ $offset ] ) ) {
-			$aux = $this->_data[ $offset ];
+	public function offsetGet( $offset ) {
+		if ( isset( $this->data[ $offset ] ) ) {
+			$aux = $this->data[ $offset ];
 		} else {
 			$aux = null;
 		}
@@ -885,7 +891,8 @@ class LaterPay_Core_Entity {
 		if ( empty( $this->_dirty ) ) {
 			return false;
 		}
-		if ( is_null( $field ) ) {
+
+		if ( null === $field ) {
 			return true;
 		}
 
@@ -895,15 +902,15 @@ class LaterPay_Core_Entity {
 	/**
 	 * Flag a field as dirty.
 	 *
-	 * @param string    $field
-	 * @param boolean   $flag
+	 * @param string $field
+	 * @param boolean $flag
 	 *
-	 * @return LaterPay_Core_Entity
+	 * @return Entity
 	 */
-	public function flag_dirty( $field, $flag = true ) {
-		if ( is_null( $field ) ) {
-			foreach ( $this->get_data() as $field => $value ) {
-				$this->flag_dirty( $field, $flag );
+	public function flagDirty( $field, $flag = true ) {
+		if ( null === $field ) {
+			foreach ( array_keys( $this->getData() ) as $f ) {
+				$this->flagDirty( $f, $flag );
 			}
 		} else {
 			if ( $flag ) {

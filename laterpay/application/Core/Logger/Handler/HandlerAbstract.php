@@ -1,10 +1,23 @@
 <?php
 
-abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View implements LaterPay_Core_Logger_Handler_Interface {
+namespace LaterPay\Core\Logger\Handler;
 
+use LaterPay\Core\Logger\Formatter\FormatterInterface;
+use LaterPay\Core\Logger\Formatter\Normalizer;
+use LaterPay\Core\Logger;
+use LaterPay\Core\View;
+
+/**
+ * Class HandlerAbstract
+ *
+ * Plugin Name: LaterPay
+ * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
+ * Author URI: https://laterpay.net/
+ */
+abstract class HandlerAbstract extends View implements HandlerInterface {
 
 	/**
-	 * @var FormatterInterface
+	 * @var \LaterPay\Core\Logger\Formatter\FormatterInterface
 	 */
 	protected $formatter;
 
@@ -14,15 +27,15 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	protected $processors = array();
 
 	/**
-	 * @see LaterPay_Core_Logger
+	 * @see Logger
 	 * @var int Level of record to handle
 	 */
-	protected $level = LaterPay_Core_Logger::DEBUG;
+	protected $level = Logger::DEBUG;
 
 	/**
-	* @param integer $level
-	*/
-	public function __construct( $level = LaterPay_Core_Logger::DEBUG ) {
+	 * @param integer $level
+	 */
+	public function __construct( $level = Logger::DEBUG ) {
 		$this->level = $level;
 		parent::__construct();
 	}
@@ -34,16 +47,16 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	 *
 	 * @return void
 	 */
-	public function handle_batch( array $records ) {
+	public function handleBatch( array $records ) {
 		foreach ( $records as $record ) {
 			$this->handle( $record );
 		}
 	}
 
-	protected function get_formatted( array $record ) {
+	protected function getFormatted( array $record ) {
 		$output = "%datetime%:%pid%.%channel%.%level_name%: %message% %context%\n";
 		foreach ( $record as $var => $val ) {
-			$output = str_replace( '%' . $var . '%', $this->convert_to_string( $val ), $output );
+			$output = str_replace( '%' . $var . '%', $this->convertToString( $val ), $output );
 		}
 
 		return $output;
@@ -54,13 +67,15 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	 *
 	 * This will be called automatically when the object is destroyed.
 	 */
-	public function close() {}
+	public function close() {
+	}
 
 	public function __destruct() {
 		try {
 			$this->close();
-		} catch ( Exception $e ) {
+		} catch ( \Exception $e ) {
 			// do nothing
+			$e->getMessage();
 		}
 	}
 
@@ -71,16 +86,16 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	 *
 	 * @return string
 	 */
-	protected function convert_to_string( $data ) {
+	protected function convertToString( $data ) {
 		if ( null === $data || is_scalar( $data ) ) {
 			return (string) $data;
 		}
 
-		if ( version_compare( PHP_VERSION, '5.4.0', '>=' ) && defined( 'JSON_UNESCAPED_SLASHES' ) && defined( 'JSON_UNESCAPED_UNICODE' ) ) {
-			return json_encode( $this->normalize( $data ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		if ( PHP_VERSION_ID >= 50400 && defined( 'JSON_UNESCAPED_SLASHES' ) && defined( 'JSON_UNESCAPED_UNICODE' ) ) {
+			return wp_json_encode( $this->normalize( $data ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		}
 
-		return str_replace( '\\/', '/', json_encode( $this->normalize( $data ) ) );
+		return str_replace( '\\/', '/', wp_json_encode( $this->normalize( $data ) ) );
 	}
 
 	/**
@@ -91,15 +106,15 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	 * @return mixed
 	 */
 	protected function normalize( $data ) {
-		if ( is_bool( $data ) || is_null( $data ) ) {
-			return var_export( $data, true );
+		if ( is_bool( $data ) || null === $data ) {
+			return null;
 		}
 
 		if ( null === $data || is_scalar( $data ) ) {
 			return $data;
 		}
 
-		if ( is_array( $data ) || $data instanceof Traversable ) {
+		if ( is_array( $data ) || $data instanceof \Traversable ) {
 			$normalized = array();
 
 			foreach ( $data as $key => $value ) {
@@ -109,12 +124,12 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 			return $normalized;
 		}
 
-		if ( $data instanceof DateTime ) {
+		if ( $data instanceof \DateTime ) {
 			return $data->format( 'Y-m-d H:i:s.u' );
 		}
 
 		if ( is_object( $data ) ) {
-			return sprintf( '[object] (%s: %s)', get_class( $data ), json_encode( $data ) );
+			return sprintf( '[object] (%s: %s)', get_class( $data ), wp_json_encode( $data ) );
 		}
 
 		if ( is_resource( $data ) ) {
@@ -131,7 +146,7 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	 *
 	 * @return bool
 	 */
-	public function is_handling( array $record ) {
+	public function isHandling( array $record ) {
 		return $record['level'] >= $this->level;
 	}
 
@@ -139,12 +154,17 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	/**
 	 * @param callable new processor which must be added into processors list
 	 *
+	 * @throws \InvalidArgumentException
+	 *
 	 * @return self
 	 */
-	public function push_processor( $callback ) {
+	public function pushProcessor( $callback ) {
 		if ( ! is_callable( $callback ) ) {
-			throw new \InvalidArgumentException( 'Processors must be valid callables (callback or object with an __invoke method), ' . var_export( $callback, true ) . ' given' );
+			throw new \InvalidArgumentException(
+				'Processors must be valid callables (callback or object with an __invoke method), ' . $callback . ' given'
+			);
 		}
+
 		array_unshift( $this->processors, $callback );
 
 		return $this;
@@ -153,9 +173,11 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	/**
 	 * Remove first processor from stack
 	 *
+	 * @throws \LogicException
+	 *
 	 * @return callable first processor from stack
 	 */
-	public function pop_processor() {
+	public function popProcessor() {
 		if ( ! $this->processors ) {
 			throw new \LogicException( 'You tried to pop from an empty processor stack.' );
 		}
@@ -164,21 +186,22 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	}
 
 	/**
-	 * @param LaterPay_Core_Logger_Formatter_Interface formatter
+	 * @param FormatterInterface $formatter
 	 *
 	 * @return self
 	 */
-	public function set_formatter( LaterPay_Core_Logger_Formatter_Interface $formatter ) {
+	public function setFormatter( FormatterInterface $formatter ) {
 		$this->formatter = $formatter;
+
 		return $this;
 	}
 
 	/**
-	 * @return LaterPay_Core_Logger_Formatter_Interface current or default formatter
+	 * @return FormatterInterface current or default formatter
 	 */
-	public function get_formatter() {
+	public function getFormatter() {
 		if ( ! $this->formatter ) {
-			$this->formatter = $this->get_default_formatter();
+			$this->formatter = $this->getDefaultFormatter();
 		}
 
 		return $this->formatter;
@@ -191,8 +214,9 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	 *
 	 * @return self
 	 */
-	public function set_level( $level ) {
+	public function setLevel( $level ) {
 		$this->level = $level;
+
 		return $this;
 	}
 
@@ -201,17 +225,16 @@ abstract class LaterPay_Core_Logger_Handler_Abstract extends LaterPay_Core_View 
 	 *
 	 * @return integer
 	 */
-	public function get_level() {
+	public function getLevel() {
 		return $this->level;
 	}
 
 	/**
-	 * Gets the default formatter.
+	 * Gets the default formatter
 	 *
-	 * @return LaterPay_Core_Logger_Formatter_Interface
+	 * @return Normalizer
 	 */
-	protected function get_default_formatter() {
-		return new LaterPay_Core_Logger_Formatter_Normalizer();
+	protected function getDefaultFormatter() {
+		return new Normalizer();
 	}
-
 }

@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Core\Logger\Handler;
+
+use LaterPay\Core\Logger\Formatter\FormatterInterface;
+
 /**
  * LaterPay core logger handler interface.
  *
@@ -7,7 +11,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-interface LaterPay_Core_Logger_Handler_Interface {
+interface HandlerInterface {
 
 
 	/**
@@ -23,7 +27,7 @@ interface LaterPay_Core_Logger_Handler_Interface {
 	 *
 	 * @return Boolean
 	 */
-	public function is_handling( array $record );
+	public function isHandling( array $record);
 
 	/**
 	 * Handles a record.
@@ -40,14 +44,14 @@ interface LaterPay_Core_Logger_Handler_Interface {
 	 * @return Boolean true means that this handler handled the record, and that bubbling is not permitted.
 	 *                        false means the record was either not processed or that this handler allows bubbling.
 	 */
-	public function handle( array $record );
+	public function handle( array $record);
 
 	/**
 	 * Handles a set of records at once.
 	 *
 	 * @param array $records The records to handle (an array of record arrays)
 	 */
-	public function handle_batch( array $records );
+	public function handleBatch( array $records);
 
 	/**
 	 * Adds a processor in the stack.
@@ -56,29 +60,29 @@ interface LaterPay_Core_Logger_Handler_Interface {
 	 *
 	 * @return self
 	 */
-	public function push_processor( $callback );
+	public function pushProcessor( $callback);
 
 	/**
 	 * Removes the processor on top of the stack and returns it.
 	 *
 	 * @return callable
 	 */
-	public function pop_processor();
+	public function popProcessor();
 
 	/**
 	 * Sets the formatter.
 	 *
-	 * @param LaterPay_Core_Logger_Formatter_Interface $formatter
+	 * @param FormatterInterface $formatter
 	 *
 	 * @return self
 	 */
-	public function set_formatter( LaterPay_Core_Logger_Formatter_Interface $formatter );
+	public function setFormatter( FormatterInterface $formatter);
 
 	/**
 	 * Gets the formatter.
 	 *
-	 * @return LaterPay_Core_Logger_Formatter_Interface
+	 * @return FormatterInterface
 	 */
-	public function get_formatter();
+	public function getFormatter();
 
 }

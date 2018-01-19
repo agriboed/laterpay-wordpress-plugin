@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Core;
+
+use LaterPay\Model\Config;
+
 /**
  * LaterPay core view.
  *
@@ -7,12 +11,12 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_View {
+class View {
 
 	/**
 	 * Contains all settings for the plugin.
 	 *
-	 * @var LaterPay_Model_Config
+	 * @var Config
 	 */
 	protected $config;
 
@@ -24,12 +28,13 @@ class LaterPay_Core_View {
 	protected $variables = array();
 
 	/**
-	 * @param LaterPay_Model_Config $config
+	 * @param Config $config
 	 *
-	 * @return LaterPay_Core_View
+	 * @return void
 	 */
 	public function __construct( $config = null ) {
-		$this->config = ( $config && $config instanceof LaterPay_Model_Config ) ? $config : laterpay_get_plugin_config();
+
+		$this->config = ( $config && $config instanceof Config ) ? $config : laterpay_get_plugin_config();
 		// assign the config to the views
 		$this->assign( 'config', $this->config );
 		$this->initialize();
@@ -40,7 +45,7 @@ class LaterPay_Core_View {
 	 *
 	 * @return void
 	 */
-	protected function refresh_config() {
+	protected function refreshConfig() {
 		laterpay_clean_plugin_cache();
 
 		// set new config and update assignation
@@ -53,14 +58,16 @@ class LaterPay_Core_View {
 	 *
 	 * @return void
 	 */
-	protected function initialize() {}
+	protected function initialize() {
+	}
 
 	/**
 	 * Load all assets on boot-up.
 	 *
 	 * @return void
 	 */
-	public function load_assets() {}
+	public function loadAssets() {
+	}
 
 	/**
 	 * Render HTML file.
@@ -78,12 +85,6 @@ class LaterPay_Core_View {
 		$view_dir  = isset( $view_dir ) ? $view_dir : $this->config->get( 'view_dir' );
 		$view_file = $view_dir . $file . '.php';
 		if ( ! file_exists( $view_file ) ) {
-			$msg = sprintf(
-				__( '%1$s : <code>%2$s</code> not found', 'laterpay' ),
-				__METHOD__,
-				__FILE__
-			);
-
 			return;
 		}
 
@@ -94,7 +95,7 @@ class LaterPay_Core_View {
 	 * Assign variable for substitution in templates.
 	 *
 	 * @param string $variable name variable to assign
-	 * @param mixed  $value    value variable for assign
+	 * @param mixed $value value variable for assign
 	 *
 	 * @return void
 	 */
@@ -106,24 +107,18 @@ class LaterPay_Core_View {
 	 * Get HTML from file.
 	 *
 	 * @param string $file file to get HTML string
-	 * @param string $view_dir  view directory
+	 * @param string $view_dir view directory
 	 *
 	 * @return string $html html output as string
 	 */
-	public function get_text_view( $file, $view_dir = null ) {
+	public function getTextView( $file, $view_dir = null ) {
 		foreach ( $this->variables as $key => $value ) {
 			${$key} = $value;
 		}
 
-		$view_dir  = isset( $view_dir ) ? $view_dir : $this->config->get( 'view_dir' );
+		$view_dir  = null !== $view_dir ? $view_dir : $this->config->get( 'view_dir' );
 		$view_file = $view_dir . $file . '.php';
 		if ( ! file_exists( $view_file ) ) {
-			$msg = sprintf(
-				__( '%1$s : <code>%2$s</code> not found', 'laterpay' ),
-				__METHOD__,
-				$file
-			);
-
 			return '';
 		}
 
@@ -133,15 +128,17 @@ class LaterPay_Core_View {
 		ob_end_clean();
 		$html = $thread;
 
-		$this->init_assignments();
+		$this->initAssignments();
 
 		return $html;
 	}
 
-	protected function init_assignments() {
+	/**
+	 * @return void
+	 */
+	protected function initAssignments() {
 		$this->variables = array();
 		// assign the config to the views
 		$this->assign( 'config', $this->config );
 	}
 }
-

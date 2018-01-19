@@ -1,17 +1,26 @@
 <?php
 
-abstract class LaterPay_Core_Logger_Handler_AbstractProcessing extends LaterPay_Core_Logger_Handler_Abstract {
+namespace LaterPay\Core\Logger\Handler;
+
+/**
+ * Class AbstractProcessing
+ *
+ * Plugin Name: LaterPay
+ * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
+ * Author URI: https://laterpay.net/
+ */
+abstract class AbstractProcessing extends HandlerAbstract {
 
 	/**
 	 * {@inheritdoc}
 	 */
 	public function handle( array $record ) {
-		if ( ! $this->is_handling( $record ) ) {
+		if ( ! $this->isHandling( $record ) ) {
 			return false;
 		}
 
 		$record              = $this->processRecord( $record );
-		$record['formatted'] = $this->get_formatter()->format( $record );
+		$record['formatted'] = $this->getFormatter()->format( $record );
 		$this->write( $record );
 
 		return true;
@@ -21,14 +30,16 @@ abstract class LaterPay_Core_Logger_Handler_AbstractProcessing extends LaterPay_
 	 * Writes the record down to the log of the implementing handler
 	 *
 	 * @param  array $record
+	 *
 	 * @return void
 	 */
-	abstract protected function write( array $record );
+	abstract protected function write( array $record);
 
 	/**
 	 * Processes a record.
 	 *
 	 * @param  array $record
+	 *
 	 * @return array
 	 */
 	protected function processRecord( array $record ) {

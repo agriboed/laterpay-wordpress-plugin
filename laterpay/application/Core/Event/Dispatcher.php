@@ -1,5 +1,11 @@
 <?php
 
+namespace LaterPay\Core\Event;
+
+use LaterPay\Core\Logger;
+use LaterPay\Core\Event;
+use LaterPay\Hooks;
+
 /**
  * LaterPay core class
  *
@@ -7,101 +13,127 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherInterface {
-	const DEFAULT_PRIORITY = 10;
+class Dispatcher implements DispatcherInterface {
+
 	/**
-	 * @var LaterPay_Core_Event_Dispatcher
+	 *
 	 */
-	private static $dispatcher = null;
-	private $listeners         = array();
+	const DEFAULT_PRIORITY = 10;
+
+	/**
+	 * @var Dispatcher
+	 */
+	protected static $dispatcher;
+
+	/**
+	 * @var array
+	 */
+	protected $listeners = array();
+
 	/**
 	 * Shared events, that could be called from any place
 	 * @var array
 	 */
-	private $shared_listeners = array();
-	private $sorted           = array();
+	protected $shared_listeners = array();
 
+	/**
+	 * @var array
+	 */
+	protected $sorted = array();
+
+	/**
+	 * @var bool
+	 */
 	protected $debug_enabled = false;
-	protected $debug_data    = array();
+
+	/**
+	 * @var array
+	 */
+	protected $debug_data = array();
 
 	/**
 	 * Singleton to get only one event dispatcher
 	 *
-	 * @return LaterPay_Core_Event_Dispatcher
+	 * @return Dispatcher
 	 */
-	public static function get_dispatcher() {
-		if ( ! isset( self::$dispatcher ) ) {
-			self::$dispatcher = new self();
+	public static function getDispatcher() {
+		if ( null === static::$dispatcher ) {
+			static::$dispatcher = new static();
 		}
 
-		return self::$dispatcher;
+		return static::$dispatcher;
 	}
 
 	/**
 	 * Dispatches an event to all registered listeners.
 	 *
 	 * @param string $event_name The name of the event to dispatch.
-	 * @param LaterPay_Core_Event|array|null $args The event to pass to the event handlers/listeners.
+	 * @param Event|array|null $args The event to pass to the event handlers/listeners.
 	 *
-	 * @return LaterPay_Core_Event
+	 * @return Event
 	 */
 	public function dispatch( $event_name, $args = null ) {
 		if ( is_array( $args ) ) {
-			$event = new LaterPay_Core_Event( $args );
-		} elseif ( $args instanceof LaterPay_Core_Event ) {
+			$event = new Event( $args );
+		} elseif ( $args instanceof Event ) {
 			$event = $args;
 		} else {
-			$event = new LaterPay_Core_Event();
+			$event = new Event();
 		}
-		$event->set_name( $event_name );
+
+		$event->setName( $event_name );
 
 		if ( ! isset( $this->listeners[ $event_name ] ) ) {
-			// $this->set_debug_data( $event_name, $event->get_debug() );
 			return $event;
 		}
-		$arguments = LaterPay_Hooks::apply_arguments_filters( $event_name, $event->get_arguments() );
-		$event->set_arguments( $arguments );
 
-		$this->do_dispatch( $this->get_listeners( $event_name ), $event );
+		$arguments = Hooks::applyArgumentsFilters( $event_name, $event->getArguments() );
+		$event->setArguments( $arguments );
+
+		$this->doDispatch( $this->getListeners( $event_name ), $event );
+
 		// apply registered in WordPress filters for the event result
-		$result = LaterPay_Hooks::apply_filters( $event_name, $event->get_result() );
-		$event->set_result( $result );
-		if ( $event->is_echo_enabled() ) {
-			echo laterpay_sanitized( $event->get_formatted_result() );
+		$result = Hooks::applyFilters( $event_name, $event->getResult() );
+		$event->setResult( $result );
+
+		if ( $event->isEchoEnabled() ) {
+			laterpay_sanitize_output( $event->getFormattedResult(), true );
 		}
-		$this->set_debug_data( $event_name, $event->get_debug() );
-		laterpay_get_logger()->debug( $event_name, $event->get_debug() );
-		if ( $event->is_ajax() ) { // otherwise admin-ajax.php will add extra '0' to each request
+
+		$this->setDebugData( $event_name, $event->getDebug() );
+		laterpay_get_logger()->debug( $event_name, $event->getDebug() );
+
+		if ( $event->isAjax() ) { // otherwise admin-ajax.php will add extra '0' to each request
 			die;
 		}
+
 		return $event;
 	}
 
 	/**
 	 * Triggers the listeners of an event.
 	 *
-	 * @param callable[]            $listeners The event listeners.
-	 * @param LaterPay_Core_Event   $event The event object to pass to the event handlers/listeners.
+	 * @param callable[] $listeners The event listeners.
+	 * @param Event $event The event object to pass to the event handlers/listeners.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	protected function do_dispatch( $listeners, LaterPay_Core_Event $event ) {
+	protected function doDispatch( $listeners, Event $event ) {
 		foreach ( $listeners as $listener ) {
 			try {
-				$arguments = $this->get_arguments( $listener, $event );
+				$arguments = $this->getArguments( $listener, $event );
 				call_user_func_array( $listener, $arguments );
-			} catch ( LaterPay_Core_Exception $e ) {
+			} catch ( \Exception $e ) {
 				laterpay_get_logger()->error(
 					$e->getMessage(), array(
-						'trace'   => $e->getTraceAsString(),
-						'context' => $e->getContext(),
+						'trace' => $e->getTraceAsString(),
 					)
 				);
-				$event->stop_propagation();
+				$event->stopPropagation();
 			}
 
-			if ( $event->is_propagation_stopped() ) {
-				$event->set_propagations_stopped_by( $listener );
+			if ( $event->isPropagationStopped() ) {
+				$event->setPropagationsStoppedBy( $listener );
 				break;
 			}
 		}
@@ -111,27 +143,28 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 * Processes callback description to get required list of arguments.
 	 *
 	 * @param callable|array|object $callback The event listener.
-	 * @param LaterPay_Core_Event   $event The event object.
-	 * @param array                 $attributes The context to get attributes.
-	 * @throws LaterPay_Core_Exception
+	 * @param Event $event The event object.
+	 * @param array $attributes The context to get attributes.
+	 *
+	 * @throws \Exception
 	 *
 	 * @return array
 	 */
-	protected function get_arguments( $callback, LaterPay_Core_Event $event, $attributes = array() ) {
+	protected function getArguments( $callback, Event $event, array $attributes = array() ) {
 		$arguments = array();
 		if ( is_array( $callback ) ) {
 			if ( ! method_exists( $callback[0], $callback[1] ) && is_callable( $callback ) ) {
 				return $arguments;
 			} elseif ( method_exists( $callback[0], $callback[1] ) ) {
-				$callbackReflection = new ReflectionMethod( $callback[0], $callback[1] );
+				$callbackReflection = new \ReflectionMethod( $callback[0], $callback[1] );
 			} else {
-				throw new LaterPay_Core_Exception( sprintf( 'Callback method "%s" is not found', print_r( $callback, true ) ) );
+				throw new \Exception( 'Callback method  is not found' );
 			}
 		} elseif ( is_object( $callback ) ) {
-			$callbackReflection = new ReflectionObject( $callback );
+			$callbackReflection = new \ReflectionObject( $callback );
 			$callbackReflection = $callbackReflection->getMethod( '__invoke' );
 		} else {
-			$callbackReflection = new ReflectionFunction( $callback );
+			$callbackReflection = new \ReflectionFunction( $callback );
 		}
 
 		if ( $callbackReflection->getNumberOfParameters() > 0 ) {
@@ -149,7 +182,7 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 			}
 		}
 
-		return (array) $arguments;
+		return $arguments;
 	}
 
 	/**
@@ -159,17 +192,18 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 *
 	 * @return mixed
 	 */
-	public function get_listeners( $event_name = null ) {
+	public function getListeners( $event_name = null ) {
 		if ( null !== $event_name ) {
 			if ( ! isset( $this->sorted[ $event_name ] ) ) {
-				$this->sort_listeners( $event_name );
+				$this->sortListeners( $event_name );
 			}
+
 			return $this->sorted[ $event_name ];
 		}
 
-		foreach ( $this->listeners as $event_name => $event_listeners ) {
-			if ( ! isset( $this->sorted[ $event_name ] ) ) {
-				$this->sort_listeners( $event_name );
+		foreach ( array_keys( $this->listeners ) as $event ) {
+			if ( ! isset( $this->sorted[ $event ] ) ) {
+				$this->sortListeners( $event );
 			}
 		}
 
@@ -181,9 +215,9 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 *
 	 * @param string $event_name The name of the event.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	private function sort_listeners( $event_name ) {
+	protected function sortListeners( $event_name ) {
 		$this->sorted[ $event_name ] = array();
 
 		if ( isset( $this->listeners[ $event_name ] ) ) {
@@ -192,8 +226,12 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 			// php function `array_unique` works wrong and has bugs working with objects/arrays.
 			$temp_array = call_user_func_array( 'array_merge', $this->listeners[ $event_name ] );
 			$result     = array();
+
+			/**
+			 * @var $temp_array array
+			 */
 			foreach ( $temp_array as $callback ) {
-				if ( ! in_array( $callback, $result ) ) {
+				if ( ! in_array( $callback, $result, true ) ) {
 					$result[] = $callback;
 				}
 			}
@@ -206,10 +244,10 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 *
 	 * @param string|null $event_name
 	 *
-	 * @return mixed
+	 * @return bool
 	 */
-	public function has_listeners( $event_name = null ) {
-		return (bool) count( $this->get_listeners( $event_name ) );
+	public function hasListeners( $event_name = null ) {
+		return (bool) count( $this->getListeners( $event_name ) );
 	}
 
 	/**
@@ -218,30 +256,44 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 * The subscriber is asked for all the events he is
 	 * interested in and added as a listener for these events.
 	 *
-	 * @param LaterPay_Core_Event_SubscriberInterface $subscriber The subscriber.
+	 * @param SubscriberInterface $subscriber The subscriber.
+	 *
+	 * @return void
 	 */
-	public function add_subscriber( LaterPay_Core_Event_SubscriberInterface $subscriber ) {
-		foreach ( $subscriber->get_shared_events() as $event_name => $params ) {
+	public function addSubscriber( SubscriberInterface $subscriber ) {
+		foreach ( $subscriber->getSharedEvents() as $event_name => $params ) {
 			if ( is_string( $params ) ) {
-				$this->add_shared_listener( $event_name, array( $subscriber, $params ) );
+				$this->addSharedListener( $event_name, array( $subscriber, $params ) );
 			} elseif ( is_string( $params[0] ) ) {
-				$this->add_shared_listener( $event_name, array( $subscriber, $params[0] ) );
+				$this->addSharedListener( $event_name, array( $subscriber, $params[0] ) );
 			} else {
 				foreach ( $params as $listener ) {
-					$this->add_shared_listener( $event_name, array( $subscriber, $listener[0] ) );
+					$this->addSharedListener( $event_name, array( $subscriber, $listener[0] ) );
 				}
 			}
 		}
 
-		foreach ( $subscriber->get_subscribed_events() as $event_name => $params ) {
+		foreach ( $subscriber->getSubscribedEvents() as $event_name => $params ) {
 			if ( is_string( $params ) ) {
-				$this->add_listener( $event_name, array( $subscriber, $params ) );
+				$this->addListener( $event_name, array( $subscriber, $params ) );
 			} else {
+
+				/**
+				 * @var $params array
+				 */
 				foreach ( $params as $listener ) {
 					if ( method_exists( $subscriber, $listener[0] ) ) {
-						$this->add_listener( $event_name, array( $subscriber, $listener[0] ), isset( $listener[1] ) ? $listener[1] : self::DEFAULT_PRIORITY );
-					} elseif ( ( $callable = $this->get_shared_listener( $listener[0] ) ) !== null ) {
-						$this->add_listener( $event_name, $callable, isset( $listener[1] ) ? $listener[1] : self::DEFAULT_PRIORITY );
+						$this->addListener(
+							$event_name, array( $subscriber, $listener[0] ),
+							isset( $listener[1] ) ? $listener[1] : static::DEFAULT_PRIORITY
+						);
+					} elseif ( $this->getSharedListener( $listener[0] ) !== null ) {
+						$callable = $this->getSharedListener( $listener[0] );
+
+						$this->addListener(
+							$event_name, $callable,
+							isset( $listener[1] ) ? $listener[1] : static::DEFAULT_PRIORITY
+						);
 					}
 				}
 			}
@@ -254,13 +306,14 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 * @param string $event_name The event name to listen on.
 	 * @param callable $listener The event listener.
 	 * @param int $priority The higher this value, the earlier an event
-	 *                            listener will be triggered in the chain (defaults to self::DEFAULT_PRIORITY)
+	 *                            listener will be triggered in the chain (defaults to static::DEFAULT_PRIORITY)
 	 *
-	 * @return null
+	 * @return void
 	 */
-	public function add_listener( $event_name, $listener, $priority = self::DEFAULT_PRIORITY ) {
-		LaterPay_Hooks::register_laterpay_action( $event_name );
+	public function addListener( $event_name, $listener, $priority = self::DEFAULT_PRIORITY ) {
+		Hooks::registerLaterpayAction( $event_name );
 		$this->listeners[ $event_name ][ $priority ][] = $listener;
+
 		unset( $this->sorted[ $event_name ] );
 	}
 
@@ -270,9 +323,9 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 * @param string $event_name The event name to listen on.
 	 * @param callable $listener The event listener.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	public function add_shared_listener( $event_name, $listener ) {
+	public function addSharedListener( $event_name, $listener ) {
 		$this->shared_listeners[ $event_name ] = $listener;
 	}
 
@@ -283,26 +336,29 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 *
 	 * @return callable|null
 	 */
-	public function get_shared_listener( $event_name ) {
+	public function getSharedListener( $event_name ) {
 		if ( isset( $this->shared_listeners[ $event_name ] ) ) {
 			return $this->shared_listeners[ $event_name ];
 		}
+
 		return null;
 	}
 
 	/**
 	 * Removes an event subscriber.
 	 *
-	 * @param LaterPay_Core_Event_SubscriberInterface $subscriber The subscriber
+	 * @param SubscriberInterface $subscriber The subscriber
+	 *
+	 * @return void
 	 */
-	public function remove_subscriber( LaterPay_Core_Event_SubscriberInterface $subscriber ) {
-		foreach ( $subscriber->get_subscribed_events() as $event_name => $params ) {
+	public function removeSubscriber( SubscriberInterface $subscriber ) {
+		foreach ( $subscriber->getSubscribedEvents() as $event_name => $params ) {
 			if ( is_array( $params ) && is_array( $params[0] ) ) {
 				foreach ( $params as $listener ) {
-					$this->remove_listener( $event_name, array( $subscriber, $listener[0] ) );
+					$this->removeListener( $event_name, array( $subscriber, $listener[0] ) );
 				}
 			} else {
-				$this->remove_listener( $event_name, array( $subscriber, is_string( $params ) ? $params : $params[0] ) );
+				$this->removeListener( $event_name, array( $subscriber, is_string( $params ) ? $params : $params[0] ) );
 			}
 		}
 	}
@@ -315,17 +371,21 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 *
 	 * @return bool
 	 */
-	public function remove_listener( $event_name, $listener ) {
+	public function removeListener( $event_name, $listener ) {
 		if ( ! isset( $this->listeners[ $event_name ] ) ) {
 			return false;
 		}
 		$result = false;
+
 		foreach ( $this->listeners[ $event_name ] as $priority => $listeners ) {
-			if ( false !== ( $key = array_search( $listener, $listeners, true ) ) ) {
+			$key = array_search( $listener, $listeners, true );
+
+			if ( false !== $key ) {
 				unset( $this->listeners[ $event_name ][ $priority ][ $key ], $this->sorted[ $event_name ] );
 				$result = true;
 			}
 		}
+
 		return $result;
 	}
 
@@ -333,10 +393,12 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 * Enables collecting of the debug information about raised events.
 	 *
 	 * @param boolean $debug_enabled
-	 * @return LaterPay_Core_Event_Dispatcher
+	 *
+	 * @return self
 	 */
-	public function set_debug_enabled( $debug_enabled ) {
+	public function setDebugEnabled( $debug_enabled ) {
 		$this->debug_enabled = $debug_enabled;
+
 		return $this;
 	}
 
@@ -345,31 +407,34 @@ class LaterPay_Core_Event_Dispatcher implements LaterPay_Core_Event_DispatcherIn
 	 *
 	 * @return array
 	 */
-	public function get_debug_data() {
+	public function getDebugData() {
 		return $this->debug_data;
 	}
 
 	/**
 	 * Formats and adds event debug information into collection.
 	 *
-	 * @param string    $event_name  The name of the event.
-	 * @param array     $context Debug information.
-	 * @return LaterPay_Core_Event_Dispatcher
+	 * @param string $event_name The name of the event.
+	 * @param array $context Debug information.
+	 *
+	 * @return self
 	 */
-	public function set_debug_data( $event_name, $context ) {
-		if ( in_array( $event_name, array( 'laterpay_post_metadata' ) ) ) {
+	public function setDebugData( $event_name, $context ) {
+		if ( 'laterpay_post_metadata' === $event_name ) {
 			return $this;
 		}
+
 		if ( $this->debug_enabled ) {
-			$listeners          = $this->get_listeners( $event_name );
+			$listeners          = $this->getListeners( $event_name );
 			$record             = array(
 				'message' => (string) $event_name,
 				'context' => $context,
 				'extra'   => (array) $listeners,
-				'level'   => count( $listeners ) > 0 ? LaterPay_Core_Logger::DEBUG : LaterPay_Core_Logger::WARNING,
+				'level'   => count( $listeners ) > 0 ? Logger::DEBUG : Logger::WARNING,
 			);
 			$this->debug_data[] = $record;
 		}
+
 		return $this;
 	}
 }

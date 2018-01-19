@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Core;
+
+use LaterPay\Helper\Strings;
+
 /**
  * Event is the base class for classes containing event data.
  *
@@ -7,9 +11,21 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Core_Event {
+class Event {
+
+	/**
+	 *
+	 */
 	const TYPE_TEXT = 'text';
+
+	/**
+	 *
+	 */
 	const TYPE_HTML = 'html';
+
+	/**
+	 *
+	 */
 	const TYPE_JSON = 'json';
 
 	/**
@@ -22,13 +38,13 @@ class LaterPay_Core_Event {
 	/**
 	 * Should be event result output
 	 */
-	protected $echo = true;
+	protected $echoOutput = true;
 
 	/**
 	 * Event result
 	 * @var mixed
 	 */
-	protected $result = null;
+	protected $result;
 
 	/**
 	 * Array of arguments.
@@ -40,22 +56,22 @@ class LaterPay_Core_Event {
 	/**
 	 * @var bool Whether no further event listeners should be triggered
 	 */
-	private $propagations_stopped = false;
+	protected $propagations_stopped = false;
 
 	/**
 	 * @var bool who has stopped event
 	 */
-	private $propagations_stopped_by = '';
+	protected $propagations_stopped_by = '';
 
 	/**
 	 * @var string $type Event result type.
 	 */
-	private $type = self::TYPE_TEXT;
+	protected $type = self::TYPE_TEXT;
 
 	/**
 	 * @var bool $ajax Is ajax event
 	 */
-	private $ajax = false;
+	protected $ajax = false;
 
 	/**
 	 * Encapsulate an event with $args.
@@ -71,16 +87,16 @@ class LaterPay_Core_Event {
 	 *
 	 * @return string
 	 */
-	public function get_type() {
+	public function getType() {
 		return $this->type;
 	}
 
 	/**
 	 * @param string $type
 	 *
-	 * @return LaterPay_Core_Event
+	 * @return Event
 	 */
-	public function set_type( $type ) {
+	public function setType( $type ) {
 		$this->type = $type;
 
 		return $this;
@@ -91,7 +107,7 @@ class LaterPay_Core_Event {
 	 *
 	 * @return boolean
 	 */
-	public function is_ajax() {
+	public function isAjax() {
 		return $this->ajax;
 	}
 
@@ -100,7 +116,7 @@ class LaterPay_Core_Event {
 	 *
 	 * @param boolean $ajax
 	 */
-	public function set_ajax( $ajax ) {
+	public function setAjax( $ajax ) {
 		$this->ajax = $ajax;
 	}
 
@@ -109,11 +125,11 @@ class LaterPay_Core_Event {
 	 *
 	 * @return bool Whether propagation was already stopped for this event.
 	 */
-	public function is_propagation_stopped() {
+	public function isPropagationStopped() {
 		return $this->propagations_stopped;
 	}
 
-	public function set_propagations_stopped_by( $listener ) {
+	public function setPropagationsStoppedBy( $listener ) {
 		if ( is_array( $listener ) && is_object( $listener[0] ) ) {
 			$name = '[[object] (' . get_class( $listener[0] ) . ': {}),"' . ( isset( $listener[1] ) ? $listener[1] : '__invoke' ) . '"]';
 		} else {
@@ -125,9 +141,9 @@ class LaterPay_Core_Event {
 	/**
 	 * Stops the propagation of the event to further event listeners.
 	 *
-	 * @return null
+	 * @return void
 	 */
-	public function stop_propagation() {
+	public function stopPropagation() {
 		$this->propagations_stopped = true;
 	}
 
@@ -136,7 +152,7 @@ class LaterPay_Core_Event {
 	 *
 	 * @return array
 	 */
-	public function get_arguments() {
+	public function getArguments() {
 		return $this->arguments;
 	}
 
@@ -145,9 +161,9 @@ class LaterPay_Core_Event {
 	 *
 	 * @param array $args Arguments.
 	 *
-	 * @return LaterPay_Core_Event
+	 * @return Event
 	 */
-	public function set_arguments( array $args = array() ) {
+	public function setArguments( array $args = array() ) {
 		$this->arguments = $args;
 
 		return $this;
@@ -158,15 +174,14 @@ class LaterPay_Core_Event {
 	 *
 	 * @param string $key Key.
 	 *
-	 * @throws InvalidArgumentException If key is not found.
-	 *
-	 * @return mixed Contents of array key.
+	 * @return mixed|null Contents of array key.
 	 */
-	public function get_argument( $key ) {
-		if ( $this->has_argument( $key ) ) {
+	public function getArgument( $key ) {
+		if ( $this->hasArgument( $key ) ) {
 			return $this->arguments[ $key ];
 		}
-		throw new InvalidArgumentException( sprintf( 'Argument "%s" not found.', $key ) );
+
+		return null;
 	}
 
 	/**
@@ -176,7 +191,7 @@ class LaterPay_Core_Event {
 	 *
 	 * @return bool
 	 */
-	public function has_argument( $key ) {
+	public function hasArgument( $key ) {
 		return array_key_exists( $key, $this->arguments );
 	}
 
@@ -186,9 +201,9 @@ class LaterPay_Core_Event {
 	 * @param string $key Argument name.
 	 * @param mixed $value Value.
 	 *
-	 * @return LaterPay_Core_Event
+	 * @return Event
 	 */
-	public function set_argument( $key, $value ) {
+	public function setArgument( $key, $value ) {
 		$this->arguments[ $key ] = $value;
 
 		return $this;
@@ -200,20 +215,15 @@ class LaterPay_Core_Event {
 	 * @param string $key Argument name.
 	 * @param mixed $value Value.
 	 *
-	 * @return LaterPay_Core_Event
+	 * @return Event
 	 */
-	public function add_argument( $key, $value ) {
-		if ( $this->has_argument( $key ) ) {
-			$argument = $this->get_argument( $key );
-			if ( ! is_array( $argument ) ) {
-				$argument = array( $argument );
-			}
-			if ( ! is_array( $value ) ) {
-				$value = array( $value );
-			}
-			$this->set_argument( $key, array_merge( $argument, $value ) );
+	public function addArgument( $key, $value ) {
+		if ( $this->hasArgument( $key ) ) {
+			$argument = (array) $this->getArgument( $key );
+			$value    = (array) $value;
+			$this->setArgument( $key, array_merge( $argument, $value ) );
 		} else {
-			$this->set_argument( $key, $value );
+			$this->setArgument( $key, $value );
 		}
 
 		return $this;
@@ -224,7 +234,7 @@ class LaterPay_Core_Event {
 	 *
 	 * @return mixed
 	 */
-	public function get_result() {
+	public function getResult() {
 		return $this->result;
 	}
 
@@ -233,9 +243,9 @@ class LaterPay_Core_Event {
 	 *
 	 * @return mixed
 	 */
-	public function get_formatted_result() {
-		$result = $this->get_result();
-		switch ( $this->get_type() ) {
+	public function getFormattedResult() {
+		$result = $this->getResult();
+		switch ( $this->getType() ) {
 			default:
 			case self::TYPE_TEXT:
 			case self::TYPE_HTML:
@@ -245,18 +255,23 @@ class LaterPay_Core_Event {
 				// add debug data to JSON/AJAX output
 				$debug = laterpay_get_plugin_config()->get( 'debug_mode' );
 				if ( $debug && is_array( $result ) ) {
-					$listeners = laterpay_event_dispatcher()->get_listeners( $this->get_name() );
+					$listeners = laterpay_event_dispatcher()->getListeners( $this->getName() );
+
+					/**
+					 * @var $listeners array
+					 */
 					foreach ( $listeners as $key => $listener ) {
 						if ( is_array( $listener ) && is_object( $listener[0] ) ) {
 							$listeners[ $key ] = array( get_class( $listener[0] ) ) + $listener;
 						}
 					}
 					$result['listeners'] = $listeners;
-					$result['debug']     = $this->get_debug();
+					$result['debug']     = $this->getDebug();
 				}
-				$result = LaterPay_Helper_String::laterpay_json_encode( $result );
+				$result = Strings::laterpayJSONEncode( $result );
 				break;
 		}
+
 		return $result;
 	}
 
@@ -265,10 +280,11 @@ class LaterPay_Core_Event {
 	 *
 	 * @param mixed $value Value.
 	 *
-	 * @return LaterPay_Core_Event
+	 * @return Event
 	 */
-	public function set_result( $value ) {
+	public function setResult( $value ) {
 		$this->result = $value;
+
 		return $this;
 	}
 
@@ -277,18 +293,19 @@ class LaterPay_Core_Event {
 	 *
 	 * @return bool
 	 */
-	public function is_echo_enabled() {
-		return $this->echo;
+	public function isEchoEnabled() {
+		return $this->echoOutput;
 	}
 
 	/**
 	 * Set flag that we should output event result.
 	 *
-	 * @param bool $echo
-	 * @return LaterPay_Core_Event
+	 * @param bool $echoOutput
+	 *
+	 * @return Event
 	 */
-	public function set_echo( $echo ) {
-		$this->echo = $echo;
+	public function setEchoOutput( $echoOutput ) {
+		$this->echoOutput = $echoOutput;
 
 		return $this;
 	}
@@ -298,13 +315,13 @@ class LaterPay_Core_Event {
 	 *
 	 * @return array
 	 */
-	public function get_debug() {
+	public function getDebug() {
 		return array(
-			'is_echo_enabled'        => $this->is_echo_enabled() ? 'true' : 'false',
-			'is_propagation_stopped' => $this->is_propagation_stopped() ? 'true' : 'false',
+			'is_echo_enabled'        => $this->isEchoEnabled() ? 'true' : 'false',
+			'is_propagation_stopped' => $this->isPropagationStopped() ? 'true' : 'false',
 			'propagation_stopped_by' => $this->propagations_stopped_by,
-			'arguments'              => $this->get_arguments(),
-			'result'                 => $this->get_result(),
+			'arguments'              => $this->getArguments(),
+			'result'                 => $this->getResult(),
 		);
 	}
 
@@ -313,7 +330,7 @@ class LaterPay_Core_Event {
 	 *
 	 * @return string
 	 */
-	public function get_name() {
+	public function getName() {
 		return $this->name;
 	}
 
@@ -322,8 +339,7 @@ class LaterPay_Core_Event {
 	 *
 	 * @param string $name
 	 */
-	public function set_name( $name ) {
+	public function setName( $name ) {
 		$this->name = $name;
 	}
-
 }
