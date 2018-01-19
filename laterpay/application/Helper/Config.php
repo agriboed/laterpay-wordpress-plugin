@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Helper;
+
 /**
  * LaterPay config helper.
  *
@@ -7,10 +9,17 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Helper_Config {
-	private static $options = array();
+class Config {
 
-	private static $regional_settings = array(
+	/**
+	 * @var array
+	 */
+	protected static $options = array();
+
+	/**
+	 * @var array
+	 */
+	protected static $regional_settings = array(
 		'eu' => array(
 			'api'      => array(
 				'sandbox_backend_api_url' => 'https://api.sandbox.laterpaytest.net',
@@ -107,31 +116,38 @@ class LaterPay_Helper_Config {
 	 *
 	 * @return array
 	 */
-	public static function get_regional_settings() {
+	public static function getRegionalSettings() {
 		$region = get_option( 'laterpay_region', 'eu' );
 
-		// region correction
-		if ( ! isset( self::$regional_settings[ $region ] ) ) {
+		/**
+		 * region correction
+		 *
+		 * @var $region string
+		 */
+		if ( ! isset( static::$regional_settings[ $region ] ) ) {
 			update_option( 'laterpay_region', 'eu' );
 			$region = 'eu';
 		}
 
-		return self::build_settings_list( self::$regional_settings[ $region ] );
+		return static::buildSettingsList( static::$regional_settings[ $region ] );
 	}
 
 	/**
 	 * Build settings list
 	 *
+	 * @param array $settings
+	 * @param string $prefix
+	 *
 	 * @return array
 	 */
-	protected static function build_settings_list( $settings, $prefix = '' ) {
+	protected static function buildSettingsList( array $settings = array(), $prefix = '' ) {
 		$list = array();
 
 		foreach ( $settings as $key => $value ) {
 			$setting_name = $prefix . $key;
 
 			if ( is_array( $value ) ) {
-				$list = array_merge( $list, self::build_settings_list( $value, $setting_name . '.' ) );
+				$list = array_merge( $list, static::buildSettingsList( $value, $setting_name . '.' ) );
 				continue;
 			}
 
@@ -142,31 +158,17 @@ class LaterPay_Helper_Config {
 	}
 
 	/**
-	 * Get settings section for current region
-	 *
-	 * @param $section
-	 *
-	 * @return array|null
-	 */
-	public static function get_settings_section( $section ) {
-		// get regional settings
-		$region = get_option( 'laterpay_region', 'eu' );
-
-		return isset( $settings[ $region ][ $section ] ) ? $settings[ $region ][ $section ] : null;
-	}
-
-	/**
 	 * Get currency config
 	 *
 	 * @return array
 	 */
-	public static function get_currency_config() {
+	public static function getCurrencyConfig() {
 		$config         = laterpay_get_plugin_config();
 		$limits_section = 'currency.limits';
 		$plan           = get_option( 'laterpay_pro_merchant', 0 ) ? 'pro' : 'default';
 
 		// get limits
-		$currency_limits  = $config->get_section( $limits_section . '.' . $plan );
+		$currency_limits  = $config->getSection( $limits_section . '.' . $plan );
 		$currency_general = array(
 			'code'          => $config->get( 'currency.code' ),
 			'dynamic_start' => $config->get( 'currency.dynamic_start' ),
@@ -190,54 +192,54 @@ class LaterPay_Helper_Config {
 	 *
 	 * @return array
 	 */
-	public static function get_php_client_options() {
+	public static function getPHPClientOptions() {
 		$config = laterpay_get_plugin_config();
 
-		if ( empty( self::$options ) ) {
+		if ( empty( static::$options ) ) {
 			if ( get_option( 'laterpay_plugin_is_in_live_mode' ) ) {
-				self::$options['cp_key']   = get_option( 'laterpay_live_merchant_id' );
-				self::$options['api_key']  = get_option( 'laterpay_live_api_key' );
-				self::$options['api_root'] = $config->get( 'api.live_backend_api_url' );
-				self::$options['web_root'] = $config->get( 'api.live_dialog_api_url' );
+				static::$options['cp_key']   = get_option( 'laterpay_live_merchant_id' );
+				static::$options['api_key']  = get_option( 'laterpay_live_api_key' );
+				static::$options['api_root'] = $config->get( 'api.live_backend_api_url' );
+				static::$options['web_root'] = $config->get( 'api.live_dialog_api_url' );
 			} else {
-				self::$options['cp_key']   = get_option( 'laterpay_sandbox_merchant_id' );
-				self::$options['api_key']  = get_option( 'laterpay_sandbox_api_key' );
-				self::$options['api_root'] = $config->get( 'api.sandbox_backend_api_url' );
-				self::$options['web_root'] = $config->get( 'api.sandbox_dialog_api_url' );
+				static::$options['cp_key']   = get_option( 'laterpay_sandbox_merchant_id' );
+				static::$options['api_key']  = get_option( 'laterpay_sandbox_api_key' );
+				static::$options['api_root'] = $config->get( 'api.sandbox_backend_api_url' );
+				static::$options['web_root'] = $config->get( 'api.sandbox_dialog_api_url' );
 			}
 
-			self::$options['token_name'] = $config->get( 'api.token_name' );
+			static::$options['token_name'] = $config->get( 'api.token_name' );
 		}
 
-		return self::$options;
+		return static::$options;
 	}
 
 	/**
-	 * Get actual sandbox creds
+	 * Get actual sandbox credentials
 	 *
-	 * @return array $creds
+	 * @return array $credentials
 	 */
-	public static function prepare_sandbox_creds() {
-		$regional_settings   = self::get_regional_settings();
-		$creds_match_default = false;
+	public static function prepareSandboxCredentials() {
+		$regional_settings         = static::getRegionalSettings();
+		$credentials_match_default = false;
 
 		$cp_key  = get_option( 'laterpay_sandbox_merchant_id' );
 		$api_key = get_option( 'laterpay_sandbox_api_key' );
 
 		// detect if sandbox creds were modified
 		if ( $cp_key && $api_key ) {
-			foreach ( self::$regional_settings as $region => $settings ) {
+			foreach ( static::$regional_settings as $settings ) {
 				if ( $settings['api']['sandbox_merchant_id'] === $cp_key &&
-					 $settings['api']['sandbox_api_key'] === $api_key ) {
-					$creds_match_default = true;
+					$settings['api']['sandbox_api_key'] === $api_key ) {
+					$credentials_match_default = true;
 					break;
 				}
 			}
 		} else {
-			$creds_match_default = true;
+			$credentials_match_default = true;
 		}
 
-		if ( $creds_match_default ) {
+		if ( $credentials_match_default ) {
 			$cp_key  = $regional_settings['api.sandbox_merchant_id'];
 			$api_key = $regional_settings['api.sandbox_api_key'];
 

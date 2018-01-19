@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Helper;
+
 /**
  * LaterPay cache helper.
  *
@@ -7,15 +9,14 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Helper_Cache {
-
+class Cache {
 
 	/**
 	 * Reset cache, if it exists.
 	 *
-	 * @return bool|void
+	 * @return bool
 	 */
-	public static function reset_opcode_cache() {
+	public static function resetOpcodeCache() {
 		$reset = false;
 
 		if ( function_exists( 'opcache_reset' ) ) {
@@ -37,7 +38,7 @@ class LaterPay_Helper_Cache {
 	 *
 	 * @return bool
 	 */
-	public static function site_uses_page_caching() {
+	public static function siteUsesPageCaching() {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
 			include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 		}
@@ -75,7 +76,7 @@ class LaterPay_Helper_Cache {
 	 *
 	 * @return void
 	 */
-	public static function purge_cache() {
+	public static function purgeCache() {
 		/**
 		 * custom action for other cache plugins to purge their cache
 		 */
@@ -88,10 +89,9 @@ class LaterPay_Helper_Cache {
 			global $file_prefix;
 			wp_cache_clean_cache( $file_prefix );
 		} elseif ( class_exists( 'quick_cache' ) && method_exists( 'quick_cache', 'clear' ) ) { // Quick Cache
-			quick_cache::clear();
+			\quick_cache::clear();
 		} elseif ( class_exists( 'Cachify' ) && method_exists( 'Cachify', 'flush_total_cache' ) ) { // Cachify
-			Cachify::flush_total_cache();
+			\Cachify::flush_total_cache();
 		}
 	}
-
 }

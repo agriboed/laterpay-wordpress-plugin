@@ -1,5 +1,10 @@
 <?php
 
+namespace LaterPay\Helper;
+
+use LaterPay\Controller\Admin\Settings;
+use LaterPay_Client;
+
 /**
  * LaterPay request helper.
  *
@@ -7,7 +12,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Helper_Request {
+class Request {
 
 	/**
 	 * API status
@@ -22,9 +27,9 @@ class LaterPay_Helper_Request {
 	 */
 	public static function isLpApiAvailability() {
 		if ( null === self::$lp_api_availability ) {
-			$client_options = LaterPay_Helper_Config::get_php_client_options();
+			$client_options = Config::getPHPClientOptions();
 			$action         = (int) get_option( 'laterpay_api_fallback_behavior', 0 );
-			$behavior       = LaterPay_Controller_Admin_Settings::get_laterpay_api_options();
+			$behavior       = Settings::getLaterpayApiOptions();
 			$client         = new LaterPay_Client(
 				$client_options['cp_key'],
 				$client_options['api_key'],
@@ -51,9 +56,10 @@ class LaterPay_Helper_Request {
 	 *
 	 * @return bool
 	 */
-	public static function is_ajax() {
-		$server = isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ? sanitize_text_field( $_SERVER['HTTP_X_REQUESTED_WITH'] ) : '';
-		return ! empty( $server ) && strtolower( $server ) == 'xmlhttprequest';
+	public static function isAjax() {
+		$server = \LaterPay\Core\Request::server( 'HTTP_X_REQUESTED_WITH' ) ? sanitize_text_field( \LaterPay\Core\Request::server( 'HTTP_X_REQUESTED_WITH' ) ) : '';
+
+		return ! empty( $server ) && strtolower( $server ) === 'xmlhttprequest';
 	}
 
 	/**
@@ -62,17 +68,19 @@ class LaterPay_Helper_Request {
 	 * @return string $url
 	 */
 	public static function get_current_url() {
-		$ssl = isset( $_SERVER['HTTPS'] ) && sanitize_text_field( $_SERVER['HTTPS'] ) == 'on';
+		$ssl = null !== \LaterPay\Core\Request::server( 'HTTPS' ) && sanitize_text_field( \LaterPay\Core\Request::server( 'HTTPS' ) ) === 'on';
+
 		// Check for Cloudflare Universal SSL / flexible SSL
-		if ( isset( $_SERVER['HTTP_CF_VISITOR'] ) && strpos( $_SERVER['HTTP_CF_VISITOR'], 'https' ) !== false ) {
+		if ( null !== \LaterPay\Core\Request::server( 'HTTP_CF_VISITOR' ) && strpos( \LaterPay\Core\Request::server( 'HTTP_CF_VISITOR' ), 'https' ) !== false ) {
 			$ssl = true;
 		}
-		$uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( $_SERVER['REQUEST_URI'] ) : '';
+
+		$uri = null !== \LaterPay\Core\Request::server( 'REQUEST_URI' ) ? sanitize_text_field( \LaterPay\Core\Request::server( 'REQUEST_URI' ) ) : '';
 
 		// process Ajax requests
-		if ( self::is_ajax() ) {
-			$url   = isset( $_SERVER['HTTP_REFERER'] ) ? sanitize_text_field( $_SERVER['HTTP_REFERER'] ) : '';
-			$parts = parse_url( $url );
+		if ( self::isAjax() ) {
+			$url   = null !== \LaterPay\Core\Request::server( 'HTTP_REFERER' ) ? sanitize_text_field( \LaterPay\Core\Request::server( 'HTTP_REFERER' ) ) : '';
+			$parts = wp_parse_url( $url );
 
 			if ( ! empty( $parts ) ) {
 				$uri = $parts['path'];
@@ -83,10 +91,8 @@ class LaterPay_Helper_Request {
 		}
 
 		$uri = preg_replace( '/lptoken=.*?($|&)/', '', $uri );
-
 		$uri = preg_replace( '/ts=.*?($|&)/', '', $uri );
 		$uri = preg_replace( '/hmac=.*?($|&)/', '', $uri );
-
 		$uri = preg_replace( '/&$/', '', $uri );
 
 		if ( $ssl ) {
@@ -94,20 +100,21 @@ class LaterPay_Helper_Request {
 		} else {
 			$pageURL = 'http://';
 		}
-		$serverPort = isset( $_SERVER['SERVER_PORT'] ) ? absint( $_SERVER['SERVER_PORT'] ) : '';
-		$serverName = isset( $_SERVER['SERVER_NAME'] ) ? sanitize_text_field( $_SERVER['SERVER_NAME'] ) : '';
-		if ( $serverName == 'localhost' and function_exists( 'site_url' ) ) {
-			$serverName = ( str_replace( array( 'http://', 'https://' ), '', site_url() ) ); // WP function
+		$serverPort = null !== \LaterPay\Core\Request::server( 'SERVER_PORT' ) ? absint( \LaterPay\Core\Request::server( 'SERVER_PORT' ) ) : '';
+		$serverName = null !== \LaterPay\Core\Request::server( 'SERVER_NAME' ) ? sanitize_text_field( \LaterPay\Core\Request::server( 'SERVER_NAME' ) ) : '';
+		if ( $serverName === 'localhost' and function_exists( 'site_url' ) ) {
+			$serverName = str_replace( array( 'http://', 'https://' ), '', site_url() ); // WP function
+
 			// overwrite port on Heroku
-			if ( isset( $_SERVER['HTTP_CF_VISITOR'] ) && strpos( $_SERVER['HTTP_CF_VISITOR'], 'https' ) !== false ) {
+			if ( null !== \LaterPay\Core\Request::server( 'HTTP_CF_VISITOR' ) && strpos( \LaterPay\Core\Request::server( 'HTTP_CF_VISITOR' ), 'https' ) !== false ) {
 				$serverPort = 443;
 			} else {
 				$serverPort = 80;
 			}
 		}
-		if ( ! $ssl && $serverPort != '80' ) {
+		if ( ! $ssl && $serverPort !== 80 ) {
 			$pageURL .= $serverName . ':' . $serverPort . $uri;
-		} elseif ( $ssl && $serverPort != '443' ) {
+		} elseif ( $ssl && $serverPort !== 443 ) {
 			$pageURL .= $serverName . ':' . $serverPort . $uri;
 		} else {
 			$pageURL .= $serverName . $uri;
@@ -120,9 +127,12 @@ class LaterPay_Helper_Request {
 	 * Set cookie with token.
 	 *
 	 * @see LaterPay_Client::set_token()
+	 *
+	 * @param $token
+	 * @param bool $redirect
 	 */
-	public static function laterpay_api_set_token( $token, $redirect = false ) {
-		$client_options = LaterPay_Helper_Config::get_php_client_options();
+	public static function laterpayApiSetToken( $token, $redirect = false ) {
+		$client_options = Config::getPHPClientOptions();
 		$client         = new LaterPay_Client(
 			$client_options['cp_key'],
 			$client_options['api_key'],
@@ -145,12 +155,17 @@ class LaterPay_Helper_Request {
 	 * Check, if user has access to a given item / given array of items.
 	 *
 	 * @see LaterPay_Client::get_access()
+	 *
+	 * @param $article_ids
+	 * @param null $product_key
+	 *
+	 * @return array
 	 */
-	public static function laterpay_api_get_access( $article_ids, $product_key = null ) {
+	public static function laterpayApiGetAccess( array $article_ids = array(), $product_key = null ) {
 		$result = array();
 
 		try {
-			$client_options = LaterPay_Helper_Config::get_php_client_options();
+			$client_options = Config::getPHPClientOptions();
 			$client         = new LaterPay_Client(
 				$client_options['cp_key'],
 				$client_options['api_key'],
@@ -163,7 +178,8 @@ class LaterPay_Helper_Request {
 
 			self::$lp_api_availability = true;
 
-		} catch ( Exception $exception ) {
+		} catch ( \Exception $e ) {
+			$e->getMessage();
 
 			$action             = (int) get_option( 'laterpay_api_fallback_behavior', 0 );
 			$result['articles'] = array();
@@ -178,6 +194,9 @@ class LaterPay_Helper_Request {
 					break;
 			}
 
+			/**
+			 * @var $article_ids array
+			 */
 			foreach ( $article_ids as $id ) {
 				$result['articles'][ $id ] = array( 'access' => $access );
 			}
@@ -208,7 +227,7 @@ class LaterPay_Helper_Request {
 	 *
 	 * @return bool
 	 */
-	protected static function laterpay_api_disabled_on_homepage() {
+	protected static function laterpayApiDisabledOnHomepage() {
 		$enabled_on_homepage = get_option( 'laterpay_api_enabled_on_homepage' );
 		$is_homepage         = is_front_page() && is_home();
 

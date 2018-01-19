@@ -1,5 +1,9 @@
 <?php
 
+namespace LaterPay\Helper;
+
+use LaterPay\Core\Event;
+
 /**
  * LaterPay view helper.
  *
@@ -7,7 +11,7 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Helper_View {
+class View {
 
 	/**
 	 * @var string
@@ -26,7 +30,7 @@ class LaterPay_Helper_View {
 	 *
 	 * @return string $link
 	 */
-	public static function get_admin_menu_link( $page ) {
+	public static function getAdminMenuLink( $page ) {
 		$query_args = array(
 			'page' => $page['url'],
 		);
@@ -35,7 +39,7 @@ class LaterPay_Helper_View {
 
 		$data = '';
 		if ( isset( $page['data'] ) ) {
-			$data = json_encode( $page['data'] );
+			$data = wp_json_encode( $page['data'] );
 			$data = 'data="' . esc_attr( $data ) . '"';
 		}
 
@@ -47,12 +51,12 @@ class LaterPay_Helper_View {
 	 *
 	 * @return array
 	 */
-	public static function get_admin_menu() {
-		$event = new LaterPay_Core_Event();
-		$event->set_echo( false );
+	public static function getAdminMenu() {
+		$event = new Event();
+		$event->setEchoOutput( false );
 		laterpay_event_dispatcher()->dispatch( 'laterpay_admin_menu_data', $event );
-		$menu = (array) $event->get_result();
-		return $menu;
+
+		return (array) $event->getResult();
 	}
 
 	/**
@@ -62,7 +66,7 @@ class LaterPay_Helper_View {
 	 *
 	 * @return string $nextDay
 	 */
-	protected static function get_next_day( $date ) {
+	protected static function getNextDay( $date ) {
 		$next_day = date(
 			'Y-m-d', mktime(
 				date( 'H', strtotime( $date ) ),
@@ -81,11 +85,11 @@ class LaterPay_Helper_View {
 	 * Get date a given number of days prior to a given date.
 	 *
 	 * @param string $date
-	 * @param int    $ago number of days ago
+	 * @param int $ago number of days ago
 	 *
 	 * @return string $prior_date
 	 */
-	protected static function get_date_days_ago( $date, $ago = 30 ) {
+	protected static function getDateDaysAgo( $date, $ago = 30 ) {
 		$ago        = absint( $ago );
 		$prior_date = date(
 			'Y-m-d', mktime(
@@ -104,15 +108,15 @@ class LaterPay_Helper_View {
 	/**
 	 * Get the statistics data for the last 30 days as string, joined by a given delimiter.
 	 *
-	 * @param array  $statistic
+	 * @param array $statistic
 	 * @param string $type
 	 * @param string $delimiter
 	 *
 	 * @return string
 	 */
-	public static function get_days_statistics_as_string( $statistic, $type = 'quantity', $delimiter = ',' ) {
+	public static function getDaysStatisticsAsString( $statistic, $type = 'quantity', $delimiter = ',' ) {
 		$today = date( 'Y-m-d' );
-		$date  = self::get_date_days_ago( date( $today ), 30 );
+		$date  = self::getDateDaysAgo( date( $today ), 30 );
 
 		$result = '';
 		while ( $date <= $today ) {
@@ -124,7 +128,7 @@ class LaterPay_Helper_View {
 			} else {
 				$result .= '0';
 			}
-			$date = self::get_next_day( $date );
+			$date = self::getNextDay( $date );
 		}
 
 		return $result;
@@ -135,13 +139,14 @@ class LaterPay_Helper_View {
 	 *
 	 * @return bool
 	 */
-	public static function plugin_is_working() {
+	public static function pluginIsWorking() {
 		$is_in_live_mode         = get_option( 'laterpay_plugin_is_in_live_mode' );
 		$sandbox_api_key         = get_option( 'laterpay_sandbox_api_key' );
 		$live_api_key            = get_option( 'laterpay_live_api_key' );
 		$is_in_visible_test_mode = get_option( 'laterpay_is_in_visible_test_mode' );
+
 		if ( ! function_exists( 'wp_get_current_user' ) ) {
-			include_once( ABSPATH . 'wp-includes/pluggable.php' );
+			include_once ABSPATH . 'wp-includes/pluggable.php';
 		}
 
 		// check, if plugin operates in live mode and Live API key exists
@@ -172,7 +177,7 @@ class LaterPay_Helper_View {
 	 *
 	 * @return string $mode
 	 */
-	public static function get_plugin_mode() {
+	public static function getPluginMode() {
 		if ( get_option( 'laterpay_plugin_is_in_live_mode' ) ) {
 			$mode = 'live';
 		} else {
@@ -189,7 +194,7 @@ class LaterPay_Helper_View {
 	 *
 	 * @return string
 	 */
-	public static function remove_extra_spaces( $string ) {
+	public static function removeExtraSpaces( $string ) {
 		$string = trim( preg_replace( '/>\s+</', '><', $string ) );
 		$string = preg_replace( '/\n\s*\n/', '', $string );
 
@@ -199,12 +204,12 @@ class LaterPay_Helper_View {
 	/**
 	 * Format number based on its type.
 	 *
-	 * @param mixed   $number
-	 * @param bool    $is_monetary
+	 * @param mixed $number
+	 * @param bool $is_monetary
 	 *
 	 * @return string $formatted
 	 */
-	public static function format_number( $number, $is_monetary = true ) {
+	public static function formatNumber( $number, $is_monetary = true ) {
 		// convert value to float if incorrect type passed
 		$number = (float) $number;
 
@@ -234,8 +239,12 @@ class LaterPay_Helper_View {
 	public static function normalize( $number ) {
 		global $wp_locale;
 
-		$number = str_replace( $wp_locale->number_format['thousands_sep'], '', (string) $number );
-		$number = str_replace( $wp_locale->number_format['decimal_point'], '.', $number );
+		$number = str_replace(
+			array(
+				$wp_locale->number_format['thousands_sep'],
+				$wp_locale->number_format['decimal_point'],
+			), array( '', '.' ), (string) $number
+		);
 
 		return (float) $number;
 	}
@@ -243,12 +252,12 @@ class LaterPay_Helper_View {
 	/**
 	 * Get error message for shortcode.
 	 *
-	 * @param string  $error_reason
-	 * @param array   $atts         shortcode attributes
+	 * @param string $error_reason
+	 * @param array $atts shortcode attributes
 	 *
 	 * @return string $error_message
 	 */
-	public static function get_error_message( $error_reason, $atts ) {
+	public static function getErrorMessage( $error_reason, $atts ) {
 		$error_message  = '<div class="lp_shortcodeError">';
 		$error_message .= __( 'Problem with inserted shortcode:', 'laterpay' ) . '<br>';
 		$error_message .= $error_reason;
@@ -264,7 +273,7 @@ class LaterPay_Helper_View {
 	 *
 	 * @return void
 	 */
-	public static function apply_colors( $handle ) {
+	public static function applyColors( $handle ) {
 		$main_color  = get_option( 'laterpay_main_color' );
 		$hover_color = get_option( 'laterpay_hover_color' );
 

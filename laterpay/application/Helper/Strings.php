@@ -1,5 +1,7 @@
 <?php
 
+namespace LaterPay\Helper;
+
 /**
  * LaterPay string helper.
  *
@@ -7,18 +9,17 @@
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class LaterPay_Helper_String {
-
+class Strings {
 
 	/**
 	 * Get the first given number of words from a string.
 	 *
-	 * @param   string  $string
-	 * @param   int     $word_limit
+	 * @param   string $string
+	 * @param   int $word_limit
 	 *
 	 * @return  string
 	 */
-	public static function limit_words( $string, $word_limit ) {
+	public static function limitWords( $string, $word_limit ) {
 		$words = explode( ' ', $string );
 
 		return implode( ' ', array_slice( $words, 0, $word_limit ) );
@@ -31,9 +32,9 @@ class LaterPay_Helper_String {
 	 *
 	 * @return int $number_of_words
 	 */
-	public static function determine_number_of_words( $content ) {
+	public static function determineNumberOfWords( $content ) {
 		$content     = preg_replace( '/\s+/', ' ', $content );
-		$total_words = count( explode( ' ', $content ) );
+		$total_words = substr_count( $content, ' ' ) + 1;
 
 		$config = laterpay_get_plugin_config();
 
@@ -60,15 +61,15 @@ class LaterPay_Helper_String {
 	 * - `exact` If false, $text will not be cut mid-word
 	 * - `html` If true, HTML tags are handled correctly
 	 *
-	 * @param string  $text    String to truncate.
-	 * @param integer $length  Length of returned string, including ellipsis.
-	 * @param array   $options An array of html attributes and options.
+	 * @param string $text String to truncate.
+	 * @param integer $length Length of returned string, including ellipsis.
+	 * @param array $options An array of html attributes and options.
 	 *
 	 * @return string Trimmed string.
 	 *
 	 * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/text.html#TextHelper::truncate
 	 */
-	public static function truncate( $text, $length = 100, $options = array() ) {
+	public static function truncate( $text, $length = 100, array $options = array() ) {
 		$default = array(
 			'ellipsis' => ' ...',
 			'exact'    => true,
@@ -81,21 +82,20 @@ class LaterPay_Helper_String {
 			$default['ellipsis'] = "\xe2\x80\xa6";
 		}
 		$options = array_merge( $default, $options );
-		extract( $options );
 
 		if ( ! function_exists( 'mb_strlen' ) ) {
 			class_exists( 'Multibyte' );
 		}
 
-		if ( $html ) {
+		if ( $options['html'] ) {
 			$text = preg_replace( '/<! --(.*?)-->/i', '', $text );
-			if ( $words ) {
-				$length = mb_strlen( self::limit_words( preg_replace( '/<.*?>/', '', $text ), $length ) );
+			if ( $options['words'] ) {
+				$length = mb_strlen( self::limitWords( preg_replace( '/<.*?>/', '', $text ), $length ) );
 			}
 			if ( mb_strlen( preg_replace( '/<.*?>/', '', $text ) ) <= $length ) {
 				return $text;
 			}
-			$totalLength = mb_strlen( strip_tags( $ellipsis ) );
+			$totalLength = mb_strlen( wp_strip_all_tags( $options['ellipsis'] ) );
 			$openTags    = array();
 			$truncate    = '';
 
@@ -105,7 +105,7 @@ class LaterPay_Helper_String {
 					if ( preg_match( '/<[\w]+[^>]*>/s', $tag[0] ) ) {
 						array_unshift( $openTags, $tag[2] );
 					} elseif ( preg_match( '/<\/([\w]+)[^>]*>/s', $tag[0], $closeTag ) ) {
-						$pos = array_search( $closeTag[1], $openTags );
+						$pos = array_search( $closeTag[1], $openTags, true );
 						if ( $pos !== false ) {
 							array_splice( $openTags, $pos, 1 );
 						}
@@ -113,11 +113,19 @@ class LaterPay_Helper_String {
 				}
 				$truncate .= $tag[1];
 
-				$contentLength = mb_strlen( preg_replace( '/&[0-9a-z]{2,8};|&#[0-9]{1,7};|&#x[0-9a-f]{1,6};/i', ' ', $tag[3] ) );
+				$contentLength = mb_strlen(
+					preg_replace(
+						'/&[0-9a-z]{2,8};|&#[0-9]{1,7};|&#x[0-9a-f]{1,6};/i', ' ',
+						$tag[3]
+					)
+				);
 				if ( $contentLength + $totalLength > $length ) {
 					$left           = $length - $totalLength;
 					$entitiesLength = 0;
-					if ( preg_match_all( '/&[0-9a-z]{2,8};|&#[0-9]{1,7};|&#x[0-9a-f]{1,6};/i', $tag[3], $entities, PREG_OFFSET_CAPTURE ) ) {
+					if ( preg_match_all(
+						'/&[0-9a-z]{2,8};|&#[0-9]{1,7};|&#x[0-9a-f]{1,6};/i', $tag[3], $entities,
+						PREG_OFFSET_CAPTURE
+					) ) {
 						foreach ( $entities[0] as $entity ) {
 							if ( $entity[1] + 1 - $entitiesLength <= $left ) {
 								$left--;
@@ -139,17 +147,18 @@ class LaterPay_Helper_String {
 				}
 			}
 		} else {
-			if ( $words ) {
-				$length = mb_strlen( self::limit_words( $text, $length ) );
+			if ( $options['words'] ) {
+				$length = mb_strlen( self::limitWords( $text, $length ) );
 			}
 			if ( mb_strlen( $text ) <= $length ) {
 				return $text;
 			}
-			$truncate = mb_substr( $text, 0, $length - mb_strlen( $ellipsis ) );
+			$truncate = mb_substr( $text, 0, $length - mb_strlen( $options['ellipsis'] ) );
 		}
-		if ( ! $exact ) {
+		if ( ! $options['exact'] ) {
 			$spacepos = mb_strrpos( $truncate, ' ' );
-			if ( $html ) {
+
+			if ( $options['html'] ) {
 				$truncateCheck = mb_substr( $truncate, 0, $spacepos );
 				$lastOpenTag   = mb_strrpos( $truncateCheck, '<' );
 				$lastCloseTag  = mb_strrpos( $truncateCheck, '>' );
@@ -162,12 +171,18 @@ class LaterPay_Helper_String {
 				preg_match_all( '/<\/([a-z]+)>/', $bits, $droppedTags, PREG_SET_ORDER );
 				if ( ! empty( $droppedTags ) ) {
 					if ( ! empty( $openTags ) ) {
+						/**
+						 * @var $droppedTags array
+						 */
 						foreach ( $droppedTags as $closingTag ) {
-							if ( ! in_array( $closingTag[1], $openTags ) ) {
+							if ( ! in_array( $closingTag[1], $openTags, true ) ) {
 								array_unshift( $openTags, $closingTag[1] );
 							}
 						}
 					} else {
+						/**
+						 * @var $droppedTags array
+						 */
 						foreach ( $droppedTags as $closingTag ) {
 							$openTags[] = $closingTag[1];
 						}
@@ -176,9 +191,12 @@ class LaterPay_Helper_String {
 			}
 			$truncate = mb_substr( $truncate, 0, $spacepos );
 		}
-		$truncate .= $ellipsis;
+		$truncate .= $options['ellipsis'];
 
-		if ( $html ) {
+		if ( $options['html'] ) {
+			/**
+			 * @var $openTags array
+			 */
 			foreach ( $openTags as $tag ) {
 				$truncate .= '</' . $tag . '>';
 			}
@@ -190,21 +208,22 @@ class LaterPay_Helper_String {
 	/**
 	 * Encode a variable into JSON, with some sanity checks.
 	 *
-	 * @param mixed $data    Variable (usually an array or object) to encode as JSON.
-	 * @param int   $options Optional. Options to be passed to json_encode(). Default 0.
-	 * @param int   $depth   Optional. Maximum depth to walk through $data. Must be
+	 * @param mixed $data Variable (usually an array or object) to encode as JSON.
+	 * @param int $options Optional. Options to be passed to json_encode(). Default 0.
+	 * @param int $depth Optional. Maximum depth to walk through $data. Must be
 	 *                       greater than 0. Default 512.
+	 *
 	 * @return bool|string The JSON encoded string, or false if it cannot be encoded.
 	 */
-	public static function laterpay_json_encode( $data, $options = 0, $depth = 512 ) {
+	public static function laterpayJSONEncode( $data, $options = 0, $depth = 512 ) {
 		/*
 		 * json_encode() has had extra params added over the years.
 		 * $options was added in 5.3, and $depth in 5.5.
 		 * We need to make sure we call it with the correct arguments.
 		 */
-		if ( version_compare( PHP_VERSION, '5.5', '>=' ) ) {
+		if ( PHP_VERSION_ID >= 50500 ) {
 			$args = array( $data, $options, $depth );
-		} elseif ( version_compare( PHP_VERSION, '5.3', '>=' ) ) {
+		} elseif ( PHP_VERSION_ID >= 50300 ) {
 			$args = array( $data, $options );
 		} else {
 			$args = array( $data );
@@ -212,5 +231,4 @@ class LaterPay_Helper_String {
 
 		return call_user_func_array( 'json_encode', $args );
 	}
-
 }
