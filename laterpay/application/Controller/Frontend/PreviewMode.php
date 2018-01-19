@@ -2,13 +2,12 @@
 
 namespace LaterPay\Controller\Frontend;
 
-use LaterPay\Form\PreviewMode as FormPreviewMode;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Form\PreviewModeVisibility;
 use LaterPay\Form\PreviewModeForm;
 use LaterPay\Controller\Base;
-use LaterPay\Helper\Globals;
 use LaterPay\Helper\Pricing;
+use LaterPay\Core\Request;
 use LaterPay\Helper\User;
 use LaterPay\Core\Event;
 
@@ -155,10 +154,10 @@ class PreviewMode extends Base {
 	 * @return void
 	 */
 	public function ajaxTogglePreview( Event $event ) {
-		$preview_form = new PreviewModeForm( Globals::POST() );
+		$preview_form = new PreviewModeForm( Request::post() );
 
-		if ( ! $preview_form->is_valid() ) {
-			throw new FormValidation( get_class( $preview_form ), $preview_form->get_errors() );
+		if ( ! $preview_form->isValid() ) {
+			throw new FormValidation( get_class( $preview_form ), $preview_form->getErrors() );
 		}
 
 		$error = array(
@@ -174,7 +173,7 @@ class PreviewMode extends Base {
 			return;
 		}
 
-		$preview_post = $preview_form->get_field_value( 'preview_post' );
+		$preview_post = $preview_form->getFieldValue( 'preview_post' );
 
 		if ( $preview_post === null ) {
 			$error['code'] = 2;
@@ -192,7 +191,7 @@ class PreviewMode extends Base {
 			return;
 		}
 
-		$result = User::update_user_meta(
+		$result = User::updateUserMeta(
 			'laterpay_preview_post_as_visitor',
 			$preview_post
 		);
@@ -222,15 +221,15 @@ class PreviewMode extends Base {
 	 * @return void
 	 */
 	public function ajaxRenderTabPreviewMode( Event $event ) {
-		$preview_form = new FormPreviewMode( Globals::GET() );
+		$preview_form = new \LaterPay\Form\PreviewMode( Request::get() );
 
-		if ( ! $preview_form->is_valid() ) {
+		if ( ! $preview_form->isValid() ) {
 			$event->stopPropagation();
 
 			return;
 		}
 
-		$post_id = $preview_form->get_field_value( 'post_id' );
+		$post_id = $preview_form->getFieldValue( 'post_id' );
 		if ( ! User::can( 'laterpay_has_full_access_to_content', $post_id ) ) {
 			$event->stopPropagation();
 
@@ -240,8 +239,8 @@ class PreviewMode extends Base {
 		$post = get_post( $post_id );
 		// assign variables
 		$view_args = array(
-			'hide_preview_mode_pane'  => User::preview_mode_pane_is_hidden(),
-			'preview_post_as_visitor' => (bool) User::preview_post_as_visitor( $post ),
+			'hide_preview_mode_pane'  => User::previewModePaneIsHidden(),
+			'preview_post_as_visitor' => (bool) User::previewPostAsVisitor( $post ),
 		);
 		$this->assign( 'laterpay', $view_args );
 
@@ -260,12 +259,12 @@ class PreviewMode extends Base {
 	 * @return void
 	 */
 	public function ajaxToggleVisibility( Event $event ) {
-		$preview_mode_visibility_form = new PreviewModeVisibility( Globals::POST() );
+		$preview_mode_visibility_form = new PreviewModeVisibility( Request::post() );
 
-		if ( ! $preview_mode_visibility_form->is_valid() ) {
+		if ( ! $preview_mode_visibility_form->isValid() ) {
 			throw new FormValidation(
 				get_class( $preview_mode_visibility_form ),
-				$preview_mode_visibility_form->get_errors()
+				$preview_mode_visibility_form->getErrors()
 			);
 		}
 
@@ -285,9 +284,9 @@ class PreviewMode extends Base {
 			return;
 		}
 
-		$result = User::update_user_meta(
+		$result = User::updateUserMeta(
 			'laterpay_hide_preview_mode_pane',
-			$preview_mode_visibility_form->get_field_value( 'hide_preview_mode_pane' )
+			$preview_mode_visibility_form->getFieldValue( 'hide_preview_mode_pane' )
 		);
 
 		if ( ! $result ) {

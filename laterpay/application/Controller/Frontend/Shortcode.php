@@ -7,13 +7,11 @@ use LaterPay\Core\Exception\PostNotFound;
 use LaterPay\Controller\Base;
 use LaterPay\Helper\TimePass;
 use LaterPay\Core\Exception;
-use LaterPay\Helper\Globals;
 use LaterPay\Helper\Pricing;
 use LaterPay\Helper\Voucher;
+use LaterPay\Core\Request;
 use LaterPay\Helper\File;
 use LaterPay\Helper\Post;
-use LaterPay\Helper\User;
-use LaterPay\Helper\View;
 use LaterPay\Core\Event;
 
 /**
@@ -44,27 +42,9 @@ class Shortcode extends Base {
 				array( 'laterpay_on_plugin_is_working', 200 ),
 				array( 'renderPremiumDownloadBox' ),
 			),
-			'laterpay_shortcode_gift_card'                => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'renderGiftCard' ),
-			),
-			'laterpay_shortcode_redeem_voucher'           => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'renderRedeemGiftCode' ),
-			),
 			'laterpay_shortcode_account_links'            => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
 				array( 'renderAccountLinks' ),
-			),
-			'wp_ajax_laterpay_get_gift_card_actions'      => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'laterpay_on_ajax_send_json', 300 ),
-				array( 'ajaxLoadGiftAction' ),
-			),
-			'wp_ajax_nopriv_laterpay_get_gift_card_actions' => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'laterpay_on_ajax_send_json', 300 ),
-				array( 'ajaxLoadGiftAction' ),
 			),
 			'wp_ajax_laterpay_get_premium_shortcode_link' => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
@@ -371,29 +351,29 @@ class Shortcode extends Base {
 	 * @return void
 	 */
 	public function ajaxGetPremiumShortcodeLink( Event $event ) {
-		if ( null === Globals::GET( 'action' ) || sanitize_text_field( Globals::GET( 'action' ) ) !== 'laterpay_get_premium_shortcode_link' ) {
+		if ( null === Request::get( 'action' ) || sanitize_text_field( Request::get( 'action' ) ) !== 'laterpay_get_premium_shortcode_link' ) {
 			throw new InvalidIncomingData( 'action' );
 		}
 
-		if ( null === Globals::GET( 'ids' ) ) {
+		if ( null === Request::get( 'ids' ) ) {
 			throw new InvalidIncomingData( 'ids' );
 		}
 
-		if ( null === Globals::GET( 'types' ) ) {
+		if ( null === Request::get( 'types' ) ) {
 			throw new InvalidIncomingData( 'types' );
 		}
 
-		if ( null === Globals::GET( 'post_id' ) ) {
+		if ( null === Request::get( 'post_id' ) ) {
 			throw new InvalidIncomingData( 'post_id' );
 		}
 
-		$current_post_id = absint( Globals::GET( 'post_id' ) );
+		$current_post_id = absint( Request::get( 'post_id' ) );
 		if ( ! get_post( $current_post_id ) ) {
 			throw new PostNotFound( $current_post_id );
 		}
 
-		$ids    = array_map( 'sanitize_text_field', Globals::GET( 'ids' ) );
-		$types  = array_map( 'sanitize_text_field', Globals::GET( 'types' ) );
+		$ids    = array_map( 'sanitize_text_field', Request::get( 'ids' ) );
+		$types  = array_map( 'sanitize_text_field', Request::get( 'types' ) );
 		$result = array();
 
 		foreach ( $ids as $key => $id ) {
@@ -457,7 +437,7 @@ class Shortcode extends Base {
 			} else {
 				// the user has not purchased the item yet
 				$button_event = new Event();
-				$button_event->setEcho( false );
+				$button_event->setEchoOutput( false );
 				$button_event->setArgument( 'post', $post );
 				$button_event->setArgument( 'current_post', $current_post_id );
 				$button_event->setArgument(
@@ -488,141 +468,6 @@ class Shortcode extends Base {
 	}
 
 	/**
-	 * Render gift cards for time passes from shortcode [laterpay_gift_card].
-	 *
-	 * The shortcode [laterpay_gift_card] accepts one optional parameter:
-	 * id: the id of the time pass that a user can buy a gift card for and give to someone else as a present
-	 * You can find the id of a time pass on the pricing page on the left side of the time pass (e.g. "Pass 3").
-	 * If no id is provided, the shortcode renders one giftcard for each defined time pass.
-	 *
-	 * Example:
-	 * [laterpay_gift_card id="1"]
-	 * or:
-	 * [laterpay_gift_card]
-	 *
-	 * @param Event $event
-	 *
-	 * @throws Exception
-	 *
-	 * @return void
-	 */
-	public function renderGiftCard( Event $event ) {
-		list($atts) = $event->getArguments() + array( array() );
-		$data       = shortcode_atts(
-			array(
-				'id' => null,
-			), $atts
-		);
-
-		// get a specific time pass, if an ID was provided; otherwise get all time passes
-		if ( $data['id'] ) {
-			$time_passes_list = array( TimePass::get_time_pass_by_id( $data['id'], true ) );
-		} else {
-			$time_passes_list = TimePass::get_active_time_passes();
-		}
-
-		// don't render any gift cards, if there are no time passes
-		if ( ! $time_passes_list ) {
-			$error_message = View::get_error_message(
-				__(
-					'Wrong time pass id or no time passes specified.',
-					'laterpay'
-				), $atts
-			);
-			$event->setResult( $error_message );
-			throw new Exception( $error_message );
-		}
-
-		$view_args = array(
-			'passes_list'             => $time_passes_list,
-			'standard_currency'       => $this->config->get( 'currency.code' ),
-			'preview_post_as_visitor' => User::preview_post_as_visitor( get_post() ),
-			'selected_pass_id'        => $data['id'],
-		);
-		$this->assign( 'laterpay', $view_args );
-
-		$html = $this->getTextView( 'frontend/partials/post/gift/gift-card' );
-
-		$event->setResult( $html );
-	}
-
-	/**
-	 * Render a form to redeem a gift code for a time pass from shortcode [laterpay_redeem_voucher].
-	 * The shortcode renders an input and a button.
-	 * If the user enters his gift code and clicks the 'Redeem' button, a purchase dialog is opened,
-	 * where the user has to confirm the purchase of the associated time pass for a price of 0.00 Euro.
-	 * This step is done to ensure that this user accepts the LaterPay terms of use.
-	 *
-	 * @param Event $event
-	 *
-	 * @throws \Exception
-	 */
-	public function renderRedeemGiftCode( Event $event ) {
-		list($atts) = $event->getArguments() + array( array() );
-
-		$data = shortcode_atts(
-			array(
-				'id' => null,
-			), $atts
-		);
-
-		// get a specific time pass, if an ID was provided; otherwise get all time passes
-		if ( $data['id'] ) {
-			$time_pass = TimePass::get_time_pass_by_id( $data['id'], true );
-			if ( ! $time_pass ) {
-				$error_message = View::get_error_message( __( 'Wrong time pass id.', 'laterpay' ), $atts );
-				$event->setResult( $error_message );
-				throw new \Exception( $error_message );
-			}
-		} else {
-			$time_pass = array();
-		}
-
-		$view_args = array(
-			'pass_data'               => $time_pass,
-			'standard_currency'       => $this->config->get( 'currency.code' ),
-			'preview_post_as_visitor' => User::preview_post_as_visitor( get_post() ),
-		);
-		$this->assign( 'laterpay', $view_args );
-
-		$html = $this->getTextView( 'frontend/partials/post/gift/gift-redeem' );
-
-		$event->setResult( $html );
-	}
-
-	/**
-	 * Render gift card.
-	 *
-	 * @param array $gift_pass
-	 * @param bool $show_redeem
-	 *
-	 * @return string
-	 */
-	public function renderGiftPass( $gift_pass, $show_redeem = false ) {
-		// check if gift_pass is not empty and is array
-		if ( ! $gift_pass || ! is_array( $gift_pass ) ) {
-			return '';
-		}
-
-		$view_args = array(
-			'gift_pass'   => $gift_pass,
-			'show_redeem' => $show_redeem,
-		);
-		$this->assign( 'laterpay_gift', $view_args );
-
-		return $this->getTextView( 'frontend/partials/post/gift/gift-pass' );
-	}
-
-	/**
-	 * Render redeem gift card form.
-	 *
-	 * @return string
-	 */
-	public function renderRedeemForm() {
-		return $this->getTextView( 'frontend/partials/post/gift/redeem-form' );
-	}
-
-	/**
 	 * Add voucher codes to time passes.
 	 *
 	 * @param array $time_passes list of time passes
@@ -635,11 +480,11 @@ class Shortcode extends Base {
 			foreach ( $time_passes as $id => $time_pass ) {
 				// create URL with the generated voucher code
 				$data = array(
-					'voucher' => Voucher::generate_voucher_code(),
+					'voucher' => Voucher::generateVoucherCode(),
 					'link'    => $link ?: get_permalink(),
 				);
 
-				$time_pass['url']   = TimePass::get_laterpay_purchase_link(
+				$time_pass['url']   = TimePass::getLaterpayPurchaseLink(
 					$time_pass['pass_id'], $data,
 					true
 				);
@@ -648,91 +493,6 @@ class Shortcode extends Base {
 		}
 
 		return $time_passes;
-	}
-
-	/**
-	 * Get gift cards through Ajax.
-	 *
-	 * @hook wp_ajax_laterpay_get_gift_card_actions, wp_ajax_nopriv_laterpay_get_gift_card_actions
-	 *
-	 * @param Event $event
-	 *
-	 * @throws \LaterPay\Core\Exception\InvalidIncomingData
-	 *
-	 * @return void
-	 */
-	public function ajaxLoadGiftAction( Event $event ) {
-		if ( null === Globals::GET( 'action' ) || sanitize_text_field( Globals::GET( 'action' ) ) !== 'laterpay_get_gift_card_actions' ) {
-			throw new InvalidIncomingData( 'action' );
-		}
-
-		if ( null === Globals::GET( 'pass_id' ) ) {
-			throw new InvalidIncomingData( 'pass_id' );
-		}
-
-		if ( null === Globals::GET( 'link' ) ) {
-			throw new InvalidIncomingData( 'link' );
-		}
-
-		$data          = array();
-		$time_pass_ids = array();
-
-		if ( is_array( Globals::GET( 'pass_id' ) ) ) {
-			$time_pass_ids = array_map( 'sanitize_text_field', Globals::GET( 'pass_id' ) );
-		}
-
-		foreach ( $time_pass_ids as $time_pass_id ) {
-			$time_passes  = $time_pass_id ? array(
-				TimePass::get_time_pass_by_id( $time_pass_id, true ),
-			) : TimePass::get_active_time_passes();
-			$access       = Post::hasPurchasedGiftCard();
-			$landing_page = get_option( 'laterpay_landing_page' );
-
-			// add gift codes with URLs to time passes
-			$time_passes = $this->addFreeCodesToPasses(
-				$time_passes,
-				esc_url_raw( Globals::GET( 'link' ) )
-			);
-			$view_args   = array(
-				'gift_code'               => is_array( $access ) ? $access['code'] : null,
-				'landing_page'            => $landing_page ?: home_url(),
-				'preview_post_as_visitor' => User::preview_post_as_visitor( get_post() ),
-				'standard_currency'       => $this->config->get( 'currency.code' ),
-			);
-
-			foreach ( $time_passes as $time_pass ) {
-				$has_access      = is_array( $access ) && $access['access'] && (int) $access['pass_id'] === (int) $time_pass['pass_id'];
-				$additional_args = array(
-					'pass'       => $time_pass,
-					'has_access' => $has_access,
-				);
-				$this->assign( 'laterpay', array_merge( $view_args, $additional_args ) );
-
-				$html = View::removeExtraSpaces( $this->getTextView( 'frontend/partials/post/gift/gift-actions' ) );
-				$info = array(
-					'html'     => $html,
-					'id'       => $time_pass['pass_id'],
-					'buy_more' => null,
-				);
-
-				if ( $has_access ) {
-					$label            = __( 'Buy another gift card', 'laterpay' );
-					$html             = '<a href="#" class="lp_gift-card__buy-another">' . $label . '</a>';
-					$info['buy_more'] = $html;
-				}
-
-				if ( ! isset( $data[ $time_pass['pass_id'] ] ) ) {
-					$data[ $time_pass['pass_id'] ] = $info;
-				}
-			}
-		}
-
-		$event->setResult(
-			array(
-				'success' => true,
-				'data'    => array_values( $data ),
-			)
-		);
 	}
 
 	/**
@@ -778,7 +538,7 @@ class Shortcode extends Base {
 		);
 
 		$links_event = new Event( $view_args );
-		$links_event->setEcho( false );
+		$links_event->setEchoOutput( false );
 		laterpay_event_dispatcher()->dispatch( 'laterpay_account_links', $links_event );
 
 		$event->setResult( $links_event->getResult() );

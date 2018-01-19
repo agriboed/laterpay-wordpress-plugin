@@ -3,20 +3,15 @@
 namespace LaterPay\Controller\Frontend;
 
 use LaterPay\Core\Exception\InvalidIncomingData;
-use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\PostNotFound;
-use LaterPay\Helper\Post as HelperPost;
 use LaterPay\Helper\Subscription;
 use LaterPay\Helper\Appearance;
 use LaterPay\Controller\Base;
-use LaterPay\Form\PostRating;
 use LaterPay\Helper\TimePass;
-use LaterPay\Helper\Globals;
 use LaterPay\Helper\Pricing;
 use LaterPay\Helper\Request;
 use LaterPay\Helper\Voucher;
-use LaterPay\Helper\Rating;
-use LaterPay\Helper\String;
+use LaterPay\Helper\Strings;
 use LaterPay\Helper\User;
 use LaterPay\Helper\View;
 use LaterPay\Helper\File;
@@ -82,24 +77,6 @@ class Post extends Base {
 				array( 'laterpay_on_plugin_is_working', 200 ),
 				array( 'ajaxLoadPurchasedContent' ),
 			),
-			'wp_ajax_laterpay_post_rate_purchased_content' => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'laterpay_on_ajax_send_json', 300 ),
-				array( 'ajaxRatePurchasedContent' ),
-			),
-			'wp_ajax_nopriv_laterpay_post_rate_purchased_content' => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'laterpay_on_ajax_send_json', 300 ),
-				array( 'ajaxRatePurchasedContent' ),
-			),
-			'wp_ajax_laterpay_post_rating_summary'         => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'ajaxLoadRatingSummary' ),
-			),
-			'wp_ajax_nopriv_laterpay_post_rating_summary'  => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'ajaxLoadRatingSummary' ),
-			),
 			'wp_ajax_laterpay_redeem_voucher_code'         => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
 				array( 'laterpay_on_ajax_send_json', 300 ),
@@ -134,8 +111,8 @@ class Post extends Base {
 	 *
 	 */
 	public function ajaxLoadPurchasedContent( Event $event ) {
-		$action  = Globals::GET( 'action' );
-		$post_id = Globals::GET( 'id' );
+		$action  = \LaterPay\Core\Request::get( 'action' );
+		$post_id = \LaterPay\Core\Request::get( 'id' );
 
 		if ( null === $action || sanitize_text_field( $action ) !== 'laterpay_post_load_purchased_content' ) {
 			throw new InvalidIncomingData( 'action' );
@@ -152,14 +129,14 @@ class Post extends Base {
 			throw new PostNotFound( $post_id );
 		}
 
-		if ( ! is_user_logged_in() && ! HelperPost::hasAccessToPost( $post ) ) {
+		if ( ! is_user_logged_in() && ! \LaterPay\Helper\Post::hasAccessToPost( $post ) ) {
 			// check access to paid post for not logged in users only and prevent
 			$event->stopPropagation();
 
 			return;
 		}
 
-		if ( is_user_logged_in() && User::preview_post_as_visitor( $post ) ) {
+		if ( is_user_logged_in() && User::previewPostAsVisitor( $post ) ) {
 			// return, if user is logged in and 'preview_as_visitor' is activated
 			$event->stopPropagation();
 
@@ -175,112 +152,6 @@ class Post extends Base {
 	}
 
 	/**
-	 * Ajax method to rate purchased content.
-	 *
-	 * @wp-hook wp_ajax_laterpay_post_rate_purchased_content, wp_ajax_nopriv_laterpay_post_rate_purchased_content
-	 *
-	 * @param Event $event
-	 *
-	 * @throws \LaterPay\Core\Exception\FormValidation
-	 *
-	 * @return void
-	 */
-	public function ajaxRatePurchasedContent( Event $event ) {
-		$post_rating_form = new PostRating( Globals::POST() );
-		$event->setResult(
-			array(
-				'success' => false,
-			)
-		);
-
-		if ( ! $post_rating_form->is_valid() ) {
-			throw new FormValidation( get_class( $post_rating_form ), $post_rating_form->get_errors() );
-		}
-
-		$post_id       = $post_rating_form->get_field_value( 'post_id' );
-		$rating_value  = $post_rating_form->get_field_value( 'rating_value' );
-		$is_user_voted = Rating::check_if_user_voted_post_already( $post_id );
-
-		if ( $is_user_voted ) {
-			$event->setResult(
-				array(
-					'success' => false,
-				)
-			);
-
-			return;
-		}
-
-		// update rating data with submitted rating
-		$rating       = Rating::get_post_rating_data( $post_id );
-		$rating_index = (string) $rating_value;
-		++$rating[ $rating_index ];
-
-		update_post_meta( $post_id, 'laterpay_rating', $rating );
-		Rating::set_user_voted( $post_id );
-
-		$event->setResult(
-			array(
-				'success' => true,
-				'message' => __( 'Thank you very much for rating!', 'laterpay' ),
-			)
-		);
-	}
-
-	/**
-	 * Ajax method to get rating summary.
-	 *
-	 * @wp-hook wp_ajax_laterpay_post_rating_summary, wp_ajax_nopriv_laterpay_post_rating_summary
-	 *
-	 * @param Event $event
-	 *
-	 * @throws \LaterPay\Core\Exception\InvalidIncomingData
-	 * @throws \LaterPay\Core\Exception\PostNotFound
-	 *
-	 * @return void
-	 */
-	public function ajaxLoadRatingSummary( Event $event ) {
-		$action  = Globals::GET( 'action' );
-		$post_id = Globals::GET( 'post_id' );
-
-		if ( null === $action || sanitize_text_field( $action ) !== 'laterpay_post_rating_summary' ) {
-			throw new InvalidIncomingData( 'action' );
-		}
-
-		if ( null === $post_id ) {
-			throw new InvalidIncomingData( 'post_id' );
-		}
-
-		$post_id = absint( $post_id );
-		$post    = get_post( $post_id );
-
-		if ( null === $post ) {
-			throw new PostNotFound( $post_id );
-		}
-
-		// get post rating summary
-		$summary_post_rating = Rating::get_summary_post_rating_data( $post_id );
-		// round $aggregated_post_rating to closest 0.5
-		$aggregated_post_rating  = $summary_post_rating['votes'] ? number_format(
-			round( 2 * $summary_post_rating['rating'] / $summary_post_rating['votes'] ) / 2,
-			1
-		) : 0;
-		$post_rating_data        = Rating::get_post_rating_data( $post_id );
-		$maximum_number_of_votes = max( $post_rating_data );
-
-		// assign variables to the view templates
-		$view_args = array(
-			'post_rating_data'        => $post_rating_data,
-			'post_aggregated_rating'  => $aggregated_post_rating,
-			'post_summary_votes'      => $summary_post_rating['votes'],
-			'maximum_number_of_votes' => $maximum_number_of_votes,
-		);
-		$this->assign( 'laterpay', $view_args );
-
-		$event->setResult( View::removeExtraSpaces( $this->getTextView( 'frontend/partials/post/rating-summary' ) ) );
-	}
-
-	/**
 	 * Ajax method to redeem voucher code.
 	 *
 	 * @wp-hook wp_ajax_laterpay_redeem_voucher_code, wp_ajax_nopriv_laterpay_redeem_voucher_code
@@ -292,9 +163,9 @@ class Post extends Base {
 	 * @return void
 	 */
 	public function ajaxRedeemVoucherCode( Event $event ) {
-		$action = Globals::GET( 'action' );
-		$code   = Globals::GET( 'code' );
-		$link   = Globals::GET( 'link' );
+		$action = \LaterPay\Core\Request::get( 'action' );
+		$code   = \LaterPay\Core\Request::get( 'code' );
+		$link   = \LaterPay\Core\Request::get( 'link' );
 
 		if ( null === $action || sanitize_text_field( $action ) !== 'laterpay_redeem_voucher_code' ) {
 			throw new InvalidIncomingData( 'action' );
@@ -311,20 +182,20 @@ class Post extends Base {
 		// check, if voucher code exists and time pass is available for purchase
 		$is_gift   = true;
 		$code      = sanitize_text_field( $code );
-		$code_data = Voucher::check_voucher_code( $code, $is_gift );
+		$code_data = Voucher::checkVoucherCode( $code, $is_gift );
 		if ( ! $code_data ) {
 			$is_gift     = false;
 			$can_be_used = true;
-			$code_data   = Voucher::check_voucher_code( $code, $is_gift );
+			$code_data   = Voucher::checkVoucherCode( $code, $is_gift );
 		} else {
-			$can_be_used = Voucher::check_gift_code_usages_limit( $code );
+			$can_be_used = Voucher::checkGiftCodeUsagesLimit( $code );
 		}
 
 		// if gift code data exists and usage limit is not exceeded
 		if ( $code_data && $can_be_used ) {
 			// update gift code usage
 			if ( $is_gift ) {
-				Voucher::update_gift_code_usages( $code );
+				Voucher::updateGiftCodeUsages( $code );
 			}
 			// get new URL for this time pass
 			$pass_id = $code_data['pass_id'];
@@ -336,7 +207,7 @@ class Post extends Base {
 			);
 
 			// get new purchase URL
-			$url = TimePass::get_laterpay_purchase_link( $pass_id, $data );
+			$url = TimePass::getLaterpayPurchaseLink( $pass_id, $data );
 
 			if ( $url ) {
 				$event->setResult(
@@ -366,10 +237,9 @@ class Post extends Base {
 	 *
 	 * @param Event $event
 	 *
-	 * @var array $attr Attributes for the image markup
-	 * @var \WP_Post $post Image attachment post
-	 * @var string|array $size Requested size
+	 * @throws \Exception
 	 *
+	 * @return void
 	 */
 	public function encryptImageSource( Event $event ) {
 		list($attr, $post)             = $event->getArguments() + array( '', '' );
@@ -383,7 +253,7 @@ class Post extends Base {
 
 		$is_purchasable = Pricing::isPurchasable( $post->ID );
 		if ( $is_purchasable && $post->ID === get_the_ID() ) {
-			$access      = HelperPost::hasAccessToPost( $post );
+			$access      = \LaterPay\Helper\Post::hasAccessToPost( $post );
 			$attr        = $event->getResult();
 			$attr['src'] = File::getEncryptedResourceURL(
 				$post->ID,
@@ -403,12 +273,14 @@ class Post extends Base {
 	 *
 	 * @param Event $event
 	 *
-	 * @throws \InvalidArgumentException
+	 * @throws \Exception
 	 *
 	 * @return void
 	 */
-	public function encrypt_attachment_url( Event $event ) {
-		list($url, $post_id)           = $event->getArguments() + array( '', '' );
+	public function encryptAttachmentURL( Event $event ) {
+		list($url, $post_id) = $event->getArguments() + array( '', '' );
+		unset( $url );
+
 		$caching_is_active             = (bool) $this->config->get( 'caching.compatible_mode' );
 		$is_ajax_and_caching_is_active = defined( 'DOING_AJAX' ) && DOING_AJAX && $caching_is_active;
 
@@ -431,7 +303,7 @@ class Post extends Base {
 
 		$is_purchasable = Pricing::isPurchasable( $post->ID );
 		if ( $is_purchasable && $post->ID === $post_id ) {
-			$access = HelperPost::hasAccessToPost( $post );
+			$access = \LaterPay\Helper\Post::hasAccessToPost( $post );
 
 			// prevent from exec, if attachment is an image and user does not have access
 			if ( ! $access && strpos( $post->post_mime_type, 'image' ) !== false ) {
@@ -462,7 +334,6 @@ class Post extends Base {
 	 * @var string $attachment The attachment HTML output
 	 *
 	 * @return void
-	 * @throws \InvalidArgumentException
 	 */
 	public function prependAttachment( Event $event ) {
 		$attachment = $event->getResult();
@@ -479,8 +350,8 @@ class Post extends Base {
 		}
 
 		$is_purchasable          = Pricing::isPurchasable( $post->ID );
-		$access                  = HelperPost::hasAccessToPost( $post );
-		$preview_post_as_visitor = User::preview_post_as_visitor( $post );
+		$access                  = \LaterPay\Helper\Post::hasAccessToPost( $post );
+		$preview_post_as_visitor = User::previewPostAsVisitor( $post );
 
 		if ( ( $is_purchasable && ! $access ) || $preview_post_as_visitor ) {
 			$event->setResult( '' );
@@ -555,18 +426,18 @@ class Post extends Base {
 			// add a post_ID to the array of posts to be queried for access, if it's purchasable and not loaded already
 			if ( ! array_key_exists(
 				$post->ID,
-				HelperPost::getAccessState()
+				\LaterPay\Helper\Post::getAccessState()
 			) && Pricing::getPostPrice( $post->ID ) !== 0.00 ) {
 				$post_ids[] = $post->ID;
 			}
 		}
 
 		// check access for time passes
-		$time_passes = TimePass::get_tokenized_time_pass_ids();
+		$time_passes = TimePass::getTokenizedTimePassIDs();
 
 		foreach ( $time_passes as $time_pass ) {
 			// add a tokenized time pass id to the array of posts to be queried for access, if it's not loaded already
-			if ( ! array_key_exists( $time_pass, HelperPost::getAccessState() ) ) {
+			if ( ! array_key_exists( $time_pass, \LaterPay\Helper\Post::getAccessState() ) ) {
 				$post_ids[] = $time_pass;
 			}
 		}
@@ -576,7 +447,7 @@ class Post extends Base {
 
 		foreach ( $subscriptions as $subscription ) {
 			// add a tokenized subscription id to the array of posts to be queried for access, if it's not loaded already
-			if ( ! array_key_exists( $subscription, HelperPost::getAccessState() ) ) {
+			if ( ! array_key_exists( $subscription, \LaterPay\Helper\Post::getAccessState() ) ) {
 				$post_ids[] = $subscription;
 			}
 		}
@@ -590,14 +461,14 @@ class Post extends Base {
 			array( 'post_ids' => $post_ids )
 		);
 
-		$access_result = Request::laterpay_api_get_access( $post_ids );
+		$access_result = Request::laterpayApiGetAccess( $post_ids );
 
 		if ( empty( $access_result ) || ! array_key_exists( 'articles', $access_result ) ) {
 			return;
 		}
 
 		foreach ( $access_result['articles'] as $post_id => $state ) {
-			HelperPost::setAccessState( $post_id, (bool) $state['access'] );
+			\LaterPay\Helper\Post::setAccessState( $post_id, (bool) $state['access'] );
 		}
 	}
 
@@ -635,9 +506,8 @@ class Post extends Base {
 	 *
 	 * @internal WP_Embed $wp_embed
 	 *
-	 * @throws \InvalidArgumentException
-	 *
 	 * @return void
+	 * @throws \Exception
 	 */
 	public function modifyPostContent( Event $event ) {
 		global $wp_embed;
@@ -657,7 +527,7 @@ class Post extends Base {
 		}
 
 		// check, if user has access to content (because he already bought it)
-		$access = HelperPost::hasAccessToPost( $post );
+		$access = \LaterPay\Helper\Post::hasAccessToPost( $post );
 
 		// caching and Ajax
 		$caching_is_active = (bool) $this->config->get( 'caching.compatible_mode' );
@@ -665,7 +535,7 @@ class Post extends Base {
 
 		// check, if user has admin rights
 		$user_has_unlimited_access = User::can( 'laterpay_has_full_access_to_content', $post );
-		$preview_post_as_visitor   = User::preview_post_as_visitor( $post );
+		$preview_post_as_visitor   = User::previewPostAsVisitor( $post );
 
 		// switch to 'admin' mode and load the correct content, if user can read post statistics
 		if ( $user_has_unlimited_access && ! $preview_post_as_visitor ) {
@@ -683,16 +553,6 @@ class Post extends Base {
 			)
 		);
 
-		// maybe add ratings
-		if ( get_option( 'laterpay_ratings' ) ) {
-			$ratings_event = new Event();
-			$ratings_event->setEcho( false );
-			$ratings_event->setArguments( $event->getArguments() );
-			$ratings_event->setArgument( 'content', $content );
-			laterpay_event_dispatcher()->dispatch( 'laterpay_show_rating_form', $ratings_event );
-			$content = $ratings_event->getResult();
-		}
-
 		// stop propagation
 		if ( $user_has_unlimited_access && ! $preview_post_as_visitor ) {
 			$event->stopPropagation();
@@ -702,13 +562,13 @@ class Post extends Base {
 
 		// generate teaser
 		$teaser_event = new Event();
-		$teaser_event->setEcho( false );
+		$teaser_event->setEchoOutput( false );
 		laterpay_event_dispatcher()->dispatch( 'laterpay_post_teaser', $teaser_event );
 		$teaser_content = $teaser_event->getResult();
 
 		// generate overlay content
-		$number_of_words = String::determine_number_of_words( $content );
-		$overlay_content = String::truncate(
+		$number_of_words = Strings::determineNumberOfWords( $content );
+		$overlay_content = Strings::truncate(
 			$content, $number_of_words, array(
 				'html'  => true,
 				'words' => true,
@@ -722,7 +582,7 @@ class Post extends Base {
 
 		// get values for output states
 		$teaser_mode_event = new Event();
-		$teaser_mode_event->setEcho( false );
+		$teaser_mode_event->setEchoOutput( false );
 		$teaser_mode_event->setArgument( 'post_id', $post->ID );
 		laterpay_event_dispatcher()->dispatch( 'laterpay_teaser_content_mode', $teaser_mode_event );
 		$teaser_mode = $teaser_mode_event->getResult();
@@ -732,7 +592,7 @@ class Post extends Base {
 			// prepend hint to feed items that reading the full content requires purchasing the post
 			if ( is_feed() ) {
 				$feed_event = new Event();
-				$feed_event->setEcho( false );
+				$feed_event->setEchoOutput( false );
 				$feed_event->setArgument( 'post', $post );
 				$feed_event->setArgument( 'teaser_content', $teaser_content );
 				laterpay_event_dispatcher()->dispatch( 'laterpay_feed_content', $feed_event );
@@ -753,7 +613,7 @@ class Post extends Base {
 				case '1':
 					// add excerpt of full content, covered by an overlay with a purchase button
 					$overlay_event = new Event();
-					$overlay_event->setEcho( false );
+					$overlay_event->setEchoOutput( false );
 					$overlay_event->setArguments( $event->getArguments() );
 					laterpay_event_dispatcher()->dispatch( 'laterpay_explanatory_overlay', $overlay_event );
 					$content = $teaser_content . $overlay_event->getResult();
@@ -761,7 +621,7 @@ class Post extends Base {
 				case '2':
 					// add excerpt of full content, covered by an overlay with a purchase button
 					$overlay_event = new Event();
-					$overlay_event->setEcho( false );
+					$overlay_event->setEchoOutput( false );
 					$overlay_event->setArguments( $event->getArguments() );
 					laterpay_event_dispatcher()->dispatch( 'laterpay_purchase_overlay', $overlay_event );
 					$content = $teaser_content . $overlay_event->getResult();
@@ -769,14 +629,14 @@ class Post extends Base {
 				default:
 					// add teaser content plus a purchase link after the teaser content
 					$link_event = new Event();
-					$link_event->setEcho( false );
+					$link_event->setEchoOutput( false );
 					laterpay_event_dispatcher()->dispatch( 'laterpay_purchase_link', $link_event );
 					$content = $teaser_content . $link_event->getResult();
 					break;
 			}
 		} else {
 			// encrypt files contained in premium posts
-			$content = File::get_encrypted_content( $post->ID, $content, $access );
+			$content = File::getEncryptedContent( $post->ID, $content, $access );
 			$content = $wp_embed->autoembed( $content );
 		}
 
@@ -795,19 +655,19 @@ class Post extends Base {
 
 		wp_register_style(
 			'laterpay-post-view',
-			$this->config->css_url . 'laterpay-post-view.css',
+			$this->config->get( 'css_url' ) . 'laterpay-post-view.css',
 			array(),
-			$this->config->version
+			$this->config->get( 'version' )
 		);
 
 		// always enqueue 'laterpay-post-view' to ensure that LaterPay shortcodes have styling
 		wp_enqueue_style( 'laterpay-post-view' );
 
 		// apply colors config
-		View::apply_colors( 'laterpay-post-view' );
+		View::applyColors( 'laterpay-post-view' );
 
 		// apply purchase overlay config
-		Appearance::add_overlay_styles( 'laterpay-post-view' );
+		Appearance::addOverlayStyles( 'laterpay-post-view' );
 	}
 
 	/**
@@ -914,8 +774,6 @@ class Post extends Base {
 	/**
 	 * @param Event $event
 	 *
-	 * @throws \InvalidArgumentException
-	 *
 	 * @return void
 	 */
 	public function generatePostTeaser( Event $event ) {
@@ -934,7 +792,7 @@ class Post extends Base {
 		$teaser_content = get_post_meta( $post->ID, 'laterpay_post_teaser', true );
 		// generate teaser content, if it's empty
 		if ( ! $teaser_content ) {
-			$teaser_content = HelperPost::addTeaserToThePost( $post );
+			$teaser_content = \LaterPay\Helper\Post::addTeaserToThePost( $post );
 		}
 
 		// autoembed
@@ -942,7 +800,7 @@ class Post extends Base {
 		// add paragraphs to teaser content through wpautop
 		$teaser_content = wpautop( $teaser_content );
 		// get_the_content functionality for custom content
-		$teaser_content = HelperPost::getTheContent( $teaser_content, $post->ID );
+		$teaser_content = \LaterPay\Helper\Post::getTheContent( $teaser_content, $post->ID );
 
 		// assign all required vars to the view templates
 		$view_args = array(
@@ -958,8 +816,6 @@ class Post extends Base {
 
 	/**
 	 * @param Event $event
-	 *
-	 * @throws \InvalidArgumentException
 	 *
 	 * @return void
 	 */
@@ -1013,6 +869,8 @@ class Post extends Base {
 	 * @wp-hook wp_ajax_laterpay_load_files, wp_ajax_nopriv_laterpay_load_files
 	 *
 	 * @param Event $event
+	 *
+	 * @throws \Exception
 	 *
 	 * @return void
 	 */

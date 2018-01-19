@@ -5,7 +5,6 @@ namespace LaterPay\Controller\Frontend;
 use LaterPay\Controller\Base;
 use LaterPay\Helper\Config;
 use LaterPay\Core\Event;
-use LaterPay_Client;
 
 /**
  * LaterPay invoice controller.
@@ -45,8 +44,8 @@ class Invoice extends Base {
 	 * @return void
 	 */
 	public function theInvoiceIndicator( Event $event ) {
-		$event->setEcho( true );
-		$event->setResult( laterpay_sanitized( $this->getTextView( 'frontend/partials/widget/invoice-indicator' ) ) );
+		$event->setEchoOutput( true );
+		$event->setResult( $this->getTextView( 'frontend/partials/widget/invoice-indicator' ) );
 
 		wp_enqueue_script( 'laterpay-yui' );
 		wp_enqueue_script( 'laterpay-invoice-indicator' );
@@ -77,7 +76,7 @@ class Invoice extends Base {
 
 		// pass localized strings and variables to script
 		$client_options = Config::getPHPClientOptions();
-		$client         = new LaterPay_Client(
+		$client         = new \LaterPay_Client(
 			$client_options['cp_key'],
 			$client_options['api_key'],
 			$client_options['api_root'],

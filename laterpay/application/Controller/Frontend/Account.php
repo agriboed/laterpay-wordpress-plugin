@@ -5,7 +5,6 @@ namespace LaterPay\Controller\Frontend;
 use LaterPay\Controller\Base;
 use LaterPay\Helper\Config;
 use LaterPay\Core\Event;
-use LaterPay_Client;
 
 /**
  * LaterPay account controller.
@@ -55,7 +54,7 @@ class Account extends Base {
 
 		// create account links URL with passed parameters
 		$client_options = Config::getPHPClientOptions();
-		$client         = new LaterPay_Client(
+		$client         = new \LaterPay_Client(
 			$client_options['cp_key'],
 			$client_options['api_key'],
 			$client_options['api_root'],
@@ -64,8 +63,8 @@ class Account extends Base {
 		);
 
 		// add iframe placeholder
-		$event->setEcho( true );
-		$event->setResult( laterpay_sanitized( $this->getTextView( 'frontend/partials/widget/account-links' ) ) );
+		$event->setEchoOutput( true );
+		$event->setResult( $this->getTextView( 'frontend/partials/widget/account-links' ) );
 
 		wp_enqueue_script( 'laterpay-yui' );
 		wp_enqueue_script( 'laterpay-account-links' );
