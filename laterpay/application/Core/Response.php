@@ -9,19 +9,22 @@ namespace LaterPay\Core;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Response extends Entity {
+class Response {
 
 	/**
-	 *
-	 * @return void
+	 * @var array
 	 */
-	public function init() {
-		parent::init();
+	protected $headers;
 
-		$this->setData( 'headers', array() );
-		$this->setData( 'body', '' );
-		$this->setData( 'http_response_code', 200 ); // HTTP response code to use in headers
-	}
+	/**
+	 * @var string
+	 */
+	protected $body;
+
+	/**
+	 * @var int
+	 */
+	protected $responseCode = 200;
 
 	/**
 	 * Normalize header name.
@@ -47,29 +50,14 @@ class Response extends Entity {
 	 *
 	 * @param  string $name
 	 * @param  string $value
-	 * @param  boolean $replace
 	 *
 	 * @return Response
 	 */
-	public function setHeader( $name, $value, $replace = false ) {
-		$name    = $this->normalizeHeader( $name );
-		$value   = (string) $value;
-		$headers = $this->get_data_set_default( 'headers', array() );
+	public function setHeader( $name, $value ) {
+		$name  = $this->normalizeHeader( $name );
+		$value = (string) $value;
 
-		if ( $replace ) {
-			foreach ( $headers as $key => $header ) {
-				if ( $name === $header['name'] ) {
-					unset( $headers[ $key ] );
-				}
-			}
-		}
-
-		$headers[] = array(
-			'name'    => $name,
-			'value'   => $value,
-			'replace' => $replace,
-		);
-		$this->setData( 'headers', $headers );
+		$this->headers[ $name ] = $value;
 
 		return $this;
 	}
@@ -84,23 +72,10 @@ class Response extends Entity {
 			return $this;
 		}
 
-		$httpCodeSent = false;
+		header( 'HTTP/1.1 ' . $this->responseCode );
 
-		foreach ( $this->get_data_set_default( 'headers', array() ) as $header ) {
-			if ( ! $httpCodeSent ) {
-				header(
-					$header['name'] . ': ' . $header['value'], $header['replace'],
-					$this->getData( 'http_response_code' )
-				);
-				$httpCodeSent = true;
-			} else {
-				header( $header['name'] . ': ' . $header['value'], $header['replace'] );
-			}
-		}
-
-		if ( ! $httpCodeSent ) {
-			header( 'HTTP/1.1 ' . $this->getData( 'http_response_code' ) );
-			$httpCodeSent = true;
+		foreach ( $this->headers as $key => $value ) {
+			header( $key . ': ' . $value );
 		}
 
 		return $this;
@@ -118,7 +93,7 @@ class Response extends Entity {
 			return $this;
 		}
 
-		$this->setData( 'http_response_code', $code );
+		$this->responseCode = $code;
 
 		return $this;
 	}
@@ -129,13 +104,11 @@ class Response extends Entity {
 	 * @return void
 	 */
 	public function outputBody() {
-		$body = $this->getData( 'body' );
-
-		if ( is_array( $body ) ) {
-			$body = implode( '', $body );
+		if ( is_array( $this->body ) ) {
+			$this->body = implode( '', $this->body );
 		}
 
-		laterpay_sanitize_output( $body, true );
+		laterpay_sanitize_output( $this->body, true );
 	}
 
 	/**
