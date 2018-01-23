@@ -74,7 +74,7 @@ class Html extends Normalizer {
 	 * @return string
 	 */
 	private function addHeadRow( $message = '', $level ) {
-		$show_details_link = '<a href="#" class="lp_js_toggleLogDetails" data-icon="l">' . laterpay_sanitize_output(
+		$show_details_link = '<a href="#" class="lp_js_toggleLogDetails" data-icon="l">' . esc_html(
 			__(
 				'Details',
 				'laterpay'
@@ -83,8 +83,8 @@ class Html extends Normalizer {
 
 		$html = '<thead class="lp_js_debuggerContentTableTitle lp_debugger-content__table-title">
             <tr>
-                <td class="lp_debugger-content__table-td"><span class="lp_debugger__log-level lp_debugger__log-level--' . esc_attr( $level ) . ' lp_vectorIcon"></span>' . laterpay_sanitize_output( $message ) . '</td>
-                <td class="lp_debugger-content__table-td">' . laterpay_sanitize_output( $show_details_link ) . '</td>
+                <td class="lp_debugger-content__table-td"><span class="lp_debugger__log-level lp_debugger__log-level--' . esc_attr( $level ) . ' lp_vectorIcon"></span>' . esc_html( $message ) . '</td>
+                <td class="lp_debugger-content__table-td">' . wp_kses_post( $show_details_link ) . '</td>
             </tr>
         </thead>';
 

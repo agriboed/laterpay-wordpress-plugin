@@ -115,10 +115,10 @@ class Settings extends Base {
 			'laterpay_colors',
 			__( 'LaterPay Colors', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__( 'You can customize the colors of clickable LaterPay elements.', 'laterpay' ) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -163,7 +163,7 @@ class Settings extends Base {
 			'laterpay_debugger',
 			__( 'Debugger Pane', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						'The LaterPay debugger pane contains a lot of helpful plugin- and system-related information
@@ -173,7 +173,7 @@ class Settings extends Base {
                On a production installation you should switch it off again as soon as you don\'t need it anymore.',
 						'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -221,7 +221,7 @@ class Settings extends Base {
 			'laterpay_caching',
 			__( 'Caching Compatibility Mode', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						'You MUST enable caching compatiblity mode, if you are using a caching solution that caches
@@ -232,7 +232,7 @@ class Settings extends Base {
                 When someone visits the page, it makes an Ajax request to determine, if the visitor has already bought
                 the post and replaces the teaser with the full content, if required.', 'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -265,13 +265,13 @@ class Settings extends Base {
 			'laterpay_post_types',
 			__( 'LaterPay-enabled Post Types', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						'Please choose, which standard and custom post types should be sellable with LaterPay.',
 						'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -298,13 +298,13 @@ class Settings extends Base {
 			'laterpay_time_passes',
 			__( 'Offering Time Passes on Free Posts', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						'Please choose, if you want to show the time passes widget on free posts, or only on paid posts.',
 						'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -337,13 +337,13 @@ class Settings extends Base {
 			'laterpay_revenue_section',
 			__( 'Require login', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						'Please choose if you want to require a login for "Pay Later" purchases.',
 						'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -376,7 +376,7 @@ class Settings extends Base {
 			'laterpay_teaser_content',
 			__( 'Automatically Generated Teaser Content', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						'The LaterPay WordPress plugin automatically generates teaser content for every paid post
@@ -385,7 +385,7 @@ class Settings extends Base {
                 If you really, really want to have NO teaser content for a post, enter one space
                 into the teaser content editor for that post.', 'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -418,7 +418,7 @@ class Settings extends Base {
 			'laterpay_preview_excerpt',
 			__( 'Content Preview under Overlay', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						'In the appearance tab, you can choose to preview your paid posts with the teaser content plus
@@ -426,7 +426,7 @@ class Settings extends Base {
                 The following three parameters give you fine-grained control over the length of this excerpt.<br>
                 These settings do not affect the teaser content in any way.', 'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -534,7 +534,7 @@ class Settings extends Base {
 			'laterpay_unlimited_access',
 			__( 'Unlimited Access to Paid Content', 'laterpay' ),
 			function() use ( $has_custom_roles ) {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						"You can give logged-in users unlimited access to specific categories depending on their user
@@ -542,22 +542,22 @@ class Settings extends Base {
                 This feature can be useful e.g. for giving free access to existing subscribers.<br>
                 We recommend the plugin 'User Role Editor' for adding custom roles to WordPress.", 'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 
 				if ( $has_custom_roles ) {
 					// show header
-					laterpay_sanitize_output(
+					echo wp_kses_post(
 						'<table class="form-table">
                         <tr>
                             <th>' . __( 'User Role', 'laterpay' ) . '</th>
                             <td>' . __( 'Unlimited Access to Categories', 'laterpay' ) . '</td>
                         </tr>
-                  </table>', true
+                  </table>'
 					);
 				} else {
 					// tell the user that he needs to have at least one custom role defined
-					laterpay_sanitize_output( '<h4>' . __( 'Please add a custom role first.', 'laterpay' ) . '</h4>', true );
+					echo wp_kses_post( '<h4>' . __( 'Please add a custom role first.', 'laterpay' ) . '</h4>' );
 				}
 			},
 			'laterpay'
@@ -591,7 +591,7 @@ class Settings extends Base {
 			'laterpay_api_settings',
 			__( 'LaterPay API Settings', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 										  __( 'Define fallback behavior in case LaterPay API is not responding and option to disallow plugin to contact LaterPay API on homepage', 'laterpay' ) .
 										  '</p>'
@@ -624,13 +624,13 @@ class Settings extends Base {
 			'laterpay_api_enabled_on_homepage',
 			__( 'Enabled on home page', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__(
 						'Define fallback behavior in case LaterPay API is not responding and option to disallow plugin to contact LaterPay API on homepage',
 						'laterpay'
 					) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay',
@@ -656,10 +656,10 @@ class Settings extends Base {
 			'laterpay_pro_merchant',
 			__( 'LaterPay Pro Merchant', 'laterpay' ),
 			function() {
-				laterpay_sanitize_output(
+				echo wp_kses_post(
 					'<p>' .
 					__( 'Please choose, if you have a LaterPay Pro merchant account.', 'laterpay' ) .
-					'</p>', true
+					'</p>'
 				);
 			},
 			'laterpay'
@@ -717,11 +717,11 @@ class Settings extends Base {
 				$inputs_markup .= '<label>';
 			}
 
-			$inputs_markup .= '<input type="' . $type . '" name="' . $field['name'] . '" value="' . sanitize_text_field( $field_value ) . '"';
+			$inputs_markup .= '<input type="' . esc_attr( $type ) . '" name="' . esc_attr( $field['name'] ) . '" value="' . esc_attr( $field_value ) . '"';
 
 			// add id, if set
 			if ( isset( $field['id'] ) ) {
-				$inputs_markup .= ' id="' . $field['id'] . '"';
+				$inputs_markup .= ' id="' . esc_attr( $field['id'] ) . '"';
 			}
 
 			if ( isset( $field['label'] ) ) {
@@ -743,13 +743,13 @@ class Settings extends Base {
 
 			// add onclick support
 			if ( ! empty( $field['onclick'] ) ) {
-				$inputs_markup .= ' onclick="' . $field['onclick'] . '"';
+				$inputs_markup .= ' onclick="' . esc_attr( $field['onclick'] ) . '"';
 			}
 
 			$inputs_markup .= '>';
 
 			if ( isset( $field['appended_text'] ) ) {
-				$inputs_markup .= '<dfn class="lp_appended-text">' . $field['appended_text'] . '</dfn>';
+				$inputs_markup .= '<dfn class="lp_appended-text">' . wp_kses_post( $field['appended_text'] ) . '</dfn>';
 			}
 			if ( isset( $field['label'] ) ) {
 				$inputs_markup .= $field['label'];
@@ -808,12 +808,12 @@ class Settings extends Base {
 				if ( (string) $field_value === (string) $option_value ) {
 					$selected = 'selected';
 				}
-				$options_markup .= '<option value="' . esc_attr( $option_value ) . '" ' . $selected . '>' . laterpay_sanitize_output( $option_text ) . '</option>';
+				$options_markup .= '<option value="' . esc_attr( $option_value ) . '" ' . $selected . '>' . esc_html( $option_text ) . '</option>';
 			}
 			$select_markup .= $options_markup;
 			$select_markup .= '</select>';
 			if ( isset( $field['appended_text'] ) ) {
-				$select_markup .= '<dfn class="lp_appended-text">' . laterpay_sanitize_output( $field['appended_text'] ) . '</dfn>';
+				$select_markup .= '<dfn class="lp_appended-text">' . wp_kses_post( $field['appended_text'] ) . '</dfn>';
 			}
 			if ( isset( $field['label'] ) ) {
 				$select_markup .= $field['label'];

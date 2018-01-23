@@ -43,7 +43,7 @@ class View {
 			$data = 'data="' . esc_attr( $data ) . '"';
 		}
 
-		return laterpay_sanitize_output( '<a href="' . $href . '" ' . $data . ' class="lp_navigation-tabs__link">' . $page['title'] . '</a>' );
+		return '<a href="' . esc_url( $href ) . '" ' . $data . ' class="lp_navigation-tabs__link">' . esc_html( $page['title'] ) . '</a>';
 	}
 
 	/**

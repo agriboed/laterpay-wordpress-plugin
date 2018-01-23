@@ -238,9 +238,9 @@ class TimePass {
 		if ( $elements && is_array( $elements ) ) {
 			foreach ( $elements as $id => $name ) {
 				if ( (string) $id === (string) $default_value ) {
-					$options_html .= '<option selected="selected" value="' . esc_attr( $id ) . '">' . laterpay_sanitize_output( $name ) . '</option>';
+					$options_html .= '<option selected="selected" value="' . esc_attr( $id ) . '">' . esc_attr( $name ) . '</option>';
 				} else {
-					$options_html .= '<option value="' . esc_attr( $id ) . '">' . laterpay_sanitize_output( $name ) . '</option>';
+					$options_html .= '<option value="' . esc_attr( $id ) . '">' . esc_attr( $name ) . '</option>';
 				}
 			}
 		}

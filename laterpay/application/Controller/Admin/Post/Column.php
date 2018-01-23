@@ -80,7 +80,7 @@ class Column extends Base {
 
 				// render the price of the post, if it exists
 				if ( $price > 0 ) {
-					$event->setResult( laterpay_sanitize_output( "<strong>$localized_price</strong> <span>$currency</span>" ) );
+					$event->setResult( wp_kses_post( "<strong>$localized_price</strong> <span>$currency</span>" ) );
 				} else {
 					$event->setResult( '&mdash;' );
 				}
@@ -118,10 +118,10 @@ class Column extends Base {
 							$post_price_type = '&mdash;';
 					}
 
-					$event->setResult( laterpay_sanitize_output( $post_price_type ) );
+					$event->setResult( esc_html( $post_price_type ) );
 				} else {
 					// label the post to use the global default price
-					$event->setResult( laterpay_sanitize_output( __( 'global default price', 'laterpay' ) ) );
+					$event->setResult( esc_html( __( 'global default price', 'laterpay' ) ) );
 				}
 				break;
 		}

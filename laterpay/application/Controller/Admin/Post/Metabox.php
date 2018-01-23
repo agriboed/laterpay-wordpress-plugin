@@ -271,7 +271,7 @@ class Metabox extends Base {
 
 		$editor_id = 'postcueeditor';
 
-		laterpay_sanitize_output(
+		echo wp_kses_post(
 			'<dfn>' .
 			__(
 				'Visitors will see the teaser content <strong>instead of the full content</strong> before purchase.',
@@ -282,13 +282,12 @@ class Metabox extends Base {
 				'laterpay'
 			) . '<br>' .
 			__( 'We do recommend to write dedicated teaser content to increase your sales though.', 'laterpay' ) .
-			'</dfn>', true
+			'</dfn>'
 		);
 
 		wp_editor( $content, $editor_id, $settings );
 		laterpay_sanitize_output(
-			'<input type="hidden" name="laterpay_teaser_content_box_nonce" value="' . wp_create_nonce( $this->config->get( 'plugin_base_name' ) ) . '" />',
-			true
+			'<input type="hidden" name="laterpay_teaser_content_box_nonce" value="' . wp_create_nonce( $this->config->get( 'plugin_base_name' ) ) . '" />', true
 		);
 	}
 

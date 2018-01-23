@@ -131,7 +131,7 @@ if ( count( $laterpay['category_prices'] ) ) {
 				id="lp_js_useGlobalDefaultPrice"
 				class="lp_js_priceTypeButton lp_price-type__link"
 				data-price="<?php echo esc_attr( View::formatNumber( $laterpay['global_default_price'] ) ); ?>"
-				data-revenue-model="<?php echo esc_attr( $laterpay['global_default_price_revenue_model'] ); ?>"><?php echo esc_html( __( 'Global <br> Default Price', 'laterpay' ) ); ?></a>
+				data-revenue-model="<?php echo esc_attr( $laterpay['global_default_price_revenue_model'] ); ?>"><?php echo wp_kses_post( __( 'Global <br> Default Price', 'laterpay' ) ); ?></a>
 		</li>
 	</ul>
 

@@ -62,7 +62,7 @@ class Install extends Base {
 		$notices = $this->checkRequirements();
 		if ( count( $notices ) > 0 ) {
 			$out = implode( "\n", $notices );
-			laterpay_sanitize_output( '<div class="error">' . $out . '</div>', true );
+			echo wp_kses_post( '<div class="error">' . $out . '</div>' );
 			$event->stopPropagation();
 		}
 	}

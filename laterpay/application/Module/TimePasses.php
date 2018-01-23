@@ -381,7 +381,7 @@ class TimePasses extends CoreView implements SubscriberInterface {
 		$only_time_passes_allowed = get_option( 'laterpay_only_time_pass_purchases_allowed' );
 
 		if ( $only_time_passes_allowed ) {
-			$content .= laterpay_sanitize_output( __( 'Buy a time pass to read the full content.', 'laterpay' ) );
+			$content .= esc_html( __( 'Buy a time pass to read the full content.', 'laterpay' ) );
 		}
 		$time_pass_event = new Event();
 		$time_pass_event->setEchoOutput( false );

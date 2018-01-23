@@ -2,13 +2,10 @@
 
 namespace LaterPay\Helper;
 
-use Crypt_AES;
 use LaterPay\Core\Auth\Hmac;
 use LaterPay\Core\Request;
 use LaterPay\Core\Event;
 use LaterPay\Core\Response;
-use LaterPay_Client;
-use LaterPay_Client_Signing;
 
 /**
  * LaterPay file helper.
@@ -137,7 +134,7 @@ class File {
 		$new_url = admin_url( static::SCRIPT_PATH );
 		$uri     = $resource_url_parts['path'];
 
-		$cipher = new Crypt_AES();
+		$cipher = new \Crypt_AES();
 		$cipher->setKey( SECURE_AUTH_SALT );
 		$file = base64_encode( $cipher->encrypt( $uri ) );
 		$file = strtr( $file, '+/', '-_' );
@@ -146,7 +143,7 @@ class File {
 		$ext  = pathinfo( $path, PATHINFO_EXTENSION );
 
 		$client_options = Config::getPHPClientOptions();
-		$client         = new LaterPay_Client(
+		$client         = new \LaterPay_Client(
 			$client_options['cp_key'],
 			$client_options['api_key'],
 			$client_options['api_root'],
@@ -185,7 +182,7 @@ class File {
 		// register libraries
 		$response       = new Response();
 		$client_options = Config::getPHPClientOptions();
-		$client         = new LaterPay_Client(
+		$client         = new \LaterPay_Client(
 			$client_options['cp_key'],
 			$client_options['api_key'],
 			$client_options['api_root'],
@@ -227,9 +224,9 @@ class File {
 
 		if ( ! empty( $hmac ) && ! empty( $ts ) ) {
 			$request_method = null !== Request::server( 'REQUEST_METHOD' ) ? sanitize_text_field( Request::server( 'REQUEST_METHOD' ) ) : '';
-			if ( ! LaterPay_Client_Signing::verify(
+			if ( ! \LaterPay_Client_Signing::verify(
 				$hmac, $client->get_api_key(), Request::get(),
-				admin_url( File::SCRIPT_PATH ), $request_method
+				admin_url( static::SCRIPT_PATH ), $request_method
 			) ) {
 				$response->setHTTPResponseCode( 401 );
 				$response->sendResponse();
@@ -303,7 +300,7 @@ class File {
 			exit();
 		}
 
-		$cipher = new Crypt_AES();
+		$cipher = new \Crypt_AES();
 		$cipher->setKey( SECURE_AUTH_SALT );
 		$file = ( null !== Request::server( 'DOCUMENT_ROOT' ) ? sanitize_text_field( Request::server( 'DOCUMENT_ROOT' ) ) : ABSPATH ) . $cipher->decrypt( $file );
 

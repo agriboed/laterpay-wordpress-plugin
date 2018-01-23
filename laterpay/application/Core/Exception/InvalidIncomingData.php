@@ -13,7 +13,6 @@ use LaterPay\Core\Exception;
  */
 class InvalidIncomingData extends Exception {
 
-
 	/**
 	 * InvalidIncomingData constructor.
 	 *
