@@ -114,6 +114,17 @@ if ( ! defined('ABSPATH')) {
                                         </tr>
                                         <tr>
                                             <td>
+                                                <?php echo esc_html(__('Header color', 'laterpay')); ?>
+                                            </td>
+                                            <td>
+                                                <input type="color"
+                                                       class="lp_js_overlayOptions lp_js_purchaseHeaderColor lp_input"
+                                                       name="header_color"
+                                                       value="<?php echo esc_attr($laterpay['overlay']['header_color']); ?>">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
                                                 <?php echo esc_html(__('Header background color', 'laterpay')); ?>
                                             </td>
                                             <td>

@@ -94,7 +94,7 @@ if ( ! defined('ABSPATH')) {
                 <ul class="lp_purchase-overlay-payments-list">
                     <?php foreach ($overlay['icons'] as $icon) : ?>
                         <li class="lp_purchase-overlay-payments-item">
-                            <i class="lp_purchase-overlay-icon lp_purchase-overlay-icon-<?php echo wp_kses_post($icon); ?>"></i>
+                            <i class="lp_purchase-overlay-icon lp_purchase-overlay-icon-<?php echo esc_html($icon); ?>"></i>
                         </li>
                     <?php endforeach; ?>
                 </ul>

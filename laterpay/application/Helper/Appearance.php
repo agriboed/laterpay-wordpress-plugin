@@ -21,6 +21,7 @@ class Appearance {
 	public static function getDefaultOptions( $key = null ) {
 		$defaults = array(
 			'header_title'      => __( 'Read now, pay later', 'laterpay' ),
+            'header_color'      => '#FFFFFF',
 			'header_bg_color'   => '#585759',
 			'main_bg_color'     => '#F4F3F4',
 			'main_text_color'   => '#252221',
@@ -50,6 +51,7 @@ class Appearance {
 	public static function getCurrentOptions( $key = null ) {
 		$options = array(
 			'header_title'      => get_option( 'laterpay_overlay_header_title', __( 'Read now, pay later', 'laterpay' ) ),
+            'header_color'      => get_option( 'laterpay_overlay_header_color', '#FFFFFF' ),
 			'header_bg_color'   => get_option( 'laterpay_overlay_header_bg_color', '#585759' ),
 			'main_bg_color'     => get_option( 'laterpay_overlay_main_bg_color', '#F4F3F4' ),
 			'main_text_color'   => get_option( 'laterpay_overlay_main_text_color', '#252221' ),
@@ -82,6 +84,7 @@ class Appearance {
 		$custom_css = "
             .lp_purchase-overlay__header {
                 background-color: {$options['header_bg_color']} !important;
+                color: {$options['header_color']} !important;
             }
             .lp_purchase-overlay__form {
                 background-color: {$options['main_bg_color']} !important;

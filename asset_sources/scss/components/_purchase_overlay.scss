@@ -16,7 +16,7 @@ html body .lp_purchase-overlay {
         background: $purchase-header-background;
         border-top-left-radius: $border-radius * 2 !important;
         border-top-right-radius: $border-radius * 2 !important;
-        color: $text--inverse !important;
+        color: $text--inverse;
         font-size: $fs--15 !important;
         font-weight: normal !important;
         line-height: 1 !important;

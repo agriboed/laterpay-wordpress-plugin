@@ -13,8 +13,9 @@
                 overlayShowFooter   : '.lp_js_overlayShowFooter',
                 selected            : 'lp_is-selected',
                 showHintOnTrue      : 'lp_js_showHintOnTrue',
-                headerBgColor       : 'lp_js_purchaseHeaderBackgroundColor',
                 headerTitle         : 'lp_js_purchaseHeaderTitle',
+                headerColor         : 'lp_js_purchaseHeaderColor',
+                headerBgColor       : 'lp_js_purchaseHeaderBackgroundColor',
                 purchaseBgColor     : 'lp_js_purchaseBackgroundColor',
                 purchaseMainText    : 'lp_js_purchaseMainTextColor',
                 purchaseDescription : 'lp_js_purchaseDescriptionTextColor',
@@ -208,15 +209,31 @@
             updateOverlayOptions = function($trigger) {
                 var style;
 
-                // change header bg
-                if ($trigger.hasClass($o.headerBgColor)) {
-                    style = 'background-color: ' + $('.' + $o.headerBgColor).val() + ' !important;';
-                    setStyle($o.overlayHeader, style);
-                }
-
                 // change header title
                 if ($trigger.hasClass($o.headerTitle)) {
                     $($o.overlayHeader).text($('.' + $o.headerTitle).val());
+                }
+
+                // change header color
+                if ($trigger.hasClass($o.headerColor)) {
+                    style = 'color: ' + $('.' + $o.headerColor).val() + ' !important;';
+
+                    if ($($o.overlayHeader).css('background-color')) {
+                        style += '; background-color: ' + $('.' + $o.headerBgColor).val() + ' !important;';
+                    }
+
+                    setStyle($o.overlayHeader, style);
+                }
+
+                // change header bg
+                if ($trigger.hasClass($o.headerBgColor)) {
+                    style = 'background-color: ' + $('.' + $o.headerBgColor).val() + ' !important;';
+
+                    if ($($o.overlayHeader).css('color')) {
+                        style += '; color: ' + $('.' + $o.headerColor).val() + ' !important;';
+                    }
+
+                    setStyle($o.overlayHeader, style);
                 }
 
                 // change form bg color
@@ -316,8 +333,9 @@
             },
 
             resetOverlaySettings = function(settings) {
-                $('.' + $o.headerBgColor).val(settings.header_bg_color).change();
                 $('.' + $o.headerTitle).val(settings.header_title).change();
+                $('.' + $o.headerColor).val(settings.header_color).change();
+                $('.' + $o.headerBgColor).val(settings.header_bg_color).change();
                 $('.' + $o.purchaseBgColor).val(settings.main_bg_color).change();
                 $('.' + $o.purchaseMainText).val(settings.main_text_color).change();
                 $('.' + $o.purchaseDescription).val(settings.description_color).change();

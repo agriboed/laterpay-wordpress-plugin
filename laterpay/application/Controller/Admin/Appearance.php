@@ -193,6 +193,7 @@ class Appearance extends Base {
 			case 'overlay_settings':
 				// handle additional settings save if present in request
 				update_option( 'laterpay_overlay_header_title', Request::post( 'header_title' ) );
+                update_option( 'laterpay_overlay_header_color', Request::post( 'header_color' ) );
 				update_option( 'laterpay_overlay_header_bg_color', Request::post( 'header_background_color' ) );
 				update_option( 'laterpay_overlay_main_bg_color', Request::post( 'background_color' ) );
 				update_option( 'laterpay_overlay_main_text_color', Request::post( 'main_text_color' ) );
