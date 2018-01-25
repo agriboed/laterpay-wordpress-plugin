@@ -245,37 +245,6 @@ function laterpay_get_logger() {
     return $logger;
 }
 
-
-/**
- * This function makes sure that only the allowed HTML element names,
- * attribute names and attribute values plus only sane HTML entities will occur in $string.
- * Function is registered as 'customSanitizingFunctions' for 'WordPress.XSS.EscapeOutput' rule.
- *
- * @param string $string
- *
- * @param bool $echo
- * @param bool $strict
- * @param array $allowed_html
- *
- * @return string
- * @link     http://codex.wordpress.org/Data_Validation Data Validation on WordPress Codex
- */
-function laterpay_sanitize_output( $string, $echo = false, $strict = false, array $allowed_html = array() ) {
-    if ( empty( $allowed_html ) && true === $strict ) {
-        $string = wp_kses_post( $string );
-    }
-
-    if ( ! empty( $allowed_html ) && true === $strict ) {
-        $string = wp_kses( $string, $allowed_html );
-    }
-
-    if ( true === $echo ) {
-        echo $string;
-    }
-
-    return $string;
-}
-
 /**
  * Alias for the LaterPay Event Dispatcher
  *

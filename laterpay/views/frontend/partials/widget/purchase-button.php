@@ -2,16 +2,14 @@
 /**
  * this template is used for do_action( 'laterpay_purchase_button' );
  */
-
-use LaterPay\Helper\View;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	// prevent direct access to this file
 	exit;
 }
 
 /**
- * We can't use line-breaks in this template, otherwise wpautop() would add <br> before every attribute
+ * We can't use line-breaks in this template, otherwise wpautop() would add
+ * <br> before every attribute
  */
 
 $args    = array_merge(
@@ -27,19 +25,24 @@ $args    = array_merge(
 );
 $arg_str = '';
 foreach ( $args as $key => $value ) {
-	$arg_str .= ' ' . $key . '="' . esc_attr( $value ) . '" ';
+	$arg_str .= ' ' . esc_html( $key ) . '="' . esc_attr( $value ) . '" ';
 }
 
 $link_text = sprintf(
-	__( '%1$s<small class="lp_purchase-link__currency">%2$s</small>', 'laterpay' ),
-	View::formatNumber( $laterpay['price'] ),
+	__( '%1$s<small class="lp_purchase-link__currency">%2$s</small>',
+		'laterpay' ),
+	LaterPay\Helper\View::formatNumber( $laterpay['price'] ),
 	$laterpay['currency']
 );
 if ( isset( $laterpay['link_text'] ) ) {
 	$link_text = $laterpay['link_text'];
-	$link_text = str_replace( array( '{price}', '{currency}' ), array( View::formatNumber( $laterpay['price'] ), $laterpay['currency'] ), $link_text );
+	$link_text = str_replace( array( '{price}', '{currency}' ), array(
+		LaterPay\Helper\View::formatNumber( $laterpay['price'] ),
+		$laterpay['currency'],
+	), $link_text );
 }
 ?>
-
-<div><a <?php laterpay_sanitize_output( $arg_str , true); ?>><?php echo esc_html( $link_text ); ?></a></div>
-<div><a class="lp_bought_notification" href="<?php echo esc_url($laterpay['identify_url']); ?>"><?php echo esc_html( $laterpay['notification_text']); ?></a></div>
+<div><a <?php echo $arg_str; ?>><?php echo esc_html( $link_text ); ?></a></div>
+<div><a class="lp_bought_notification"
+        href="<?php echo esc_url( $laterpay['identify_url'] ); ?>"><?php echo esc_html( $laterpay['notification_text'] ); ?></a>
+</div>

@@ -1,16 +1,12 @@
 <?php
-
-use LaterPay\Controller\Admin;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	// prevent direct access to this file
 	exit;
 }
 ?>
-
 <?php
 	// plugin menu pointer
-if ( in_array( Admin::ADMIN_MENU_POINTER, $laterpay['pointers'], true ) ) :
+if ( in_array( LaterPay\Controller\Admin::ADMIN_MENU_POINTER, $laterpay['pointers'], true ) ) :
 	$pointer_content  = '<h3>' . __( 'Welcome to LaterPay', 'laterpay' ) . '</h3>';
 	$pointer_content .= '<p>' . __( 'Set the most appropriate settings for you.', 'laterpay' ) . '</p>';
 ?>
@@ -26,7 +22,7 @@ if ( in_array( Admin::ADMIN_MENU_POINTER, $laterpay['pointers'], true ) ) :
 				},
 				close: function() {
 					jQuery.post( ajaxurl, {
-						pointer: '<?php echo esc_html( Admin::ADMIN_MENU_POINTER ); ?>',
+						pointer: '<?php echo esc_html( LaterPay\Controller\Admin::ADMIN_MENU_POINTER ); ?>',
 						action: 'dismiss-wp-pointer'
 					});
 				}
@@ -38,7 +34,7 @@ if ( in_array( Admin::ADMIN_MENU_POINTER, $laterpay['pointers'], true ) ) :
 <?php endif; ?>
 <?php
 	// add / edit post page - pricing box pointer
-if ( in_array( Admin::POST_PRICE_BOX_POINTER, $laterpay['pointers'], true ) ) :
+if ( in_array( LaterPay\Controller\Admin::POST_PRICE_BOX_POINTER, $laterpay['pointers'], true ) ) :
 	$pointer_content  = '<h3>' . __( 'Set a Price for this Post', 'laterpay' ) . '</h3>';
 	$pointer_content .= '<p>' . __( 'Set an <strong>individual price</strong> for this post here.<br>You can also apply <strong>advanced pricing</strong> by defining how the price changes over time.', 'laterpay' ) . '</p>';
 ?>
@@ -54,7 +50,7 @@ if ( in_array( Admin::POST_PRICE_BOX_POINTER, $laterpay['pointers'], true ) ) :
 				},
 				close: function() {
 					jQuery.post( ajaxurl, {
-						pointer: '<?php echo esc_html( Admin::POST_PRICE_BOX_POINTER ); ?>',
+						pointer: '<?php echo esc_html( LaterPay\Controller\Admin::POST_PRICE_BOX_POINTER ); ?>',
 						action: 'dismiss-wp-pointer'
 					});
 				}
@@ -66,7 +62,7 @@ if ( in_array( Admin::POST_PRICE_BOX_POINTER, $laterpay['pointers'], true ) ) :
 <?php endif; ?>
 <?php
 	// add / edit post page - teaser content pointer
-if ( in_array( Admin::POST_TEASER_CONTENT_POINTER, $laterpay['pointers'], true ) ) :
+if ( in_array( LaterPay\Controller\Admin::POST_TEASER_CONTENT_POINTER, $laterpay['pointers'], true ) ) :
 	$pointer_content  = '<h3>' . __( 'Add Teaser Content', 'laterpay' ) . '</h3>';
 	$pointer_content .= '<p>' . __( 'You´ll give your users a better impression of what they´ll buy, if you preview some text, images, or video from the actual post.', 'laterpay' ) . '</p>';
 ?>
@@ -75,14 +71,14 @@ if ( in_array( Admin::POST_TEASER_CONTENT_POINTER, $laterpay['pointers'], true )
 		if (typeof(jQuery().pointer) !== 'undefined') {
 			jQuery('#lp_post-teaser')
 			.pointer({
-				content: '<?php laterpay_sanitize_output( $pointer_content, true ); ?>',
+				content: '<?php echo wp_kses_post( $pointer_content ); ?>',
 				position: {
 					edge: 'bottom',
 					align: 'left'
 				},
 				close: function() {
 					jQuery.post( ajaxurl, {
-						pointer: '<?php echo esc_html( Admin::POST_TEASER_CONTENT_POINTER ); ?>',
+						pointer: '<?php echo esc_html( LaterPay\Controller\Admin::POST_TEASER_CONTENT_POINTER ); ?>',
 						action: 'dismiss-wp-pointer'
 					});
 				}

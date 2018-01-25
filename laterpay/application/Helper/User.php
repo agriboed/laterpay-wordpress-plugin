@@ -235,9 +235,8 @@ class User {
 		}
 
 		$user = wp_get_current_user();
-		$func = 'update_user_meta';
 
-		return $func(
+		return update_user_meta(
 			$user->ID,
 			$key,
 			$value
@@ -256,8 +255,11 @@ class User {
 		}
 
 		$user = wp_get_current_user();
-		$func = 'get_user_meta';
 
-		return $func( $user->ID, $key, $single );
+		return get_user_meta(
+			$user->ID,
+			$key,
+			$single
+		);
 	}
 }

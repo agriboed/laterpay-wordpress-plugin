@@ -84,7 +84,7 @@ class Settings extends Base {
 		$this->assign( 'laterpay', $view_args );
 
 		// render view template for options page
-		laterpay_sanitize_output( $this->getTextView( 'backend/options' ), true );
+		echo $this->getTextView( 'backend/options' );
 	}
 
 	/**
@@ -752,12 +752,12 @@ class Settings extends Base {
 				$inputs_markup .= '<dfn class="lp_appended-text">' . wp_kses_post( $field['appended_text'] ) . '</dfn>';
 			}
 			if ( isset( $field['label'] ) ) {
-				$inputs_markup .= $field['label'];
+				$inputs_markup .= wp_kses_post($field['label']);
 				$inputs_markup .= '</label>';
 			}
 		}
 
-		laterpay_sanitize_output( $inputs_markup, true );
+		echo $inputs_markup;
 	}
 
 	/**
@@ -816,12 +816,12 @@ class Settings extends Base {
 				$select_markup .= '<dfn class="lp_appended-text">' . wp_kses_post( $field['appended_text'] ) . '</dfn>';
 			}
 			if ( isset( $field['label'] ) ) {
-				$select_markup .= $field['label'];
+				$select_markup .= wp_kses_post($field['label']);
 				$select_markup .= '</label>';
 			}
 		}
 
-		laterpay_sanitize_output( $select_markup, true );
+		echo $select_markup;
 	}
 
 	/**
@@ -845,18 +845,18 @@ class Settings extends Base {
 			if ( in_array( $slug, $hidden_post_types, true ) ) {
 				continue;
 			}
-			$inputs_markup .= '<li><label title="' . $post_type->labels->name . '">';
-			$inputs_markup .= '<input type="checkbox" name="laterpay_enabled_post_types[]" value="' . $slug . '" ';
+			$inputs_markup .= '<li><label title="' . esc_attr($post_type->labels->name) . '">';
+			$inputs_markup .= '<input type="checkbox" name="laterpay_enabled_post_types[]" value="' . esc_attr($slug) . '" ';
 			if ( is_array( $enabled_post_types ) && in_array( $slug, $enabled_post_types, true ) ) {
 				$inputs_markup .= 'checked';
 			}
 			$inputs_markup .= '>';
-			$inputs_markup .= '<span>' . $post_type->labels->name . '</span>';
+			$inputs_markup .= '<span>' . esc_html($post_type->labels->name) . '</span>';
 			$inputs_markup .= '</label></li>';
 		}
 		$inputs_markup .= '</ul>';
 
-		laterpay_sanitize_output( $inputs_markup, true );
+		echo $inputs_markup;
 	}
 
 	/**
@@ -898,7 +898,7 @@ class Settings extends Base {
 			}
 		}
 
-		laterpay_sanitize_output( $inputs_markup, true );
+		echo $inputs_markup;
 	}
 
 	/**

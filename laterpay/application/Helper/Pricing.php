@@ -62,24 +62,14 @@ class Pricing {
 	 * @return array
 	 */
 	public static function getAllPostsWithPrice() {
-		// used for phpcs
-		$func           = 'get_posts';
-		$meta_query     = 'meta_query';
-		$meta_key       = 'meta_key';
-		$posts_per_page = 'posts_per_page';
-
-		$posts = $func(
-			array(
-				$meta_query     => array(
-					array(
-						$meta_key => static::META_KEY,
-					),
+		return get_posts( array(
+			'meta_query'     => array(
+				array(
+					'meta_key' => static::META_KEY,
 				),
-				$posts_per_page => '-1',
-			)
-		);
-
-		return $posts;
+			),
+			'posts_per_page' => '-1',
+		) );
 	}
 
 	/**
@@ -108,21 +98,14 @@ class Pricing {
 			}
 		}
 
-		$func           = 'get_posts';
-		$meta_query     = 'meta_query';
-		$meta_key       = 'meta_key';
-		$posts_per_page = 'posts_per_page';
-
-		$post_args = array(
-			'fields'        => 'ids',
-			$meta_query     => array( array( $meta_key => static::META_KEY ) ),
-			'category__in'  => $ids,
-			'cat'           => $category_id,
-			$posts_per_page => '-1',
-			'post_type'     => $config->get( 'content.enabled_post_types' ),
-		);
-
-		return $func( $post_args );
+		return get_posts( array(
+			'fields'         => 'ids',
+			'meta_query'     => array( array( 'meta_key' => Pricing::META_KEY ) ),
+			'category__in'   => $ids,
+			'cat'            => $category_id,
+			'posts_per_page' => '-1',
+			'post_type'      => $config->get( 'content.enabled_post_types' ),
+		) );
 	}
 
 	/**
@@ -323,6 +306,11 @@ class Pricing {
 	public static function getDynamicPrice( \WP_Post $post ) {
 		$post_price             = get_post_meta( $post->ID, static::META_KEY, true );
 		$days_since_publication = self::dynamicPriceDaysAfterPublication( $post );
+
+		if ( empty( $post_price['price_range_type'] ) ) {
+			return 0.00;
+		}
+
 		$price_range_type       = $post_price['price_range_type'];
 		$currency               = Config::getCurrencyConfig();
 

@@ -24,7 +24,7 @@ if ( ! defined('ABSPATH')) {
             <span class="lp_plugin-mode-indicator__text"><?php echo esc_html(__('Earn money in <i>live mode</i>',
                     'laterpay')); ?></span>
         </a>
-        <?php laterpay_sanitize_output($laterpay['top_nav'], true); ?>
+        <?php echo $laterpay['top_nav']; ?>
     </div>
 
     <div class="lp_pagewrap">

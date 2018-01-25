@@ -118,7 +118,7 @@ class WordPress extends HandlerAbstract {
 
 		$this->assign( 'laterpay_records', $view_args );
 
-		laterpay_sanitize_output( $this->getTextView( 'backend/logger/wordpress-handler-records' ), true );
+		echo $this->getTextView( 'backend/logger/wordpress-handler-records' );
 	}
 
 	/**

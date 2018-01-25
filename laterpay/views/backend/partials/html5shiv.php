@@ -3,16 +3,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	// prevent direct access to this file
 	exit;
 }
-$open_comment  = '<!--[if lt IE 9]>';
-$close_comment = '<![endif]-->';
-$open_tag      = '<script {attributes}>';
-$close_tag     = '</script>';
 ?>
-<?php laterpay_sanitize_output( $open_comment , true); ?>
-
+<!--[if lt IE 9]>
 <?php foreach ( $laterpay['scripts'] as $script ) : ?>
-<?php laterpay_sanitize_output( str_replace( '{attributes}', 'src="' . $script . '"', $open_tag ), true ); ?>
-<?php laterpay_sanitize_output( $close_tag, true ); ?>
+<script src="<?php echo esc_url($script);?>"></script>
 <?php endforeach; ?>
-
-<?php laterpay_sanitize_output( $close_comment, true );
+<![endif]-->

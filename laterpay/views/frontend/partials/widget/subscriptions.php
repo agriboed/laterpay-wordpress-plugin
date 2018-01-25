@@ -4,8 +4,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-
 <?php foreach ( $laterpay_sub['subscriptions'] as $subscription ) : ?>
-	<?php laterpay_sanitize_output( $this->render_subscription( $subscription ), true ); ?>
-<?php
-endforeach;
+	<?php echo $this->renderSubscription( $subscription ); ?>
+<?php endforeach;?>

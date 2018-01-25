@@ -97,7 +97,7 @@ class Dispatcher implements DispatcherInterface {
 		$event->setResult( $result );
 
 		if ( $event->isEchoEnabled() ) {
-			laterpay_sanitize_output( $event->getFormattedResult(), true );
+			echo $event->getFormattedResult();
 		}
 
 		$this->setDebugData( $event_name, $event->getDebug() );

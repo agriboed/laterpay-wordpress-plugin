@@ -286,9 +286,7 @@ class Metabox extends Base {
 		);
 
 		wp_editor( $content, $editor_id, $settings );
-		laterpay_sanitize_output(
-			'<input type="hidden" name="laterpay_teaser_content_box_nonce" value="' . wp_create_nonce( $this->config->get( 'plugin_base_name' ) ) . '" />', true
-		);
+		echo'<input type="hidden" name="laterpay_teaser_content_box_nonce" value="' . wp_create_nonce( $this->config->get( 'plugin_base_name' ) ) . '" />';
 	}
 
 	/**
@@ -387,10 +385,7 @@ class Metabox extends Base {
 		// get currency settings for current region
 		$currency_settings = Config::getCurrencyConfig();
 
-		laterpay_sanitize_output(
-			'<input type="hidden" name="laterpay_pricing_post_content_box_nonce" value="' . wp_create_nonce( $this->config->plugin_base_name ) . '" />',
-			true
-		);
+		echo '<input type="hidden" name="laterpay_pricing_post_content_box_nonce" value="' . wp_create_nonce( $this->config->plugin_base_name ) . '" />';
 
 		$view_args = array(
 			'post_id'                              => $post->ID,

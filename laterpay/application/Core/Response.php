@@ -99,6 +99,18 @@ class Response {
 	}
 
 	/**
+	 * @param $body
+	 *
+	 * @return $this
+	 */
+	public function setBody($body)
+	{
+		$this->body = $body;
+
+		return $this;
+	}
+
+	/**
 	 * Echo the body segments.
 	 *
 	 * @return void
@@ -108,7 +120,7 @@ class Response {
 			$this->body = implode( '', $this->body );
 		}
 
-		laterpay_sanitize_output( $this->body, true );
+		echo $this->body;
 	}
 
 	/**

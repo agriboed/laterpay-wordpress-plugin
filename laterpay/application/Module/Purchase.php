@@ -484,9 +484,8 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 					'attachment'
 				);
 
-				$func = 'setcookie';
 				// set cookie to notify post that we need to start attachment download
-				$func(
+				setcookie(
 					'laterpay_download_attached',
 					$attachment_url,
 					time() + 60,

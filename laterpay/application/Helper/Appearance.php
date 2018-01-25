@@ -81,37 +81,37 @@ class Appearance {
 	public static function addOverlayStyles( $handle ) {
 		$options = static::getCurrentOptions();
 
-		$custom_css = "
+		$custom_css = '
             .lp_purchase-overlay__header {
-                background-color: {$options['header_bg_color']} !important;
-                color: {$options['header_color']} !important;
+                background-color: ' . esc_attr( $options['header_bg_color'] ) . ' !important;
+                color: ' . esc_attr( $options['header_color'] ) . ' !important;
             }
             .lp_purchase-overlay__form {
-                background-color: {$options['main_bg_color']} !important;
+                background-color: ' . esc_attr( $options['main_bg_color'] ) . ' !important;
             }
             .lp_purchase-overlay-option__title {
-                color: {$options['main_text_color']} !important;
+                color: ' . esc_attr( $options['main_text_color'] ) . ' !important;
             }
             .lp_purchase-overlay-option__description {
-                color: {$options['description_color']} !important;
+                color: ' . esc_attr( $options['description_color'] ) . ' !important;
             }
             .lp_purchase-overlay__notification {
-                color: {$options['link_main_color']} !important;
+                color: ' . esc_attr( $options['link_main_color'] ) . ' !important;
             }
             .lp_purchase-overlay__notification a {
-                color: {$options['link_main_color']} !important;
+                color: ' . esc_attr( $options['link_main_color'] ) . ' !important;
             }
             .lp_purchase-overlay__notification a:hover {
-                color: {$options['link_hover_color']} !important;
+                color: ' . esc_attr( $options['link_hover_color'] ) . ' !important;
             }
             .lp_purchase-overlay__submit {
-                background-color: {$options['button_bg_color']} !important;
-                color: {$options['button_text_color']} !important;
+                background-color: ' . esc_attr( $options['button_bg_color'] ) . ' !important;
+                color: ' . esc_attr( $options['button_text_color'] ) . ' !important;
             }
             .lp_purchase-overlay__footer {
-                background-color: {$options['footer_bg_color']} !important;
+                background-color: ' . esc_attr( $options['footer_bg_color'] ) . ' !important;
             }
-        ";
+        ';
 
 		wp_add_inline_style( $handle, $custom_css );
 	}

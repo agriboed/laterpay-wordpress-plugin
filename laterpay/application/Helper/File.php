@@ -332,16 +332,17 @@ class File {
 
 		$filetype = wp_check_filetype( $file );
 		$fsize    = filesize( $file );
-		$func     = 'file_get_contents';
-		$data     = $func( $file );
+		$data     = file_get_contents( $file );
 		$filename = basename( $file );
 
-		$response->setHeader( 'Content-Type', $filetype['type'] );
-		$response->setHeader( 'Content-Disposition', $disposition . '; filename="' . $filename . '"' );
-		$response->setHeader( 'Content-Length', $fsize );
-		$response->setBody( $data );
-		$response->setHTTPResponseCode( 200 );
-		$response->sendResponse();
+		$response
+			->setHeader( 'Content-Type', $filetype['type'] )
+			->setHeader( 'Content-Disposition',
+				$disposition . '; filename="' . $filename . '"' )
+			->setHeader( 'Content-Length', $fsize )
+			->setBody( $data )
+			->setHTTPResponseCode( 200 )
+			->sendResponse();
 
 		// exit script after response was created
 		exit();
@@ -401,12 +402,10 @@ class File {
 			if ( is_dir( $file ) ) {
 				static::deleteDirectory( $file );
 			} else {
-				$func = 'unlink';
-				$func( $file );
+				unlink( $file );
 			}
 		}
 
-		$func = 'rmdir';
-		$func( $path );
+		rmdir( $path );
 	}
 }

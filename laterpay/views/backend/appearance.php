@@ -21,7 +21,7 @@ if ( ! defined('ABSPATH')) {
                         'laterpay')); ?></span>
             </a>
         <?php endif; ?>
-        <?php laterpay_sanitize_output($laterpay['top_nav'], true); ?>
+        <?php echo $laterpay['top_nav']; ?>
     </div>
 
     <div class="lp_pagewrap">
@@ -268,7 +268,7 @@ if ( ! defined('ABSPATH')) {
                                     <div class="lp_purchase-form-label lp_text-align--center lp_mt-">
                                         <?php echo esc_html(__('Preview', 'laterpay')); ?>
                                     </div>
-                                    <?php laterpay_sanitize_output($this->renderOverlay(), true); ?>
+                                    <?php echo $this->renderOverlay(); ?>
                                 </div>
                             </div>
                             <div class="lp_purchase-form__buttons lp_1">

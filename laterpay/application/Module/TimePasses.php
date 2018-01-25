@@ -329,9 +329,9 @@ class TimePasses extends CoreView implements SubscriberInterface {
 						'title' => null,
 					);
 					Voucher::savePassVouchers( $pass_id, $gift_cards, true );
+
 					// set cookie to store information that gift card was purchased
-					$func = 'setcookie';
-					$func(
+					setcookie(
 						'laterpay_purchased_gift_card',
 						$voucher . '|' . $pass_id,
 						time() + 30,

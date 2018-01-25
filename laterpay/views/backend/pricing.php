@@ -1,9 +1,4 @@
 <?php
-
-use LaterPay\Helper\View;
-use LaterPay\Helper\TimePass;
-use LaterPay\Helper\Pricing;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	// prevent direct access to this file
 	exit;
@@ -25,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<span class="lp_plugin-mode-indicator__text"><?php echo esc_html( __( 'Earn money in <i>live mode</i>', 'laterpay' ) ); ?></span>
 			</a>
 		<?php endif; ?>
-		<?php laterpay_sanitize_output( $laterpay['top_nav'] , true); ?>
+		<?php echo $laterpay['top_nav']; ?>
 	</div>
 
 	<div class="lp_pagewrap">
@@ -61,21 +56,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<input type="hidden" name="form"    value="global_price_form">
 					<input type="hidden" name="action"  value="laterpay_pricing">
 					<input type="hidden" name="revenue_model" class="lp_js_globalRevenueModel" value="<?php echo esc_attr( $laterpay['global_default_price_revenue_model'] ); ?>" disabled>
-					<?php
-					if ( function_exists( 'wp_nonce_field' ) ) {
+					<?php if ( function_exists( 'wp_nonce_field' ) ) {
 						wp_nonce_field( 'laterpay_form' ); }
 ?>
-
 					<div id="lp_js_globalDefaultPriceShowElements" class="lp_greybox lp_price-panel">
 						<?php echo esc_html( __( 'Every post costs', 'laterpay' ) ); ?>
 						<span id="lp_js_globalDefaultPriceDisplay" class="lp_price-settings__value-text" data-price="<?php echo esc_attr( $laterpay['global_default_price'] ); ?>">
-							<?php echo esc_html( View::formatNumber( $laterpay['global_default_price'] ) ); ?>
+							<?php echo esc_html( LaterPay\Helper\View::formatNumber( $laterpay['global_default_price'] ) ); ?>
 						</span>
 						<span class="lp_js_currency lp_currency">
 							<?php echo esc_html( $laterpay['currency']['code'] ); ?>
 						</span>
 						<span id="lp_js_globalDefaultPriceRevenueModelDisplay" class="lp_badge" data-revenue="<?php echo esc_attr( $laterpay['global_default_price_revenue_model'] ); ?>">
-							<?php echo wp_kses_post( Pricing::getRevenueLabel( $laterpay['global_default_price_revenue_model'] ) ); ?>
+							<?php echo wp_kses_post( LaterPay\Helper\Pricing::getRevenueLabel( $laterpay['global_default_price_revenue_model'] ) ); ?>
 						</span>
 						<div class="lp_price-panel__buttons">
 							<a href="#" id="lp_js_editGlobalDefaultPrice" class="lp_edit-link--bold lp_change-link lp_rounded--right" data-icon="d"></a>
@@ -102,7 +95,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 												class="lp_js_priceInput lp_input lp_number-input"
 												name="laterpay_global_price"
 												value="<?php echo esc_attr( number_format( $laterpay['global_default_price'], 2, '.', '' ) ); ?>"
-												placeholder="<?php echo esc_attr( View::formatNumber( 0 ) ); ?>">
+												placeholder="<?php echo esc_attr( LaterPay\Helper\View::formatNumber( 0 ) ); ?>">
 										<span class="lp_js_currency lp_currency"><?php echo esc_html( $laterpay['currency']['code'] ); ?></span>
 									</td>
 								</tr>
@@ -193,13 +186,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 								</span>
 								<?php echo esc_html( __( 'costs', 'laterpay' ) ); ?>
 								<span class="lp_js_categoryDefaultPriceDisplay lp_category-price" data-price="<?php echo esc_attr( $category_price ); ?>">
-									<?php echo esc_html( View::formatNumber( $category_price ) ); ?>
+									<?php echo esc_html( LaterPay\Helper\View::formatNumber( $category_price ) ); ?>
 								</span>
 								<span class="lp_js_currency lp_currency">
 									<?php echo esc_html( $laterpay['currency']['code'] ); ?>
 								</span>
 								<span class="lp_js_revenueModelLabelDisplay lp_badge" data-revenue="<?php echo esc_attr( $category_revenue_model ); ?>">
-									<?php echo wp_kses_post( Pricing::getRevenueLabel( $category_revenue_model ) ); ?>
+									<?php echo wp_kses_post( LaterPay\Helper\Pricing::getRevenueLabel( $category_revenue_model ) ); ?>
 								</span>
 								<div class="lp_price-panel__buttons">
 									<a href="#" class="lp_js_deleteCategoryDefaultPrice lp_edit-link--bold lp_delete-link lp_rounded--right" data-icon="g"></a>
@@ -234,7 +227,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 														name="price"
 														class="lp_js_priceInput lp_js_categoryDefaultPriceInput lp_input lp_number-input"
 														value="<?php echo esc_attr( number_format( $category->category_price, 2, '.', '' ) ); ?>"
-														placeholder="<?php echo esc_attr( View::formatNumber( 0 ) ); ?>">
+														placeholder="<?php echo esc_attr( LaterPay\Helper\View::formatNumber( 0 ) ); ?>">
 												<span class="lp_js_currency lp_currency"><?php echo esc_html( $laterpay['currency']['code'] ); ?></span>
 											</td>
 										</tr>
@@ -368,7 +361,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 												name="price"
 												class="lp_js_priceInput lp_js_categoryDefaultPriceInput lp_input lp_number-input"
 												value="<?php echo esc_attr( number_format( $laterpay['global_default_price'], 2, '.', '' ) ); ?>"
-												placeholder="<?php echo esc_attr( View::formatNumber( 0 ) ); ?>">
+												placeholder="<?php echo esc_attr( LaterPay\Helper\View::formatNumber( 0 ) ); ?>">
 										<span class="lp_js_currency lp_currency"><?php echo esc_html( $laterpay['currency']['code'] ); ?></span>
 									</td>
 								</tr>
@@ -447,7 +440,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<span class="lp_js_timePassId lp_time-pass__id"><?php echo esc_html( $pass['pass_id'] ); ?></span>
 						</div>
 						<div class="lp_js_timePassPreview lp_left">
-							<?php laterpay_sanitize_output( $this->renderTimePass( $pass ), true ); ?>
+							<?php echo $this->renderTimePass( $pass ); ?>
 						</div>
 
 						<div class="lp_js_timePassEditorContainer lp_time-pass-editor"></div>
@@ -497,7 +490,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</div>
 
 					<div class="lp_js_timePassPreview lp_left">
-						<?php laterpay_sanitize_output( $this->renderTimePass(), true ); ?>
+						<?php echo $this->renderTimePass(); ?>
 					</div>
 
 					<div class="lp_js_timePassEditorContainer lp_time-pass-editor">
@@ -517,10 +510,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 									</td>
 									<td>
 										<select name="duration" class="lp_js_switchTimePassDuration lp_input">
-											<?php laterpay_sanitize_output( TimePass::getSelectOptions( 'duration' ), true ); ?>
+											<?php echo LaterPay\Helper\TimePass::getSelectOptions( 'duration' ); ?>
 										</select>
 										<select name="period" class="lp_js_switchTimePassPeriod lp_input">
-											<?php laterpay_sanitize_output( TimePass::getSelectOptions( 'period' ), true ); ?>
+											<?php echo LaterPay\Helper\TimePass::getSelectOptions( 'period' ); ?>
 										</select>
 										<?php echo esc_html( __( 'and grants', 'laterpay' ) ); ?>
 									</td>
@@ -531,7 +524,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									</td>
 									<td>
 										<select name="access_to" class="lp_js_switchTimePassScope lp_input lp_1">
-											<?php laterpay_sanitize_output( TimePass::getSelectOptions( 'access' ), true ); ?>
+											<?php echo LaterPay\Helper\TimePass::getSelectOptions( 'access' ); ?>
 										</select>
 									</td>
 								</tr>
@@ -549,7 +542,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 										<input type="text"
 											class="lp_js_timePassPriceInput lp_input lp_number-input"
 											name="price"
-											value="<?php echo esc_attr( View::formatNumber( TimePass::getDefaultOptions( 'price' ) ) ); ?>"
+											value="<?php echo esc_attr( LaterPay\Helper\View::formatNumber( LaterPay\Helper\TimePass::getDefaultOptions( 'price' ) ) ); ?>"
 											maxlength="6">
 										<?php echo esc_html( $laterpay['currency']['code'] ); ?>
 										<?php echo esc_html( __( 'and the user has to', 'laterpay' ) ); ?>
@@ -560,34 +553,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 										<div class="lp_js_revenueModel lp_button-group">
 											<label class="lp_js_revenueModelLabel lp_button-group__button lp_1/2
 															<?php
-															if (TimePass::getDefaultOptions( 'revenue_model' ) === 'ppu' ) {
+															if (LaterPay\Helper\TimePass::getDefaultOptions( 'revenue_model' ) === 'ppu' ) {
 																echo 'lp_is-selected'; }
 ?>
 															<?php
-															if (TimePass::getDefaultOptions( 'price' ) > $laterpay['currency']['ppu_max'] ) {
+															if (LaterPay\Helper\TimePass::getDefaultOptions( 'price' ) > $laterpay['currency']['ppu_max'] ) {
 																echo 'lp_is-disabled'; }
 ?>
 ">
 												<input type="radio" name="revenue_model" class="lp_js_timePassRevenueModelInput" value="ppu"
 												<?php
-												if (TimePass::getDefaultOptions( 'revenue_model' ) === 'ppu' ) {
+												if (LaterPay\Helper\TimePass::getDefaultOptions( 'revenue_model' ) === 'ppu' ) {
 													echo ' checked'; }
 ?>
 ><?php echo esc_html(__( 'Pay Later', 'laterpay' )); ?>
 											</label><!--
 											--><label class="lp_js_revenueModelLabel lp_button-group__button lp_1/2
 															<?php
-															if (TimePass::getDefaultOptions( 'revenue_model' ) === 'sis' ) {
+															if (LaterPay\Helper\TimePass::getDefaultOptions( 'revenue_model' ) === 'sis' ) {
 																echo 'lp_is-selected'; }
 ?>
 															<?php
-															if (TimePass::getDefaultOptions( 'price' ) < $laterpay['currency']['sis_min'] ) {
-																echo 'lp_is-disabled'; }
-?>
-">
+															if (LaterPay\Helper\TimePass::getDefaultOptions( 'price' ) < $laterpay['currency']['sis_min'] ) {
+																echo 'lp_is-disabled'; }?>">
 												<input type="radio" name="revenue_model" class="lp_js_timePassRevenueModelInput" value="sis"
 												<?php
-												if (TimePass::getDefaultOptions( 'revenue_model' ) === 'sis' ) {
+												if (LaterPay\Helper\TimePass::getDefaultOptions( 'revenue_model' ) === 'sis' ) {
 													echo ' checked'; }
 ?>
 ><?php echo esc_html(__( 'Pay Now', 'laterpay' )); ?>
@@ -603,7 +594,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 										<input type="text"
 											   name="title"
 											   class="lp_js_timePassTitleInput lp_input lp_1"
-											   value="<?php echo esc_attr( TimePass::getDefaultOptions( 'title' ) ); ?>">
+											   value="<?php echo esc_attr( LaterPay\Helper\TimePass::getDefaultOptions( 'title' ) ); ?>">
 									</td>
 								</tr>
 								<tr>
@@ -614,7 +605,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 										<textarea
 											class="lp_js_timePassDescriptionTextarea lp_timePass_description-input lp_input lp_1"
 											name="description">
-											<?php echo esc_textarea( TimePass::getDescription() ); ?>
+											<?php echo esc_textarea( LaterPay\Helper\TimePass::getDescription() ); ?>
 										</textarea>
 									</td>
 								</tr>
@@ -625,7 +616,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<input type="text"
 									   name="voucher_price_temp"
 									   class="lp_js_voucherPriceInput lp_input lp_number-input"
-									   value="<?php echo esc_attr( View::formatNumber( TimePass::getDefaultOptions( 'price' ) ) ); ?>"
+									   value="<?php echo esc_attr( LaterPay\Helper\View::formatNumber( LaterPay\Helper\TimePass::getDefaultOptions( 'price' ) ) ); ?>"
 									   maxlength="6">
 								<span><?php echo esc_html( $laterpay['currency']['code'] ); ?></span>
 								<a href="#" class="lp_js_generateVoucherCode lp_edit-link lp_add-link" data-icon="c">
@@ -679,7 +670,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<span class="lp_js_subscriptionId lp_subscription__id"><?php echo esc_html( $subscription['id'] ); ?></span>
 						</div>
 						<div class="lp_js_subscriptionPreview lp_left">
-							<?php laterpay_sanitize_output( $this->renderSubscription( $subscription ), true ); ?>
+							<?php echo $this->renderSubscription( $subscription ); ?>
 						</div>
 
 						<div class="lp_js_subscriptionEditorContainer lp_subscription-editor"></div>
@@ -700,7 +691,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</div>
 
 					<div class="lp_js_subscriptionPreview lp_left">
-						<?php laterpay_sanitize_output( $this->renderSubscription(), true ); ?>
+						<?php echo $this->renderSubscription(); ?>
 					</div>
 
 					<div class="lp_js_subscriptionEditorContainer lp_subscription-editor">
@@ -722,7 +713,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 										<input type="text"
 											   class="lp_js_subscriptionPriceInput lp_input lp_number-input"
 											   name="price"
-											   value="<?php echo esc_attr( View::formatNumber( TimePass::getDefaultOptions( 'price' ) ) ); ?>"
+											   value="<?php echo esc_attr( LaterPay\Helper\View::formatNumber( LaterPay\Helper\TimePass::getDefaultOptions( 'price' ) ) ); ?>"
 											   maxlength="6">
 										<?php echo esc_html( $laterpay['currency']['code'] ); ?>
 										<?php echo esc_html( __( ', grants ', 'laterpay' ) ); ?>
@@ -734,7 +725,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									</td>
 									<td>
 										<select name="access_to" class="lp_js_switchSubscriptionScope lp_input lp_1">
-											<?php laterpay_sanitize_output( TimePass::getSelectOptions( 'access' ), true ); ?>
+											<?php echo LaterPay\Helper\TimePass::getSelectOptions( 'access' ); ?>
 										</select>
 									</td>
 								</tr>
@@ -752,10 +743,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 									</td>
 									<td>
 										<select name="duration" class="lp_js_switchSubscriptionDuration lp_input">
-											<?php laterpay_sanitize_output( TimePass::getSelectOptions( 'duration' ), true ); ?>
+											<?php echo LaterPay\Helper\TimePass::getSelectOptions( 'duration' ); ?>
 										</select>
 										<select name="period" class="lp_js_switchSubscriptionPeriod lp_input">
-											<?php laterpay_sanitize_output( TimePass::getSelectOptions( 'period' ), true ); ?>
+											<?php echo LaterPay\Helper\TimePass::getSelectOptions( 'period' ); ?>
 										</select>
 									</td>
 								</tr>
@@ -767,7 +758,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 										<input type="text"
 											   name="title"
 											   class="lp_js_subscriptionTitleInput lp_input lp_1"
-											   value="<?php echo esc_attr( TimePass::getDefaultOptions( 'title' ) ); ?>">
+											   value="<?php echo esc_attr( LaterPay\Helper\TimePass::getDefaultOptions( 'title' ) ); ?>">
 									</td>
 								</tr>
 								<tr>
@@ -778,7 +769,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 										<textarea
 											class="lp_js_subscriptionDescriptionTextarea lp_subscription_description-input lp_input lp_1"
 											name="description">
-											<?php echo esc_textarea( TimePass::getDescription() ); ?>
+											<?php echo esc_textarea( LaterPay\Helper\TimePass::getDescription() ); ?>
 										</textarea>
 									</td>
 								</tr>
