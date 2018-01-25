@@ -1,11 +1,10 @@
 <?php
-use LaterPay\Controller\Admin;
-use LaterPay\Helper\User;
-
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	// exit, if uninstall was not called from WordPress
 	exit;
 }
+
+require __DIR__ . '/vendor/autoload.php';
 
 global $wpdb;
 
@@ -118,11 +117,11 @@ delete_option( 'laterpay_plugin_version' );
 delete_option( 'laterpay_pro_merchant' );
 
 // remove custom capabilities
-User::removeCustomCapabilities();
+LaterPay\Helper\User::removeCustomCapabilities();
 
 // remove all dismissed LaterPay pointers
 // delete_user_meta can't remove these pointers without damaging other data
-$pointers = Admin::getAllPointers();
+$pointers = LaterPay\Controller\Admin::getAllPointers();
 
 if ( ! empty( $pointers ) && is_array( $pointers ) ) {
 	$replace_string = 'meta_value';
@@ -142,5 +141,5 @@ if ( ! empty( $pointers ) && is_array( $pointers ) ) {
         ;
     ";
 
-    $db->query( $sql );
+	$db->query( $sql );
 }
