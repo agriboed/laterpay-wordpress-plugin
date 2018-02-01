@@ -17,7 +17,7 @@ if ( ! defined('ABSPATH')) {
                class="lp_plugin-mode-indicator"
                data-icon="h">
                 <h2 class="lp_plugin-mode-indicator__title"><?php echo esc_html(__('Test mode', 'laterpay')); ?></h2>
-                <span class="lp_plugin-mode-indicator__text"><?php echo esc_html(__('Earn money in <i>live mode</i>',
+                <span class="lp_plugin-mode-indicator__text"><?php echo wp_kses_post(__('Earn money in <i>live mode</i>',
                         'laterpay')); ?></span>
             </a>
         <?php endif; ?>
