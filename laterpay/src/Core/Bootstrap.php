@@ -2,7 +2,6 @@
 
 namespace LaterPay\Core;
 
-use LaterPay\Hooks;
 use LaterPay\Helper\Cache;
 use LaterPay\Model\Config;
 use LaterPay\Module\Purchase;

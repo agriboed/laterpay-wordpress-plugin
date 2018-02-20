@@ -1,8 +1,6 @@
 <?php
 
-namespace LaterPay;
-
-use LaterPay\Core\Event;
+namespace LaterPay\Core;
 
 /**
  * Event is the base class for classes containing event data.

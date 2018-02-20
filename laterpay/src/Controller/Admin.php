@@ -2,7 +2,7 @@
 
 namespace LaterPay\Controller;
 
-use LaterPay\Hooks;
+use LaterPay\Core\Hooks;
 use LaterPay\Core\Event;
 use LaterPay\Helper\User;
 use LaterPay\Helper\View;

@@ -2,7 +2,7 @@
 
 namespace LaterPay\Core\Event;
 
-use LaterPay\Hooks;
+use LaterPay\Core\Hooks;
 use LaterPay\Core\Event;
 use LaterPay\Core\Logger;
 
