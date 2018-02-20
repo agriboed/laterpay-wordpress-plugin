@@ -15,11 +15,11 @@
     ],
     "autoload": {
         "psr-4": {
-            "LaterPay\\": "laterpay/application/"
+            "LaterPay\\": "laterpay/src/"
         }
     },
     "require": {
-        "laterpay/laterpay-client-php": "dev-develop"
+        "laterpay/laterpay-client-php": "dev-development"
     },
     "require-dev": {
         "wp-coding-standards/wpcs": "dev-develop#9c4de8175ce1f82813f8c9c8f11809ee6c794efc"
