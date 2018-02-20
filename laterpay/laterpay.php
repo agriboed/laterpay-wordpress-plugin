@@ -26,17 +26,17 @@ register_deactivation_hook( __FILE__, 'laterpay_deactivate' );
  * @return void
  */
 function laterpay_init() {
-    try {
-        $config   = laterpay_get_plugin_config();
-        $laterpay = new \LaterPay\Core\Bootstrap( $config );
-        $laterpay->run();
-    } catch ( Exception $e ) {
-        $context = array(
-            'message' => $e->getMessage(),
-            'trace'   => $e->getTrace(),
-        );
-        laterpay_get_logger()->critical( __( 'Unexpected error during plugin init', 'laterpay' ), $context );
-    }
+	try {
+		$config   = laterpay_get_plugin_config();
+		$laterpay = new \LaterPay\Core\Bootstrap( $config );
+		$laterpay->run();
+	} catch ( Exception $e ) {
+		$context = array(
+			'message' => $e->getMessage(),
+			'trace'   => $e->getTrace(),
+		);
+		laterpay_get_logger()->critical( __( 'Unexpected error during plugin init', 'laterpay' ), $context );
+	}
 }
 
 /**
@@ -47,20 +47,20 @@ function laterpay_init() {
  * @return void
  */
 function laterpay_activate() {
-    try {
-        $config   = laterpay_get_plugin_config();
-        $laterpay = new \LaterPay\Core\Bootstrap( $config );
+	try {
+		$config   = laterpay_get_plugin_config();
+		$laterpay = new \LaterPay\Core\Bootstrap( $config );
 
-        laterpay_event_dispatcher()->dispatch( 'laterpay_activate_before' );
-        $laterpay->activate();
-        laterpay_event_dispatcher()->dispatch( 'laterpay_activate_after' );
-    } catch ( Exception $e ) {
-        $context = array(
-            'message' => $e->getMessage(),
-            'trace'   => $e->getTrace(),
-        );
-        laterpay_get_logger()->critical( __( 'Unexpected error during plugin init', 'laterpay' ), $context );
-    }
+		laterpay_event_dispatcher()->dispatch( 'laterpay_activate_before' );
+		$laterpay->activate();
+		laterpay_event_dispatcher()->dispatch( 'laterpay_activate_after' );
+	} catch ( Exception $e ) {
+		$context = array(
+			'message' => $e->getMessage(),
+			'trace'   => $e->getTrace(),
+		);
+		laterpay_get_logger()->critical( __( 'Unexpected error during plugin init', 'laterpay' ), $context );
+	}
 }
 
 /**
@@ -71,20 +71,20 @@ function laterpay_activate() {
  * @return void
  */
 function laterpay_deactivate() {
-    try {
-        $config   = laterpay_get_plugin_config();
-        $laterpay = new \LaterPay\Core\Bootstrap( $config );
+	try {
+		$config   = laterpay_get_plugin_config();
+		$laterpay = new \LaterPay\Core\Bootstrap( $config );
 
-        laterpay_event_dispatcher()->dispatch( 'laterpay_deactivate_before' );
-        $laterpay->deactivate();
-        laterpay_event_dispatcher()->dispatch( 'laterpay_deactivate_after' );
-    } catch ( Exception $e ) {
-        $context = array(
-            'message' => $e->getMessage(),
-            'trace'   => $e->getTrace(),
-        );
-        laterpay_get_logger()->critical( __( 'Unexpected error during plugin init', 'laterpay' ), $context );
-    }
+		laterpay_event_dispatcher()->dispatch( 'laterpay_deactivate_before' );
+		$laterpay->deactivate();
+		laterpay_event_dispatcher()->dispatch( 'laterpay_deactivate_after' );
+	} catch ( Exception $e ) {
+		$context = array(
+			'message' => $e->getMessage(),
+			'trace'   => $e->getTrace(),
+		);
+		laterpay_get_logger()->critical( __( 'Unexpected error during plugin init', 'laterpay' ), $context );
+	}
 }
 
 /**
@@ -93,105 +93,105 @@ function laterpay_deactivate() {
  * @return \LaterPay\Model\Config
  */
 function laterpay_get_plugin_config() {
-    // check, if the config is in cache -> don't load it again.
-    $config = wp_cache_get( 'config', 'laterpay' );
+	// check, if the config is in cache -> don't load it again.
+	$config = wp_cache_get( 'config', 'laterpay' );
 
     if ( is_a( $config, 'LaterPay\Model\Config' ) ) {
-        return $config;
-    }
+		return $config;
+	}
 
-    $config = new \LaterPay\Model\Config();
+	$config = new \LaterPay\Model\Config();
 
-    // plugin default settings for paths and directories
-    $config->set( 'plugin_dir_path', plugin_dir_path( __FILE__ ) );
-    $config->set( 'plugin_file_path', __FILE__ );
-    $config->set( 'plugin_base_name', plugin_basename( __FILE__ ) );
-    $config->set( 'plugin_url', plugins_url( '/', __FILE__ ) );
-    $config->set( 'view_dir', plugin_dir_path( __FILE__ ) . 'views/' );
-    $config->set( 'cache_dir', plugin_dir_path( __FILE__ ) . 'cache/' );
+	// plugin default settings for paths and directories
+	$config->set( 'plugin_dir_path', plugin_dir_path( __FILE__ ) );
+	$config->set( 'plugin_file_path', __FILE__ );
+	$config->set( 'plugin_base_name', plugin_basename( __FILE__ ) );
+	$config->set( 'plugin_url', plugins_url( '/', __FILE__ ) );
+	$config->set( 'view_dir', plugin_dir_path( __FILE__ ) . 'views/' );
+	$config->set( 'cache_dir', plugin_dir_path( __FILE__ ) . 'cache/' );
 
-    $upload_dir = wp_upload_dir();
-    $config->set( 'log_dir', $upload_dir['basedir'] . '/laterpay_log/' );
-    $config->set( 'log_url', $upload_dir['baseurl'] . '/laterpay_log/' );
+	$upload_dir = wp_upload_dir();
+	$config->set( 'log_dir', $upload_dir['basedir'] . '/laterpay_log/' );
+	$config->set( 'log_url', $upload_dir['baseurl'] . '/laterpay_log/' );
 
-    $plugin_url = $config->get( 'plugin_url' );
-    $config->set( 'css_url', $plugin_url . 'assets/css/' );
-    $config->set( 'js_url', $plugin_url . 'assets/js/' );
-    $config->set( 'image_url', $plugin_url . 'assets/img/' );
+	$plugin_url = $config->get( 'plugin_url' );
+	$config->set( 'css_url', $plugin_url . 'assets/css/' );
+	$config->set( 'js_url', $plugin_url . 'assets/js/' );
+	$config->set( 'image_url', $plugin_url . 'assets/img/' );
 
-    // plugin modes
-    $config->set( 'is_in_live_mode', (bool) get_option( 'laterpay_plugin_is_in_live_mode', false ) );
-    $config->set( 'ratings_enabled', (bool) get_option( 'laterpay_ratings', false ) );
+	// plugin modes
+	$config->set( 'is_in_live_mode', (bool) get_option( 'laterpay_plugin_is_in_live_mode', false ) );
+	$config->set( 'ratings_enabled', (bool) get_option( 'laterpay_ratings', false ) );
 
-    $client_address       = \LaterPay\Core\Request::server( 'REMOTE_ADDR' );
-    $debug_mode_enabled   = (bool) get_option( 'laterpay_debugger_enabled', false );
-    $debug_mode_addresses = (string) get_option( 'laterpay_debugger_addresses', '' );
-    $debug_mode_addresses = explode( ',', $debug_mode_addresses );
-    $debug_mode_addresses = array_map( 'trim', $debug_mode_addresses );
+	$client_address       = \LaterPay\Core\Request::server( 'REMOTE_ADDR' );
+	$debug_mode_enabled   = (bool) get_option( 'laterpay_debugger_enabled', false );
+	$debug_mode_addresses = (string) get_option( 'laterpay_debugger_addresses', '' );
+	$debug_mode_addresses = explode( ',', $debug_mode_addresses );
+	$debug_mode_addresses = array_map( 'trim', $debug_mode_addresses );
 
-    $config->set( 'debug_mode', $debug_mode_enabled && ! empty( $debug_mode_addresses ) && in_array( $client_address, $debug_mode_addresses, true ) );
-    $config->set( 'script_debug_mode', defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG );
+	$config->set( 'debug_mode', $debug_mode_enabled && ! empty( $debug_mode_addresses ) && in_array( $client_address, $debug_mode_addresses, true ) );
+	$config->set( 'script_debug_mode', defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG );
 
-    if ( $config->get( 'is_in_live_mode' ) ) {
-        $laterpay_dialog_library_src = 'https://lpstatic.net/combo?yui/3.17.2/build/yui/yui-min.js&client/1.0.0/config.js';
-    } elseif ( $config->get( 'script_debug_mode' ) ) {
-        $laterpay_dialog_library_src = 'https://sandbox.lpstatic.net/combo?yui/3.17.2/build/yui/yui.js&client/1.0.0/config-sandbox.js';
-    } else {
-        $laterpay_dialog_library_src = 'https://sandbox.lpstatic.net/combo?yui/3.17.2/build/yui/yui-min.js&client/1.0.0/config-sandbox.js';
-    }
-    $config->set( 'laterpay_yui_js', $laterpay_dialog_library_src );
+	if ( $config->get( 'is_in_live_mode' ) ) {
+		$laterpay_dialog_library_src = 'https://lpstatic.net/combo?yui/3.17.2/build/yui/yui-min.js&client/1.0.0/config.js';
+	} elseif ( $config->get( 'script_debug_mode' ) ) {
+		$laterpay_dialog_library_src = 'https://sandbox.lpstatic.net/combo?yui/3.17.2/build/yui/yui.js&client/1.0.0/config-sandbox.js';
+	} else {
+		$laterpay_dialog_library_src = 'https://sandbox.lpstatic.net/combo?yui/3.17.2/build/yui/yui-min.js&client/1.0.0/config-sandbox.js';
+	}
+	$config->set( 'laterpay_yui_js', $laterpay_dialog_library_src );
 
-    // plugin headers
-    $plugin_headers = get_file_data(
-        __FILE__,
-        array(
-            'plugin_name'      => 'Plugin Name',
-            'plugin_uri'       => 'Plugin URI',
-            'description'      => 'Description',
-            'author'           => 'Author',
-            'version'          => 'Version',
-            'author_uri'       => 'Author URI',
-            'textdomain'       => 'Textdomain',
-            'text_domain_path' => 'Domain Path',
-        )
-    );
-    $config->import( $plugin_headers );
+	// plugin headers
+	$plugin_headers = get_file_data(
+		__FILE__,
+		array(
+			'plugin_name'      => 'Plugin Name',
+			'plugin_uri'       => 'Plugin URI',
+			'description'      => 'Description',
+			'author'           => 'Author',
+			'version'          => 'Version',
+			'author_uri'       => 'Author URI',
+			'textdomain'       => 'Textdomain',
+			'text_domain_path' => 'Domain Path',
+		)
+	);
+	$config->import( $plugin_headers );
 
-    /**
-     * LaterPay API endpoints and API default settings depends from region.
-     */
-    $config->import( \LaterPay\Helper\Config::getRegionalSettings() );
+	/**
+	 * LaterPay API endpoints and API default settings depends from region.
+	 */
+	$config->import( \LaterPay\Helper\Config::getRegionalSettings() );
 
-    /**
-     * Use page caching compatible mode.
-     *
-     * Set this to true, if you are using a caching solution like WP Super Cache that caches entire HTML pages;
-     * In compatibility mode the plugin renders paid posts without the actual content so they can be cached as static
-     * files and then uses an Ajax request to load either the preview content or the full content,
-     * depending on the current visitor
-     *
-     * @var boolean $caching_compatible_mode
-     *
-     * @return boolean $caching_compatible_mode
-     */
-    $config->set( 'caching.compatible_mode', get_option( 'laterpay_caching_compatibility' ) );
+	/**
+	 * Use page caching compatible mode.
+	 *
+	 * Set this to true, if you are using a caching solution like WP Super Cache that caches entire HTML pages;
+	 * In compatibility mode the plugin renders paid posts without the actual content so they can be cached as static
+	 * files and then uses an Ajax request to load either the preview content or the full content,
+	 * depending on the current visitor
+	 *
+	 * @var boolean $caching_compatible_mode
+	 *
+	 * @return boolean $caching_compatible_mode
+	 */
+	$config->set( 'caching.compatible_mode', get_option( 'laterpay_caching_compatibility' ) );
 
-    $enabled_post_types = get_option( 'laterpay_enabled_post_types' );
+	$enabled_post_types = get_option( 'laterpay_enabled_post_types' );
 
-    // content preview settings
-    $content_settings = array(
-        'content.auto_generated_teaser_content_word_count' => get_option( 'laterpay_teaser_content_word_count' ),
-        'content.preview_percentage_of_content'            => get_option( 'laterpay_preview_excerpt_percentage_of_content' ),
-        'content.preview_word_count_min'                   => get_option( 'laterpay_preview_excerpt_word_count_min' ),
-        'content.preview_word_count_max'                   => get_option( 'laterpay_preview_excerpt_word_count_max' ),
-        'content.enabled_post_types'                       => $enabled_post_types ?: array(),
-    );
-    $config->import( $content_settings );
+	// content preview settings
+	$content_settings = array(
+		'content.auto_generated_teaser_content_word_count' => get_option( 'laterpay_teaser_content_word_count' ),
+		'content.preview_percentage_of_content'            => get_option( 'laterpay_preview_excerpt_percentage_of_content' ),
+		'content.preview_word_count_min'                   => get_option( 'laterpay_preview_excerpt_word_count_min' ),
+		'content.preview_word_count_max'                   => get_option( 'laterpay_preview_excerpt_word_count_max' ),
+		'content.enabled_post_types'                       => $enabled_post_types ?: array(),
+	);
+	$config->import( $content_settings );
 
-    // cache the config
-    wp_cache_set( 'config', $config, 'laterpay' );
+	// cache the config
+	wp_cache_set( 'config', $config, 'laterpay' );
 
-    return $config;
+	return $config;
 }
 
 
@@ -201,8 +201,8 @@ function laterpay_get_plugin_config() {
  * @return void
  */
 function laterpay_clean_plugin_cache() {
-    wp_cache_delete( 'config', 'laterpay' );
-    wp_cache_delete( 'logger', 'laterpay' );
+	wp_cache_delete( 'config', 'laterpay' );
+	wp_cache_delete( 'logger', 'laterpay' );
 }
 
 /**
@@ -211,38 +211,38 @@ function laterpay_clean_plugin_cache() {
  * @return \LaterPay\Core\Logger
  */
 function laterpay_get_logger() {
-    // check, if the config is cached -> don't load it again
-    $logger = wp_cache_get( 'logger', 'laterpay' );
-    if ( is_a( $logger, 'LaterPay\Core\Logger' ) ) {
-        return $logger;
-    }
+	// check, if the config is cached -> don't load it again
+	$logger = wp_cache_get( 'logger', 'laterpay' );
+	if ( is_a( $logger, 'LaterPay\Core\Logger' ) ) {
+		return $logger;
+	}
 
-    $config   = laterpay_get_plugin_config();
-    $handlers = array();
+	$config   = laterpay_get_plugin_config();
+	$handlers = array();
 
-    if ( $config->get( 'debug_mode' ) ) {
-        // LaterPay WordPress handler to render the debugger pane
-        $wp_handler = new \LaterPay\Core\Logger\Handler\WordPress( LaterPay\Core\Logger::WARNING );
-        $wp_handler->setFormatter( new \LaterPay\Core\Logger\Formatter\Html() );
+	if ( $config->get( 'debug_mode' ) ) {
+		// LaterPay WordPress handler to render the debugger pane
+		$wp_handler = new \LaterPay\Core\Logger\Handler\WordPress( LaterPay\Core\Logger::WARNING );
+		$wp_handler->setFormatter( new \LaterPay\Core\Logger\Formatter\Html() );
 
-        $handlers[] = $wp_handler;
-    } else {
-        $handlers[] = new \LaterPay\Core\Logger\Handler\Nothing();
-    }
+		$handlers[] = $wp_handler;
+	} else {
+		$handlers[] = new \LaterPay\Core\Logger\Handler\Nothing();
+	}
 
-    // add additional processors for more detailed log entries
-    $processors = array(
-        new \LaterPay\Core\Logger\Processor\Web(),
-        new \LaterPay\Core\Logger\Processor\MemoryUsage(),
-        new \LaterPay\Core\Logger\Processor\MemoryPeakUsage(),
-    );
-    laterpay_event_dispatcher()->setDebugEnabled( true );
-    $logger = new LaterPay\Core\Logger( 'laterpay', $handlers, $processors );
+	// add additional processors for more detailed log entries
+	$processors = array(
+		new \LaterPay\Core\Logger\Processor\Web(),
+		new \LaterPay\Core\Logger\Processor\MemoryUsage(),
+		new \LaterPay\Core\Logger\Processor\MemoryPeakUsage(),
+	);
+	laterpay_event_dispatcher()->setDebugEnabled( true );
+	$logger = new LaterPay\Core\Logger( 'laterpay', $handlers, $processors );
 
-    // cache the config
-    wp_cache_set( 'logger', $logger, 'laterpay' );
+	// cache the config
+	wp_cache_set( 'logger', $logger, 'laterpay' );
 
-    return $logger;
+	return $logger;
 }
 
 /**
@@ -251,5 +251,5 @@ function laterpay_get_logger() {
  * @return \LaterPay\Core\Event\Dispatcher
  */
 function laterpay_event_dispatcher() {
-    return \LaterPay\Core\Event\Dispatcher::getDispatcher();
+	return \LaterPay\Core\Event\Dispatcher::getDispatcher();
 }
