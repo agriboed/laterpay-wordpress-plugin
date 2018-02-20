@@ -12,8 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 				number_format( $laterpay_records['memory_peak'],
 					1 ) . ' MB' ) ); ?>
         </div>
-        <h2 data-icon="a" class="lp_debugger-header__title">
-			<?php echo esc_html( __( 'Debugger', 'laterpay' ) ); ?></h2>
+        <div data-icon="a" class="lp_debugger-header__title">
+			<?php echo esc_html( __( 'Debugger', 'laterpay' ) ); ?></div>
     </header>
 
     <ul id="lp_js_debuggerTabs" class="lp_debugger-tabs lp_clearfix">
