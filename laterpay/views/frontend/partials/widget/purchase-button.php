@@ -42,7 +42,9 @@ if ( isset( $laterpay['link_text'] ) ) {
 	), $link_text );
 }
 ?>
-<div><a <?php echo $arg_str; ?>><?php echo esc_html( $link_text ); ?></a></div>
-<div><a class="lp_bought_notification"
-        href="<?php echo esc_url( $laterpay['identify_url'] ); ?>"><?php echo esc_html( $laterpay['notification_text'] ); ?></a>
+<div><a <?php echo $arg_str; ?>><?php echo wp_kses_post( $link_text ); ?></a>
+</div>
+<div>
+    <a class="lp_bought_notification"
+       href="<?php echo esc_url( $laterpay['identify_url'] ); ?>"><?php echo wp_kses_post( $laterpay['notification_text'] ); ?></a>
 </div>

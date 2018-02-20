@@ -49,4 +49,4 @@ if ( isset( $laterpay['link_text'] ) ) {
 	), $link_text );
 }
 ?>
-<a <?php echo $arg_str; ?>><?php echo esc_html( $link_text ); ?></a>
+<a <?php echo $arg_str; ?>><?php echo wp_kses_post( $link_text ); ?></a>

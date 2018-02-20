@@ -25,16 +25,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php foreach ( $overlay_data['benefits'] as $benefit ) : ?>
 					<li class="lp_benefits__list-item <?php echo esc_attr( $benefit['class'] ); ?>">
 						<h3 class="lp_benefit__title">
-							<?php echo esc_html( $benefit['title'] ); ?>
+							<?php echo wp_kses_post( $benefit['title'] ); ?>
 						</h3>
 						<p class="lp_benefit__text">
-							<?php echo esc_html( $benefit['text'] ); ?>
+							<?php echo wp_kses_post( $benefit['text'] ); ?>
 						</p>
 					</li>
 				<?php endforeach; ?>
 			</ul>
 			<div class="lp_benefits__action">
-				<?php echo esc_html( $overlay_data['action'] ); ?>
+				<?php echo $overlay_data['action']; ?>
 			</div>
 			<div class="lp_powered-by">
 				powered by<span data-icon="a"></span>
