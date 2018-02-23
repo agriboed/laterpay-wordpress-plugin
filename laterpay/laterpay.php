@@ -108,11 +108,6 @@ function laterpay_get_plugin_config() {
 	$config->set( 'plugin_base_name', plugin_basename( __FILE__ ) );
 	$config->set( 'plugin_url', plugins_url( '/', __FILE__ ) );
 	$config->set( 'view_dir', plugin_dir_path( __FILE__ ) . 'views/' );
-	$config->set( 'cache_dir', plugin_dir_path( __FILE__ ) . 'cache/' );
-
-	$upload_dir = wp_upload_dir();
-	$config->set( 'log_dir', $upload_dir['basedir'] . '/laterpay_log/' );
-	$config->set( 'log_url', $upload_dir['baseurl'] . '/laterpay_log/' );
 
 	$plugin_url = $config->get( 'plugin_url' );
 	$config->set( 'css_url', $plugin_url . 'assets/css/' );

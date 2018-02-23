@@ -280,34 +280,34 @@ class View {
 		$custom_css = '';
 
 		if ( $main_color ) {
-			$custom_css .= "
+			$custom_css .= '
                 .lp_purchase-button, .lp_redeem-code__button, .lp_time-pass__front-side-link {
-                    background-color: {$main_color} !important;
+                    background-color: '.esc_attr($main_color).' !important;
                 }
                 body .lp_time-pass__actions .lp_time-pass__terms {
-                    color: {$main_color} !important;
+                    color: '.esc_attr($main_color).' !important;
                 }
                 .lp_bought_notification, .lp_purchase-link, .lp_redeem-code__hint {
-                    color: {$main_color} !important;
+                    color: '.esc_attr($main_color).' !important;
                 }
-            ";
+            ';
 		}
 
 		if ( $hover_color ) {
-			$custom_css .= "
+			$custom_css .= '
                 .lp_purchase-button:hover {
-                    background-color: {$hover_color} !important;
+                    background-color: '.esc_attr($hover_color).' !important;
                 }
                 .lp_time-pass__front-side-link:hover {
-                    background-color: {$hover_color} !important;
+                    background-color: '.esc_attr($hover_color).' !important;
                 }
                 body .lp_time-pass__actions .lp_time-pass__terms:hover {
-                    color: {$hover_color} !important;
+                    color: '.esc_attr($hover_color).' !important;
                 }
                 .lp_bought_notification:hover, .lp_purchase-link:hover, .lp_redeem-code__hint:hover {
-                    color: {$hover_color} !important;
+                    color: '.esc_attr($hover_color).' !important;
                 }
-            ";
+            ';
 		}
 
 		if ( $custom_css ) {

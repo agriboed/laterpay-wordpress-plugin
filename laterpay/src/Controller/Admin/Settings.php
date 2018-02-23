@@ -788,16 +788,16 @@ class Settings extends Base {
 			// remove duplicated classes
 			$classes = array_unique( $classes );
 
-			$select_markup .= '<select name="' . $field['name'] . '"';
+			$select_markup .= '<select name="' . esc_attr($field['name']) . '"';
 
 			if ( isset( $field['id'] ) ) {
-				$select_markup .= ' id="' . $field['id'] . '"';
+				$select_markup .= ' id="' . esc_attr($field['id']) . '"';
 			}
 
 			if ( ! empty( $field['disabled'] ) ) {
 				$select_markup .= ' disabled';
 			}
-			$select_markup .= ! empty( $classes ) ? ' class="' . implode( ' ', $classes ) . '"' : '';
+			$select_markup .= ! empty( $classes ) ? ' class="' . esc_attr(implode( ' ', $classes )) . '"' : '';
 			$select_markup .= '>';
 
 			$options_markup = '';
@@ -813,7 +813,7 @@ class Settings extends Base {
 				if ( (string) $field_value === (string) $option_value ) {
 					$selected = 'selected';
 				}
-				$options_markup .= '<option value="' . esc_attr( $option_value ) . '" ' . $selected . '>' . esc_html( $option_text ) . '</option>';
+				$options_markup .= '<option value="' . esc_attr( $option_value ) . '" ' . esc_attr($selected) . '>' . esc_html( $option_text ) . '</option>';
 			}
 			$select_markup .= $options_markup;
 			$select_markup .= '</select>';
@@ -886,17 +886,17 @@ class Settings extends Base {
 				$is_selected    = ! $need_default ? in_array( (string) $id, $unlimited[ $role ], true ) : false;
 
 				$inputs_markup .= '<input type="checkbox" ';
-				$inputs_markup .= 'id="lp_category--' . $role . $count . '"';
+				$inputs_markup .= 'id="lp_category--' . esc_attr($role . $count) . '"';
 				$inputs_markup .= 'class="lp_category-access-input';
 				$inputs_markup .= $is_none_or_all ? ' lp_global-access" ' : '" ';
-				$inputs_markup .= 'name="laterpay_unlimited_access[' . $role . '][]"';
-				$inputs_markup .= 'value="' . $id . '" ';
+				$inputs_markup .= 'name="laterpay_unlimited_access[' . esc_attr($role) . '][]"';
+				$inputs_markup .= 'value="' . esc_attr($id) . '" ';
 				$inputs_markup .= $is_selected || ( $need_default && $id === 'none' ) ? 'checked' : '';
 				$inputs_markup .= '>';
 				$inputs_markup .= '<label class="lp_category-access-label';
 				$inputs_markup .= $is_none_or_all ? ' lp_global-access" ' : '" ';
-				$inputs_markup .= 'for="lp_category--' . $role . $count . '">';
-				$inputs_markup .= $is_none_or_all ? __( $name, 'laterpay' ) : $name;
+				$inputs_markup .= 'for="lp_category--' . esc_attr($role . $count) . '">';
+				$inputs_markup .= $is_none_or_all ? esc_attr(__( $name, 'laterpay' )) : esc_attr($name);
 				$inputs_markup .= '</label>';
 
 				++ $count;

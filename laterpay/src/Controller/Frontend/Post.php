@@ -149,7 +149,7 @@ class Post extends Base {
 		// call 'the_post' hook to enable modification of loaded data by themes and plugins
 		do_action_ref_array( 'the_post', array( &$post ) );
 
-		$content = apply_filters( 'the_content', $post->post_content );
+		$content = wp_kses_post(apply_filters( 'the_content', $post->post_content ));
 		$content = str_replace( ']]>', ']]&gt;', $content );
 		$event->setResult( $content );
 	}
@@ -864,7 +864,7 @@ class Post extends Base {
 		$html  = $event->getResult();
 		$html .= str_replace(
 			array( '{price}', '{currency}', '{teaser_content}' ),
-			array( $price, $currency, $teaser_content ), $feed_hint
+			array( esc_html($price), esc_html($currency), wp_kses_post($teaser_content )), $feed_hint
 		);
 
 		$event->setResult( $html );

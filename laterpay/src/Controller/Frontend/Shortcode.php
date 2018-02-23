@@ -243,24 +243,24 @@ class Shortcode extends Base {
 		// build the HTML for the teaser box
 		if ( $image_path !== '' ) {
 			$html = '<div class="lp_js_premium-file-box lp_premium-file-box" '
-					. 'style="background-image:url(' . $image_path . ')'
-					. '" data-post-id="' . $post->ID
-					. '" data-content-type="' . $content_type
-					. '" data-page-url="' . $page_url
+					. 'style="background-image:url(' . esc_attr($image_path) . ')'
+					. '" data-post-id="' . esc_attr($post->ID)
+					. '" data-content-type="' . esc_attr($content_type)
+					. '" data-page-url="' . esc_url($page_url)
 					. '">';
 		} else {
-			$html = '<div class="lp_js_premium-file-box lp_premium-file-box lp_is-' . $content_type
-					. '" data-post-id="' . $post->ID
-					. '" data-content-type="' . $content_type
-					. '" data-page-url="' . $page_url
+			$html = '<div class="lp_js_premium-file-box lp_premium-file-box lp_is-' . esc_attr($content_type)
+					. '" data-post-id="' . esc_attr($post->ID)
+					. '" data-content-type="' . esc_attr($content_type)
+					. '" data-page-url="' . esc_url($page_url)
 					. '">';
 		}
 
 		// create a premium box
 		$html .= '    <div class="lp_premium-file-box__details">';
-		$html .= '        <h3 class="lp_premium-file-box__title">' . $heading . '</h3>';
+		$html .= '        <h3 class="lp_premium-file-box__title">' . wp_kses_post($heading) . '</h3>';
 		if ( $description !== '' ) {
-			$html .= '    <p class="lp_premium-file-box__text">' . $description . '</p>';
+			$html .= '    <p class="lp_premium-file-box__text">' . wp_kses_post($description) . '</p>';
 		}
 		$html .= '    </div>';
 		$html .= '</div>';
@@ -375,7 +375,7 @@ class Shortcode extends Base {
 					}
 				}
 
-				$html_button = '<a href="' . $button_page_url . '" ' .
+				$html_button = '<a href="' . esc_url($button_page_url) . '" ' .
 							   'class="lp_js_purchaseLink lp_purchase-button lp_purchase-button--shortcode" ' .
 							   'rel="prefetch" ' .
 							   'data-icon="b">' .
