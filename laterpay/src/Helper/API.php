@@ -166,7 +166,6 @@ class API {
 		return $result;
 	}
 
-
 	/**
 	 * Current magic method allows to add abstraction between plugin
 	 * and API Client. That means you can call any public

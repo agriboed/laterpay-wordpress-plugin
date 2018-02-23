@@ -148,33 +148,11 @@ class Post {
 		$price         = Pricing::getPostPrice( $post->ID );
 		$revenue_model = Pricing::getPostRevenueModel( $post->ID );
 
-		// data to register purchase after redirect from LaterPay
-		$url_params = array(
-			'post_id' => $post->ID,
-			'buy'     => 'true',
-		);
-
-		if ( $post->post_type === 'attachment' ) {
-			$url_params['post_id']           = $current_post_id;
-			$url_params['download_attached'] = $post->ID;
-		}
-
-		// get current post link
-		$link = get_permalink( $url_params['post_id'] );
-
-		// cut params from link and merge with other params
-		$parsed_link = wp_parse_url( $link );
-		if ( isset( $parsed_link['query'] ) ) {
-			parse_str( $parsed_link['query'], $link_params );
-			$url_params   = array_merge( $link_params, $url_params );
-			list( $link ) = explode( '?', $link );
-		}
-
 		// parameters for LaterPay purchase form
 		$params = array(
 			'article_id'    => $post->ID,
 			'pricing'       => $currency . ( $price * 100 ),
-			'url'           => $link . '?' . build_query( $url_params ),
+			'url'           => get_permalink($post_id),
 			'title'         => $post->post_title,
 			'require_login' => (int) get_option( 'laterpay_require_login', 0 ),
 		);

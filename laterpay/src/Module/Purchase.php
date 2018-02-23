@@ -4,13 +4,14 @@ namespace LaterPay\Module;
 
 use LaterPay\Helper\API;
 use LaterPay\Core\Event;
-use LaterPay\Helper\Cache;
 use LaterPay\Helper\View;
 use LaterPay\Helper\User;
 use LaterPay\Helper\Post;
 use LaterPay\Core\Request;
+use LaterPay\Helper\Cache;
 use LaterPay\Helper\Config;
 use LaterPay\Helper\Pricing;
+use LaterPayClient\Auth\Signing;
 use LaterPay\Core\Event\SubscriberInterface;
 
 /**
@@ -131,7 +132,7 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 		$html = $this->getTextView( 'frontend/partials/widget/purchase-button' );
 
 		$event->setResult( $html )
-			  ->setArguments( $view_args );
+		      ->setArguments( $view_args );
 	}
 
 	/**
@@ -255,7 +256,7 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 		$html = $this->getTextView( 'frontend/partials/widget/purchase-link' );
 
 		$event->setResult( $html )
-			  ->setArguments( $view_args );
+		      ->setArguments( $view_args );
 	}
 
 	/**
@@ -446,12 +447,21 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 	 */
 	public function setToken() {
 		// return, if the request was not a redirect after a purchase
-		if ( null === Request::get( 'buy' ) || null === Request::get( 'lptoken' ) ) {
+		if ( null === Request::get( 'lptoken' ) || null === Request::get( 'hmac' ) ) {
 			return;
 		}
 
-		API::setToken( Request::get( 'lptoken' ) );
-		Cache::delete( Request::get( 'lptoken' ) );
+		$params = array(
+			'lptoken' => Request::get( 'lptoken' ),
+			'ts'      => Request::get( 'ts' ),
+		);
+
+		// ensure that we have request from API side using hmac based on params in url
+		if ( Signing::verify( Request::get( 'hmac' ), API::getApiKey(), $params, get_permalink(), \LaterPayClient\Http\Request::GET ) ) {
+			// set token
+			API::setToken( Request::get( 'lptoken' ) );
+			Cache::delete( Request::get( 'lptoken' ) );
+		}
 
 		wp_safe_redirect( get_permalink( Request::get( 'post_id' ) ) );
 		exit;

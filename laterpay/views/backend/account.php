@@ -224,8 +224,11 @@ if ( ! defined('ABSPATH')) {
                         </li>
                         <li class="lp_api-credentials__list-item">
                             <a href="#"
+                               data-href-eu="<?php echo esc_attr($laterpay['credentials_url_eu']);?>"
+                               data-href-us="<?php echo esc_attr($laterpay['credentials_url_us']);?>"
                                id="lp_js_showMerchantContracts"
                                class="button button-primary"
+                               target="_blank"
                                 <?php
                                 if ( ! empty($laterpay['live_merchant_id']) && ! empty($laterpay['live_api_key'])) {
                                     echo 'style="display:none";';

@@ -11,17 +11,17 @@ var gulp                        = require('gulp'),
     p                           = {
                                         allfiles        : [
                                                             './laterpay/**/*.php',
-                                                            './asset_sources/scss/**/*.scss',
-                                                            './asset_sources/js/*.js'
+                                                            './assets_sources/scss/**/*.scss',
+                                                            './assets_sources/js/*.js'
                                                         ],
                                         mainPhpFile     : './laterpay/laterpay.php',
                                         changelogFile   : './laterpay/README.txt',
                                         jsonfiles       : ['./composer.json', './package.json'],
                                         phpfiles        : ['./laterpay/**/*.php', '!./laterpay/library/**/*.php'],
-                                        srcSCSS         : './asset_sources/scss/*.scss',
-                                        srcJS           : './asset_sources/js/',
-                                        srcSVG          : './asset_sources/img/**/*.svg',
-                                        srcPNG          : './asset_sources/img/**/*.png',
+                                        srcSCSS         : './assets_sources/scss/*.scss',
+                                        srcJS           : './assets_sources/js/',
+                                        srcSVG          : './assets_sources/img/**/*.svg',
+                                        srcPNG          : './assets_sources/img/**/*.png',
                                         distJS          : './laterpay/assets/js/',
                                         distCSS         : './laterpay/assets/css/',
                                         distIMG         : './laterpay/assets/img/',
