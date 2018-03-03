@@ -116,14 +116,14 @@ class Metabox extends Base {
 	public function loadScripts() {
 		wp_register_script(
 			'laterpay-d3',
-			$this->config->get( 'js_url' ) . '/vendor/d3.min.js',
+			$this->config->get( 'js_url' ) . 'vendor/d3.min.js',
 			array(),
 			$this->config->get( 'version' ),
 			true
 		);
 		wp_register_script(
 			'laterpay-d3-dynamic-pricing-widget',
-			$this->config->get( 'js_url' ) . '/laterpay-dynamic-pricing-widget.js',
+			$this->config->get( 'js_url' ) . 'laterpay-dynamic-pricing-widget.js',
 			array( 'laterpay-d3' ),
 			$this->config->get( 'version' ),
 			true
@@ -137,7 +137,7 @@ class Metabox extends Base {
 		);
 		wp_register_script(
 			'laterpay-post-edit',
-			$this->config->get( 'js_url' ) . '/laterpay-post-edit.js',
+			$this->config->get( 'js_url' ) . 'laterpay-post-edit.js',
 			array( 'laterpay-d3', 'laterpay-d3-dynamic-pricing-widget', 'laterpay-velocity', 'jquery' ),
 			$this->config->get( 'version' ),
 			true

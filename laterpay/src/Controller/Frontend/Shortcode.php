@@ -5,7 +5,6 @@ namespace LaterPay\Controller\Frontend;
 use LaterPay\Core\Event;
 use LaterPay\Helper\Post;
 use LaterPay\Core\Request;
-use LaterPay\Core\Exception;
 use LaterPay\Helper\Pricing;
 use LaterPay\Helper\Voucher;
 use LaterPay\Controller\Base;
@@ -106,20 +105,11 @@ class Shortcode extends Base {
 			), $atts
 		);
 
-		$error_reason = '';
-
-		// get URL for target page
+		$error = null;
 		$post = null;
 
 		if ( $a['target_post_id'] !== '' ) {
 			$post = get_post( absint( $a['target_post_id'] ) );
-		}
-		// target_post_id was provided, but didn't work
-		if ( $post === null && $a['target_post_id'] !== '' ) {
-			$error_reason = sprintf(
-				__( 'We couldn\'t find a page for target_post_id="%s" on this site.', 'laterpay' ),
-				absint( $a['target_post_id'] )
-			);
 		}
 
 		if ( $post === null && $a['target_post_title'] !== '' ) {
@@ -128,44 +118,24 @@ class Shortcode extends Base {
 		}
 
 		// target_post_title was provided, but didn't work (no invalid target_post_id was provided)
-		if ( $post === null && $error_reason === '' ) {
-			$error_reason = sprintf(
-				__( 'We couldn\'t find a page for target_post_title="%s" on this site.', 'laterpay' ),
-				esc_html( $a['target_post_title'] )
-			);
-		}
 		if ( $post === null ) {
-			$error_message  = '<div class="lp_shortcode-error">';
-			$error_message .= __( 'Problem with inserted shortcode:', 'laterpay' ) . '<br>';
-			$error_message .= $error_reason;
-			$error_message .= '</div>';
-
-			$this->logger->error(
-				__METHOD__ . ' - ' . $error_reason,
-				array( 'args' => $a )
-			);
-
-			$event->setResult( $error_message );
-			throw new \LogicException( $error_message );
+			$error = __( 'We couldn\'t find target post on this site.', 'laterpay' );
 		}
 
 		// don't render the shortcode, if the target page has a post type for which LaterPay is disabled
-		if ( ! in_array( $post->post_type, $this->config->get( 'content.enabled_post_types' ), true ) ) {
+		if ( null !== $post && ! in_array( $post->post_type, $this->config->get( 'content.enabled_post_types' ), true ) ) {
+			$error = __( 'LaterPay has been disabled for the post type of the target page.', 'laterpay' );
+		}
 
-			$error_reason = __( 'LaterPay has been disabled for the post type of the target page.', 'laterpay' );
-
-			$error_message  = '<div class="lp_shortcode-error">';
-			$error_message .= __( 'Problem with inserted shortcode:', 'laterpay' ) . '<br>';
-			$error_message .= $error_reason;
-			$error_message .= '</div>';
-
-			$this->logger->error(
-				__METHOD__ . ' - ' . $error_reason,
-				array( 'args' => $a )
+		if ( null !== $error ) {
+			$view_args = array(
+				'error' => $error,
 			);
 
-			$event->setResult( $error_message );
-			throw new Exception( $error_message );
+			$this->assign( 'laterpay', $view_args );
+			$event->setResult( $this->getTextView( 'frontend/partials/shortcode/error') );
+
+			return;
 		}
 
 		// check, if page has a custom post type
@@ -224,48 +194,17 @@ class Shortcode extends Base {
 			$content_type = 'text';
 		}
 
-		// escape user input
-		$image_path  = esc_url( $a['teaser_image_path'] );
-		$heading     = esc_attr( $a['heading_text'] );
-		$description = esc_attr( $a['description_text'] );
-
-		$this->logger->info(
-			__METHOD__,
-			array(
-				'image_path'    => $image_path,
-				'heading'       => $heading,
-				'description'   => $description,
-				'content_type'  => $content_type,
-				'content_types' => $content_types,
-			)
+		$view_args = array(
+			'post_id' => $post->ID,
+			'image_path' => $a['teaser_image_path'],
+			'content_type' => $content_type,
+			'page_url' => $page_url,
+			'heading' => $a['heading_text'],
+			'description' => $a['description_text'],
 		);
 
-		// build the HTML for the teaser box
-		if ( $image_path !== '' ) {
-			$html = '<div class="lp_js_premium-file-box lp_premium-file-box" '
-					. 'style="background-image:url(' . esc_attr($image_path) . ')'
-					. '" data-post-id="' . esc_attr($post->ID)
-					. '" data-content-type="' . esc_attr($content_type)
-					. '" data-page-url="' . esc_url($page_url)
-					. '">';
-		} else {
-			$html = '<div class="lp_js_premium-file-box lp_premium-file-box lp_is-' . esc_attr($content_type)
-					. '" data-post-id="' . esc_attr($post->ID)
-					. '" data-content-type="' . esc_attr($content_type)
-					. '" data-page-url="' . esc_url($page_url)
-					. '">';
-		}
-
-		// create a premium box
-		$html .= '    <div class="lp_premium-file-box__details">';
-		$html .= '        <h3 class="lp_premium-file-box__title">' . wp_kses_post($heading) . '</h3>';
-		if ( $description !== '' ) {
-			$html .= '    <p class="lp_premium-file-box__text">' . wp_kses_post($description) . '</p>';
-		}
-		$html .= '    </div>';
-		$html .= '</div>';
-
-		$event->setResult( $html );
+		$this->assign( 'laterpay', $view_args );
+		$event->setResult( $this->getTextView('frontend/partials/shortcode/premium-box') );
 	}
 
 	/**

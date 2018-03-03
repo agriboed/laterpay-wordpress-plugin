@@ -112,18 +112,9 @@ class Hooks {
 		add_filter( 'the_posts', array( $this, static::$filterPrefix . 'laterpay_posts' ) );
 		add_filter( 'terms_clauses', array( $this, static::$filterPrefix . 'laterpay_terms_clauses' ) );
 		add_filter(
-			'date_query_valid_columns',
-			array( $this, static::$filterPrefix . 'laterpay_date_query_valid_columns' )
-		);
-
-		add_filter(
-			'wp_get_attachment_image_attributes',
-			array( $this, static::$filterPrefix . 'laterpay_attachment_image_attributes' ), 10, 3
-		);
-		add_filter(
 			'wp_get_attachment_url', array(
 				$this,
-			static::$filterPrefix . 'laterpay_attachment_get_url',
+			static::$filterPrefix . 'laterpay_attachment_url',
 			), 10, 2
 		);
 		add_filter( 'prepend_attachment', array( $this, static::$filterPrefix . 'laterpay_attachment_prepend' ) );

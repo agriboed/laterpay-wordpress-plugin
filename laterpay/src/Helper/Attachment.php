@@ -15,20 +15,6 @@ use LaterPay\Core\Response;
  */
 class Attachment {
 
-	/**
-	 * Regex to detect URLs.
-	 *
-	 * @var string
-	 */
-	const URL_REGEX_PATTERN = '#\bhttps?://[^\s()<>]+(?:\([\w]+\)|([^[:punct:]\s]|/))#';
-
-	/**
-	 * Default file disposition.
-	 *
-	 * @var string
-	 */
-	const DEFAULT_FILE_DISPOSITION = 'inline';
-
 	 /**
 	 *
 	 * @param $attachment_id
@@ -46,11 +32,10 @@ class Attachment {
 	}
 
 	/**
-	 * @todo Check that attachment was placed in shortcode
 	 *
 	 * @param \LaterPay\Core\Event $event
 	 */
-	public static function getAccess( Event $event ) {
+	public static function getAttachmentSource( Event $event ) {
 		$attachmentID = Request::get( 'attachment_id' );       // post(attachment) id
 		$lptoken      = Request::get( 'lptoken' );             // optional, to update token
 		$hmac         = Request::get( 'hmac' );                // required, token to validate request
@@ -94,13 +79,9 @@ class Attachment {
 			$filename = basename( $file );
 
 			$response
-				->setHeader( 'Content-Description', 'File Transfer' )
 				->setHeader( 'Content-Transfer-Encoding', 'binary' )
 				->setHeader( 'Content-Type', $filetype['type'] )
-				->setHeader(
-					'Content-Disposition', 'attachment
-				 ; filename="' . $filename . '"'
-				)
+				->setHeader( 'Content-Disposition', 'attachment; filename="' . $filename . '"')
 				->setHeader( 'Content-Length', $fsize )
 				->setBody( $data )
 				->setHTTPCode( 200 )

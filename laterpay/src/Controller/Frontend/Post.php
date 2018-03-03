@@ -42,11 +42,7 @@ class Post extends Base {
 				array( 'hideFreePostsWithPremiumContent' ),
 				array( 'hidePaidPosts', 999 ),
 			),
-			'laterpay_attachment_image_attributes'         => array(
-				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'encryptImageSource' ),
-			),
-			'laterpay_attachment_get_url'                  => array(
+			'laterpay_attachment_url'                  => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
 				array( 'encryptAttachmentUrl' ),
 			),
@@ -235,46 +231,6 @@ class Post extends Base {
 	}
 
 	/**
-	 * Encrypt image source to prevent direct access.
-	 *
-	 * @wp-hook wp_get_attachment_image_attributes
-	 *
-	 * @param Event $event
-	 *
-	 * @throws \Exception
-	 *
-	 * @return void
-	 */
-	public function encryptImageSource( Event $event ) {
-		list( $attr, $post )           = $event->getArguments() + array( '', '' );
-		$attr                          = $event->getResult();
-		$caching_is_active             = (bool) $this->config->get( 'caching.compatible_mode' );
-		$is_ajax_and_caching_is_active = defined( 'DOING_AJAX' ) && DOING_AJAX && $caching_is_active;
-
-		if ( ! $is_ajax_and_caching_is_active && is_admin() ) {
-			return;
-		}
-
-		$is_purchasable = Pricing::isPurchasable( $post->ID );
-		if ( $is_purchasable && $post->ID === get_the_ID() ) {
-			$access = \LaterPay\Helper\Post::hasAccessToPost( $post );
-			$attr   = $event->getResult();
-
-			/**
-			 * @todo
-			 */
-			//          $attr['src'] = Attachment::getEncryptedResourceURL(
-			//              $post->ID,
-			//              $attr['src']
-			//              $access,
-			//              'attachment'
-			//          );
-		}
-
-		$event->setResult( $attr );
-	}
-
-	/**
 	 * Encrypt attachment URL to prevent direct access.
 	 *
 	 * @wp-hook wp_get_attachment_url
@@ -320,13 +276,7 @@ class Post extends Base {
 				return;
 			}
 
-			// encrypt attachment URL
-			$url = Attachment::getEncryptedResourceURL(
-				$post_id,
-				$url,
-				$access,
-				'attachment'
-			);
+			$url = Attachment::getEncryptedURL($post_id);
 		}
 
 		$event->setResult( $url );
@@ -338,8 +288,6 @@ class Post extends Base {
 	 * @wp-hook prepend_attachment
 	 *
 	 * @param Event $event
-	 *
-	 * @var string $attachment The attachment HTML output
 	 *
 	 * @return void
 	 */
@@ -478,34 +426,10 @@ class Post extends Base {
 	}
 
 	/**
-	 * Check, if the current page is a login page.
-	 *
-	 * @return boolean
-	 */
-	public static function isLoginPage() {
-		return in_array(
-			$GLOBALS['pagenow'], array(
-				'wp-login.php',
-				'wp-register.php',
-			), true
-		);
-	}
-
-	/**
-	 * Check, if the current page is the cron page.
-	 *
-	 * @return boolean
-	 */
-	public static function isCronPage() {
-		return 'wp-cron.php' === $GLOBALS['pagenow'];
-	}
-
-	/**
 	 * Modify the post content of paid posts.
 	 *
 	 * Depending on the configuration, the content of paid posts is modified
-	 * and several elements are added to the content: If the user is an admin,
-	 * a statistics pane with performance data for the current post is shown.
+	 * and several elements are added to the content:
 	 * LaterPay purchase button is shown before the content. Depending on the
 	 * settings in the appearance tab, only the teaser content or the teaser
 	 * content plus an excerpt of the full content is returned for user who
@@ -516,14 +440,11 @@ class Post extends Base {
 	 *
 	 * @param Event $event
 	 *
-	 * @internal WP_Embed $wp_embed
-	 *
 	 * @return void
+	 *
 	 * @throws \Exception
 	 */
 	public function modifyPostContent( Event $event ) {
-		global $wp_embed;
-
 		$content = $event->getResult();
 
 		if ( $event->hasArgument( 'post' ) ) {
@@ -540,6 +461,11 @@ class Post extends Base {
 
 		// check, if user has access to content (because he already bought it)
 		$access = \LaterPay\Helper\Post::hasAccessToPost( $post );
+
+		// it's attachment page and it has a parent post that was bought
+		if ( is_attachment( $post ) && $post->post_parent && false === $access ) {
+			$access = \LaterPay\Helper\Post::hasAccessToPost( $post );
+		}
 
 		// caching and Ajax
 		$caching_is_active = (bool) $this->config->get( 'caching.compatible_mode' );
@@ -619,40 +545,37 @@ class Post extends Base {
 			return;
 		}
 
-		if ( ! $access ) {
-			// show proper teaser
-			switch ( $teaser_mode ) {
-				case '1':
-					// add excerpt of full content, covered by an overlay with a purchase button
-					$overlay_event = new Event();
-					$overlay_event->setEchoOutput( false );
-					$overlay_event->setArguments( $event->getArguments() );
-					laterpay_event_dispatcher()->dispatch( 'laterpay_explanatory_overlay', $overlay_event );
-					$content = $teaser_content . $overlay_event->getResult();
-					break;
-				case '2':
-					// add excerpt of full content, covered by an overlay with a purchase button
-					$overlay_event = new Event();
-					$overlay_event->setEchoOutput( false );
-					$overlay_event->setArguments( $event->getArguments() );
-					laterpay_event_dispatcher()->dispatch( 'laterpay_purchase_overlay', $overlay_event );
-					$content = $teaser_content . $overlay_event->getResult();
-					break;
-				default:
-					// add teaser content plus a purchase link after the teaser content
-					$link_event = new Event();
-					$link_event->setEchoOutput( false );
-					laterpay_event_dispatcher()->dispatch( 'laterpay_purchase_link', $link_event );
-					$content = $teaser_content . $link_event->getResult();
-					break;
-			}
-		} else {
-			// encrypt files contained in premium posts
-			/**
-			 * @todo
-			 */
-			//	$content = Attachment::getEncryptedContent( $post->ID, $content, $access );
-			$content = $wp_embed->autoembed( $content );
+		if ( $access ) {
+			$event->setResult( $content );
+
+			return;
+		}
+
+		// show proper teaser if user hasn't access tu current post
+		switch ( $teaser_mode ) {
+			case '1':
+				// add excerpt of full content, covered by an overlay with a purchase button
+				$overlay_event = new Event();
+				$overlay_event->setEchoOutput( false );
+				$overlay_event->setArguments( $event->getArguments() );
+				laterpay_event_dispatcher()->dispatch( 'laterpay_explanatory_overlay', $overlay_event );
+				$content = $teaser_content . $overlay_event->getResult();
+				break;
+			case '2':
+				// add excerpt of full content, covered by an overlay with a purchase button
+				$overlay_event = new Event();
+				$overlay_event->setEchoOutput( false );
+				$overlay_event->setArguments( $event->getArguments() );
+				laterpay_event_dispatcher()->dispatch( 'laterpay_purchase_overlay', $overlay_event );
+				$content = $teaser_content . $overlay_event->getResult();
+				break;
+			default:
+				// add teaser content plus a purchase link after the teaser content
+				$link_event = new Event();
+				$link_event->setEchoOutput( false );
+				laterpay_event_dispatcher()->dispatch( 'laterpay_purchase_link', $link_event );
+				$content = $teaser_content . $link_event->getResult();
+				break;
 		}
 
 		$event->setResult( $content );
@@ -696,16 +619,9 @@ class Post extends Base {
 		$this->logger->info( __METHOD__ );
 
 		wp_register_script(
-			'laterpay-peity',
-			$this->config->get( 'js_url' ) . 'vendor/jquery.peity.min.js',
-			array( 'jquery' ),
-			$this->config->get( 'version' ),
-			true
-		);
-		wp_register_script(
 			'laterpay-post-view',
 			$this->config->get( 'js_url' ) . 'laterpay-post-view.js',
-			array( 'jquery', 'laterpay-peity' ),
+			array( 'jquery' ),
 			$this->config->get( 'version' ),
 			true
 		);
@@ -739,7 +655,6 @@ class Post extends Base {
 			)
 		);
 
-		wp_enqueue_script( 'laterpay-peity' );
 		wp_enqueue_script( 'laterpay-post-view' );
 	}
 
@@ -889,6 +804,6 @@ class Post extends Base {
 	 * @return void
 	 */
 	public function ajaxLoadAttachment( Event $event ) {
-		Attachment::getAccess( $event );
+		Attachment::getAttachmentSource( $event );
 	}
 }
