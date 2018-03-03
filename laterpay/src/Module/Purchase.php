@@ -108,22 +108,35 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 
 		$back_url    = get_permalink( $current_post_id ?: $post->ID );
 		$content_ids = Post::getContentIDs( $post->ID );
+		$identify_url = API::getIdentifyURL( $back_url, $content_ids );
+
+		$price = Pricing::getPostPrice( $post->ID );
+		$currency = $this->config->get( 'currency.code' );
+
+		$link = Post::getLaterpayPurchaseLink(
+			$post->ID,
+			$current_post_id
+		);
+
+		$link_text = sprintf(
+			__( '%1$s<small class="lp_purchase-link__currency">%2$s</small>',
+				'laterpay' ),
+			View::formatNumber( $price ),
+			$currency
+		);
 
 		$view_args = array_merge(
 			array(
 				'post_id'           => $post->ID,
-				'link'              => Post::getLaterpayPurchaseLink(
-					$post->ID,
-					$current_post_id
-				),
-				'currency'          => $this->config->get( 'currency.code' ),
-				'price'             => Pricing::getPostPrice( $post->ID ),
+				'link'              => $link,
+				'link_text'         => $link_text,
+				'currency'          => $currency,
+				'price'             => $price,
 				'notification_text' => __(
 					'I already bought this',
 					'laterpay'
 				),
-				'identify_url'      => API::getIdentifyURL( $back_url, $content_ids ),
-				'attributes'        => array(),
+				'identify_url'      => $identify_url,
 			),
 			$event->getArguments()
 		);
@@ -239,7 +252,23 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 		$revenue_model = Pricing::getPostRevenueModel( $post->ID );
 
 		// get purchase link
-		$purchase_link = Post::getLaterpayPurchaseLink( $post->ID );
+		$link = Post::getLaterpayPurchaseLink( $post->ID );
+
+		if ( 'sis' === $revenue_model ) :
+			$link_text = sprintf(
+				__( 'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small>',
+					'laterpay' ),
+				View::formatNumber( $price ),
+				$currency
+			);
+		else :
+			$link_text = sprintf(
+				__( 'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small> and pay later',
+					'laterpay' ),
+				View::formatNumber( $price ),
+				$currency
+			);
+		endif;
 
 		$view_args = array_merge(
 			array(
@@ -247,11 +276,12 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 				'currency'      => $currency,
 				'price'         => $price,
 				'revenue_model' => $revenue_model,
-				'link'          => $purchase_link,
-				'attributes'    => array(),
+				'link'          => $link,
+				'link_text'     => $link_text
 			),
 			$event->getArguments()
 		);
+
 		$this->assign( 'laterpay', $view_args );
 		$html = $this->getTextView( 'frontend/partials/widget/purchase-link' );
 

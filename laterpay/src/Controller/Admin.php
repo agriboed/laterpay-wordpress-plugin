@@ -265,7 +265,7 @@ class Admin extends Base {
 			// render account tab
 			case 'account':
 				$account_controller = new Account( $this->config );
-				$account_controller->render_page();
+				$account_controller->renderPage();
 				break;
 		}
 	}

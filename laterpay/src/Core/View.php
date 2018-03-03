@@ -88,7 +88,7 @@ class View {
 			return;
 		}
 
-		include_once( $view_file );
+		include $view_file;
 	}
 
 	/**
@@ -112,18 +112,9 @@ class View {
 	 * @return string $html html output as string
 	 */
 	public function getTextView( $file, $view_dir = null ) {
-		foreach ( $this->variables as $key => $value ) {
-			${$key} = $value;
-		}
-
-		$view_dir  = null !== $view_dir ? $view_dir : $this->config->get( 'view_dir' );
-		$view_file = $view_dir . $file . '.php';
-		if ( ! file_exists( $view_file ) ) {
-			return '';
-		}
 
 		ob_start();
-		include( $view_file );
+		$this->render($file, $view_dir);
 		$thread = ob_get_contents();
 		ob_end_clean();
 		$html = $thread;

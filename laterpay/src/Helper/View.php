@@ -60,81 +60,6 @@ class View {
 	}
 
 	/**
-	 * Get date of next day.
-	 *
-	 * @param string $date
-	 *
-	 * @return string $nextDay
-	 */
-	protected static function getNextDay( $date ) {
-		$next_day = date(
-			'Y-m-d', mktime(
-				date( 'H', strtotime( $date ) ),
-				date( 'i', strtotime( $date ) ),
-				date( 's', strtotime( $date ) ),
-				date( 'm', strtotime( $date ) ),
-				date( 'd', strtotime( $date ) ) + 1,
-				date( 'Y', strtotime( $date ) )
-			)
-		);
-
-		return $next_day;
-	}
-
-	/**
-	 * Get date a given number of days prior to a given date.
-	 *
-	 * @param string $date
-	 * @param int $ago number of days ago
-	 *
-	 * @return string $prior_date
-	 */
-	protected static function getDateDaysAgo( $date, $ago = 30 ) {
-		$ago        = absint( $ago );
-		$prior_date = date(
-			'Y-m-d', mktime(
-				date( 'H', strtotime( $date ) ),
-				date( 'i', strtotime( $date ) ),
-				date( 's', strtotime( $date ) ),
-				date( 'm', strtotime( $date ) ),
-				date( 'd', strtotime( $date ) ) - $ago,
-				date( 'Y', strtotime( $date ) )
-			)
-		);
-
-		return $prior_date;
-	}
-
-	/**
-	 * Get the statistics data for the last 30 days as string, joined by a given delimiter.
-	 *
-	 * @param array $statistic
-	 * @param string $type
-	 * @param string $delimiter
-	 *
-	 * @return string
-	 */
-	public static function getDaysStatisticsAsString( $statistic, $type = 'quantity', $delimiter = ',' ) {
-		$today = date( 'Y-m-d' );
-		$date  = self::getDateDaysAgo( date( $today ), 30 );
-
-		$result = '';
-		while ( $date <= $today ) {
-			if ( $result !== '' ) {
-				$result .= $delimiter;
-			}
-			if ( isset( $statistic[ $date ] ) ) {
-				$result .= $statistic[ $date ][ $type ];
-			} else {
-				$result .= '0';
-			}
-			$date = self::getNextDay( $date );
-		}
-
-		return $result;
-	}
-
-	/**
 	 * Check, if plugin is fully functional.
 	 *
 	 * @return bool
@@ -170,21 +95,6 @@ class View {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Get current plugin mode.
-	 *
-	 * @return string $mode
-	 */
-	public static function getPluginMode() {
-		if ( get_option( 'laterpay_plugin_is_in_live_mode' ) ) {
-			$mode = 'live';
-		} else {
-			$mode = 'test';
-		}
-
-		return $mode;
 	}
 
 	/**

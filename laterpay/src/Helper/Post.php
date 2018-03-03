@@ -280,7 +280,7 @@ class Post {
 
 		if ( count( $teaser_content ) > 1 ) {
 			if ( $more ) {
-				$output .= '<span id="more-' . esc_attr($post_id) . '"></span>' . $teaser_content[1];
+				$output .= '<span id="more-' . esc_attr($post_id) . '"></span>' . wp_kses_post($teaser_content[1]);
 			} else {
 				if ( ! empty( $more_link_text ) ) {
 					$output .= '<a href="' . get_permalink() . '#more-' . esc_attr($post_id) . '" class="more-link">' . wp_kses_post($more_link_text) . '</a>';

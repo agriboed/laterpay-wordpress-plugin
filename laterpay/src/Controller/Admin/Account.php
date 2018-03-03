@@ -80,7 +80,7 @@ class Account extends Base {
 	 *
 	 * @return void
 	 */
-	public function render_page() {
+	public function renderPage() {
 		$this->loadAssets();
 
 		$view_args = array(

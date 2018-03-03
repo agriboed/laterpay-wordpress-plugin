@@ -700,69 +700,32 @@ class Settings extends Base {
 	 *
 	 * @return void
 	 */
-	public static function getInputFieldMarkup( $field = null ) {
-		$inputs_markup = '';
-
-		if ( $field && isset( $field['name'] ) ) {
-			$option_value = get_option( $field['name'] );
-			$field_value  = isset( $field['value'] ) ? $field['value'] : get_option( $field['name'], '' );
-			$type         = isset( $field['type'] ) ? $field['type'] : 'text';
-			$classes      = isset( $field['classes'] ) ? $field['classes'] : array();
-
-			// clean 'class' data
-			$classes = (array) $classes;
-			$classes = array_unique( $classes );
-
-			if ( $type === 'text' ) {
-				$classes[] = 'regular-text';
-			}
-
-			$inputs_markup = '';
-			if ( isset( $field['label'] ) ) {
-				$inputs_markup .= '<label>';
-			}
-
-			$inputs_markup .= '<input type="' . esc_attr( $type ) . '" name="' . esc_attr( $field['name'] ) . '" value="' . esc_attr( $field_value ) . '"';
-
-			// add id, if set
-			if ( isset( $field['id'] ) ) {
-				$inputs_markup .= ' id="' . esc_attr( $field['id'] ) . '"';
-			}
-
-			if ( isset( $field['label'] ) ) {
-				$inputs_markup .= ' style="margin-right:5px;"';
-			}
-
-			// add classes, if set
-			$inputs_markup .= ! empty( $classes ) ? ' class="' . implode( ' ', $classes ) . '"' : '';
-
-			// add checked property, if set
-			if ( 'checkbox' === $type ) {
-				$inputs_markup .= $option_value ? ' checked' : '';
-			}
-
-			// add disabled property, if set
-			if ( ! empty( $field['disabled'] ) ) {
-				$inputs_markup .= ' disabled';
-			}
-
-			// add onclick support
-			if ( ! empty( $field['onclick'] ) ) {
-				$inputs_markup .= ' onclick="' . esc_attr( $field['onclick'] ) . '"';
-			}
-
-			$inputs_markup .= '>';
-
-			if ( isset( $field['appended_text'] ) ) {
-				$inputs_markup .= '<dfn class="lp_appended-text">' . wp_kses_post( $field['appended_text'] ) . '</dfn>';
-			}
-			if ( isset( $field['label'] ) ) {
-				$inputs_markup .= wp_kses_post( $field['label'] );
-				$inputs_markup .= '</label>';
-			}
+	public function getInputFieldMarkup( $field = null ) {
+		if ( null === $field || empty( $field['name'] ) ) {
+			return;
 		}
 
-		echo $inputs_markup;
+		$view_args = array(
+			'value'    => isset( $field['value'] ) ? $field['value'] : get_option( $field['name'], '' ),
+			'type'     => isset( $field['type'] ) ? $field['type'] : 'text',
+			'id'       => isset( $field['id'] ) ? $field['id'] : null,
+			'classes'  => isset( $field['classes'] ) ? (array) $field['classes'] : array(),
+			'label'    => isset( $field['label'] ) ? $field['label'] : null,
+			'disabled' => isset( $field['disabled'] ) ? true : false,
+			'checked'  => null,
+			'onclick'  => isset( $field['onclick'] ) ? $field['onclick'] : null,
+		);
+
+		if ( $view_args['type'] === 'text' ) {
+			$view_args['classes'][] = 'regular-text';
+		}
+
+		if ( 'checkbox' === $view_args['type'] && $view_args['value'] ) {
+			$view_args['checked'] = true;
+		}
+
+		$this->assign( 'laterpay', $view_args );
+		$this->render( 'backend/settings/input-field' );
 	}
 
 	/**
