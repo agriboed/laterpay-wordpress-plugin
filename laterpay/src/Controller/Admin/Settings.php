@@ -84,7 +84,7 @@ class Settings extends Base {
 		$this->assign( 'laterpay', $view_args );
 
 		// render view template for options page
-		echo $this->getTextView( 'backend/options' );
+		$this->render( 'backend/options' );
 	}
 
 	/**
@@ -806,25 +806,28 @@ class Settings extends Base {
 		);
 
 		$all_post_types     = get_post_types( array(), 'objects' );
-		$enabled_post_types = get_option( 'laterpay_enabled_post_types' );
+		$enabled_post_types = (array) get_option( 'laterpay_enabled_post_types' );
 
-		$inputs_markup = '<ul class="post_types">';
+		$post_types = array();
+
 		foreach ( $all_post_types as $slug => $post_type ) {
 			if ( in_array( $slug, $hidden_post_types, true ) ) {
 				continue;
 			}
-			$inputs_markup .= '<li><label title="' . esc_attr( $post_type->labels->name ) . '">';
-			$inputs_markup .= '<input type="checkbox" name="laterpay_enabled_post_types[]" value="' . esc_attr( $slug ) . '" ';
-			if ( is_array( $enabled_post_types ) && in_array( $slug, $enabled_post_types, true ) ) {
-				$inputs_markup .= 'checked';
-			}
-			$inputs_markup .= '>';
-			$inputs_markup .= '<span>' . esc_html( $post_type->labels->name ) . '</span>';
-			$inputs_markup .= '</label></li>';
-		}
-		$inputs_markup .= '</ul>';
 
-		echo $inputs_markup;
+			$post_types[] = array(
+				'slug' => $slug,
+				'label'   => $post_type->labels->name,
+				'checked' => in_array( $slug, $enabled_post_types, true ),
+			);
+		}
+
+		$view_args = array(
+			'post_types' => $post_types
+		);
+
+		$this->assign( 'laterpay', $view_args );
+		$this->render( 'backend/settings/post-types' );
 	}
 
 	/**

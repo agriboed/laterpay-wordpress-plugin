@@ -23,8 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php endif; ?>
 		<?php if ( $laterpay['onclick'] ): ?>
             onclick="<?php esc_attr_e( $laterpay['onclick'] ); ?>"
-		<?php endif; ?>
-    >
+		<?php endif; ?>>
 	<?php if ( $laterpay['text'] ): ?>
         <dfn class="lp_appended-text"><?php echo wp_kses_post( $laterpay['text'] ); ?></dfn>
 	<?php endif; ?>
