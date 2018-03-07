@@ -1,8 +1,6 @@
 .idea/
 .sublime-gulp.cache
-laterpay/assets/
-!laterpay/assets/css/vendor
-!laterpay/assets/js/vendor
+laterpay/assets/*
 laterpay/sftp-config.json
 nbproject/
 node_modules/
