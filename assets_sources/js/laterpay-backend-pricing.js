@@ -254,28 +254,32 @@
 
             // edit
             $o.body
-            .on('click', $o.editCategoryDefaultPrice, function() {
+            .on('click', $o.editCategoryDefaultPrice, function(e) {
+                e.preventDefault();
                 var $form = $(this).parents($o.categoryDefaultPriceForm);
                 editCategoryDefaultPrice($form);
             });
 
             // cancel
             $o.body
-            .on('click', $o.cancelEditingCategoryDefaultPrice, function() {
+            .on('click', $o.cancelEditingCategoryDefaultPrice, function(e) {
+                e.preventDefault();
                 var $form = $(this).parents($o.categoryDefaultPriceForm);
                 exitEditModeCategoryDefaultPrice($form);
             });
 
             // save
             $o.body
-            .on('click', $o.saveCategoryDefaultPrice, function() {
+            .on('click', $o.saveCategoryDefaultPrice, function(e) {
+                e.preventDefault();
                 var $form = $(this).parents($o.categoryDefaultPriceForm);
                 saveCategoryDefaultPrice($form);
             });
 
             // delete
             $o.body
-            .on('click', $o.deleteCategoryDefaultPrice, function() {
+            .on('click', $o.deleteCategoryDefaultPrice, function(e) {
+                e.preventDefault();
                 var $form = $(this).parents($o.categoryDefaultPriceForm);
                 deleteCategoryDefaultPrice($form);
             });
@@ -666,8 +670,7 @@
             renderCategorySelect(
                 $form,
                 $o.selectCategory,
-                'laterpay_get_categories_with_price',
-                formatSelect2Selection
+                'laterpay_get_categories_with_price'
             );
         },
 
@@ -675,6 +678,10 @@
             // fix invalid prices
             var validatedPrice = validatePrice($form);
             $($o.categoryDefaultPriceInput, $form).val(validatedPrice);
+
+            if ($form.find('select[name=category_id]').val() === '') {
+                return;
+            }
 
             $.post(
                 ajaxurl,
@@ -687,7 +694,7 @@
                             .text(r.revenue_model_label)
                             .data('revenue', r.revenue_model);
                         $($o.categoryDefaultPriceInput, $form).val(r.price);
-                        $($o.categoryTitle, $form).text(r.category);
+                        $($o.categoryTitle, $form).text(r.category_name);
                         $($o.categoryId, $form).val(r.category_id);
 
                         // mark the form as saved
@@ -773,14 +780,6 @@
             );
         },
 
-        formatSelect2Selection = function(data, container) {
-            var $form = $(container).parent().parent().parent();
-            $('.lp_js_selectCategory', $form).val(data.text);
-            $('.lp_js_categoryDefaultPriceCategoryId', $form).val(data.id);
-
-            return data.text;
-        },
-
         formatSelect2ForEntity = function(data, container) {
             var form = $(container).parents('form'),
                 $entity = $o.timepass;
@@ -797,59 +796,33 @@
             return data.text;
         },
 
-        renderCategorySelect = function($form, selector, form, format_func) {
+        renderCategorySelect = function($form, selector, form) {
             $(selector, $form).select2({
-                allowClear      : true,
                 ajax            : {
-                                    url         : ajaxurl,
-                                    data        : function(term) {
-                                                    return {
-                                                        form    : form,
-                                                        term    : term,
-                                                        action  : 'laterpay_pricing'
-                                                    };
-                                                },
-                                    results     : function(data) {
-                                                    var return_data = [];
+                    url         : ajaxurl,
+                    data        : function(term) {
+                        return {
+                            form    : form,
+                            term    : term.term ? term.term : '',
+                            action  : 'laterpay_pricing'
+                        };
+                    },
+                    processResults     : function(data) {
+                        var return_data = [];
 
-                                                    $.each(data.categories, function(index) {
-                                                        var term = data.categories[ index ];
-                                                        return_data.push({
-                                                            id     : term.term_id,
-                                                            text   : term.name
-                                                        });
-                                                    });
+                        $.each(data.categories, function(index) {
+                            var term = data.categories[ index ];
+                            return_data.push({
+                                id     : term.term_id,
+                                text   : term.name
+                            });
+                        });
 
-                                                    return {results: return_data};
-                                                },
-                                    dataType    : 'json',
-                                    type: 'POST'
-                                },
-                initSelection   : function(element, callback) {
-                                    var id = $(element).val();
-                                    if (id !== '') {
-                                        var data = {text: id};
-                                        callback(data);
-                                    } else {
-                                        $.post(
-                                            ajaxurl,
-                                            {
-                                                form    : form,
-                                                term    : '',
-                                                action  : 'laterpay_pricing'
-                                            },
-                                            function(data) {
-                                                if (data && data[0] !== undefined) {
-                                                    var term = data[0];
-                                                    callback({id: term.term_id, text: term.name});
-                                                }
-                                            }
-                                        );
-                                    }
-                                },
-                formatResult    : function(data) {return data.text;},
-                formatSelection : format_func,
-                escapeMarkup    : function(m) {return m;}
+                        return {results: return_data};
+                    },
+                    dataType    : 'json',
+                    type: 'POST'
+                }
             });
         },
 
