@@ -39,6 +39,10 @@ jQuery.fn.showMessage = function(message, success) {
         }
     }
 
+    if (jQuery('.lp_flash-message').length > 0){
+        jQuery('.lp_flash-message').remove();
+    }
+
     var $message     = jQuery('<div class="lp_flash-message" style="display:none;"><p></p></div>'),
         messageClass = success ? 'updated' : 'error';
 

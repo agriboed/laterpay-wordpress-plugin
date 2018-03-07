@@ -1,5 +1,3 @@
-// Loaded on backend pages of LaterPay plugin
-
 @charset "UTF-8";
 
 @import 'objects/_variables';
@@ -11,6 +9,7 @@
 @import 'objects/_lists';
 @import 'objects/_utilities';
 @import 'objects/_forms';
+@import 'objects/_select2';
 @import 'objects/_greybox';
 @import 'objects/_vector_icons';
 @import 'objects/_tooltips';
@@ -28,9 +27,3 @@
 
 @import 'pages/_pricing';
 @import 'pages/_appearance';
-
-
-
-
-// TODO: remove with release 1.0
-@import 'objects/_deprecated';
