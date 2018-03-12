@@ -68,7 +68,7 @@
                     toggleVisibilityInTestMode();
                 });
 
-                $o.showMerchantContractsButton.bind('click', function(e) {
+                $o.showMerchantContractsButton.bind('click', function() {
                     $(this).attr('href', $(this).data('href-'+$o.region.val()));
                     return true;
                 });
@@ -103,7 +103,7 @@
                     $o.testMerchantId.focus();
 
                     // show button for loading the contracts, as the user probably has no valid live credentials yet
-                    $o.showMerchantContractsButton.velocity('fadeIn', { duration: 250 });
+                    $o.showMerchantContractsButton.fadeIn({ duration: 250 });
 
                     // make sure Ajax request gets sent
                     $o.requestSent = false;
@@ -117,10 +117,10 @@
 
             togglePluginModeIndicators = function(mode) {
                 if (mode === 'live') {
-                    $('#lp_js_pluginModeIndicator').velocity('fadeOut', { duration: 250 });
+                    $('#lp_js_pluginModeIndicator').fadeOut({ duration: 250 });
                     $('#lp_js_liveCredentials').addClass($o.isLive);
                 } else {
-                    $('#lp_js_pluginModeIndicator').velocity('fadeIn', { duration: 250 });
+                    $('#lp_js_pluginModeIndicator').fadeIn({ duration: 250 });
                     $('#lp_js_liveCredentials').removeClass($o.isLive);
                 }
             },
@@ -140,16 +140,16 @@
                     $o.requestSent = false;
 
                     // show additional toggle for switching between visible and invisible test mode
-                    $o.pluginVisibilitySetting.velocity('fadeIn', { duration: 250, display: 'inline-block' });
+                    $o.pluginVisibilitySetting.fadeIn({ duration: 250, display: 'inline-block' });
                 } else if (hasSwitchedToLiveMode) {
                     // hide toggle for switching between visible and invisible test mode
-                    $o.pluginVisibilitySetting.velocity('fadeOut', { duration: 250 });
+                    $o.pluginVisibilitySetting.fadeOut({ duration: 250 });
 
                     // hide button for loading the contracts, as the user obviously has valid live credentials already
-                    $o.showMerchantContractsButton.velocity('fadeOut', { duration: 250 });
+                    $o.showMerchantContractsButton.fadeOut({ duration: 250 });
                 } else {
                     // hide toggle for switching between visible and invisible test mode
-                    $o.pluginVisibilitySetting.velocity('fadeIn', { duration: 250, display: 'inline-block' });
+                    $o.pluginVisibilitySetting.fadeIn({ duration: 250, display: 'inline-block' });
                 }
 
                 // save plugin mode

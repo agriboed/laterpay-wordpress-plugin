@@ -39,26 +39,19 @@ jQuery.fn.showMessage = function(message, success) {
         }
     }
 
-    if (jQuery('.lp_flash-message').length > 0){
-        jQuery('.lp_flash-message').remove();
-    }
-
     var $message     = jQuery('<div class="lp_flash-message" style="display:none;"><p></p></div>'),
         messageClass = success ? 'updated' : 'error';
 
     $container.prepend($message);
     $message.addClass(messageClass).find('p').html(message);
     if (jQuery('p:hidden', $message)) {
-        $message.velocity('slideDown', { duration: 250 });
+        $message.slideDown({ duration: 250 });
     }
     setTimeout(function() { $message.clearMessage(); }, 3000);
 };
 
 jQuery.fn.clearMessage = function() {
-    jQuery(this).velocity('slideUp', { duration: 250, complete: function(message) { jQuery(message).remove(); } });
+    jQuery(this).slideUp({ duration: 250, complete: function(message) { jQuery(message).remove(); } });
 };
 
 jQuery.noConflict();
-
-// Zendesk widget
-window.zEmbed||function(e,t){var n,o,d,i,s,a=[],r=document.createElement("iframe");window.zEmbed=function(){a.push(arguments)},window.zE=window.zE||window.zEmbed,r.src="javascript:false",r.title="",r.role="presentation",(r.frameElement||r).style.cssText="display: none",d=document.getElementsByTagName("script"),d=d[d.length-1],d.parentNode.insertBefore(r,d),i=r.contentWindow,s=i.document;try{o=s}catch(e){n=document.domain,r.src='javascript:var d=document.open();d.domain="'+n+'";void(0);',o=s}o.open()._l=function(){var e=this.createElement("script");n&&(this.domain=n),e.id="js-iframe-async",e.src="https://assets.zendesk.com/embeddable_framework/main.js",this.t=+new Date,this.zendeskHost="laterpay.zendesk.com",this.zEQueue=a,this.body.appendChild(e)},o.write('<body onload="document._l();">'),o.close()}();

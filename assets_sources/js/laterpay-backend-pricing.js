@@ -581,10 +581,9 @@
         },
 
         enterEditModeGlobalDefaultPrice = function() {
-            $o.globalDefaultPriceShowElements.velocity('slideUp', { duration: 250, easing: 'ease-out' });
-            $o.globalDefaultPriceEditElements.velocity('slideDown', {
+            $o.globalDefaultPriceShowElements.slideUp({ duration: 250 });
+            $o.globalDefaultPriceEditElements.slideDown({
                 duration: 250,
-                easing: 'ease-out',
                 complete: function() {
                     setTimeout(function() {
                         $o.globalDefaultPriceInput.focus();
@@ -595,8 +594,8 @@
         },
 
         exitEditModeGlobalDefaultPrice = function() {
-            $o.globalDefaultPriceShowElements.velocity('slideDown', { duration: 250, easing: 'ease-out' });
-            $o.globalDefaultPriceEditElements.velocity('slideUp', { duration: 250, easing: 'ease-out' });
+            $o.globalDefaultPriceShowElements.slideDown({ duration: 250});
+            $o.globalDefaultPriceEditElements.slideUp({ duration: 250});
             $o.globalDefaultPriceForm.removeClass($o.editing);
             // reset value of price input to current global default price
             $o.globalDefaultPriceInput.val($o.globalDefaultPriceDisplay.data('price'));
@@ -632,11 +631,11 @@
         },
 
         addCategoryDefaultPrice = function() {
-            $o.addCategory.velocity('fadeOut', { duration: 250 });
+            $o.addCategory.fadeOut({ duration: 250 });
 
             // hide empty state hint, if it is visible
             if ($($o.emptyState, $o.categoryDefaultPrices).is(':visible')) {
-                $($o.emptyState, $o.categoryDefaultPrices).velocity('fadeOut', { duration: 400 });
+                $($o.emptyState, $o.categoryDefaultPrices).fadeOut({ duration: 400 });
             }
 
             // clone category default price template
@@ -644,7 +643,7 @@
                         .clone()
                         .removeAttr('id')
                         .insertBefore('#lp_js_categoryDefaultPriceList')
-                        .velocity('slideDown', { duration: 250, easing: 'ease-out' });
+                        .slideDown({ duration: 250 });
 
             editCategoryDefaultPrice($form);
         },
@@ -657,12 +656,10 @@
 
             // initialize edit mode
             $form.addClass($o.editing);
-            $($o.categoryDefaultPriceShowElements, $form)
-            .velocity('slideUp', { duration: 250, easing: 'ease-out' });
-            $o.addCategory.velocity('fadeOut', { duration: 250 });
-            $($o.categoryDefaultPriceEditElements, $form).velocity('slideDown', {
+            $($o.categoryDefaultPriceShowElements, $form).slideUp({ duration: 250 });
+            $o.addCategory.fadeOut({ duration: 250 });
+            $($o.categoryDefaultPriceEditElements, $form).slideDown({
                 duration: 250,
-                easing: 'ease-out',
                 complete: function() {
                     $($o.categoryDefaultPriceInput, $form).focus();
                 }
@@ -713,23 +710,21 @@
 
             if ($form.hasClass($o.unsaved)) {
                 // remove form, if creating a new category default price has been canceled
-                $form.velocity('slideUp', {
+                $form.slideUp({
                     duration: 250,
-                    easing: 'ease-out',
                     complete: function() {
                         $(this).remove();
 
                         // show empty state hint, if there are no category default prices
                         if ($($o.categoryDefaultPriceForm + ':visible').length === 0) {
-                            $($o.emptyState, $o.categoryDefaultPrices).velocity('fadeIn', { duration: 400 });
+                            $($o.emptyState, $o.categoryDefaultPrices).fadeIn({ duration: 400 });
                         }
                     }
                 });
             } else {
                 // hide form, if a new category default price has been saved
                 // or editing an existing category default price has been canceled
-                $($o.categoryDefaultPriceEditElements, $form)
-                .velocity('slideUp', { duration: 250, easing: 'ease-out' });
+                $($o.categoryDefaultPriceEditElements, $form).slideUp({ duration: 250});
                 $($o.selectCategory, $form).select2('destroy');
                 // reset value of price input to current category default price
                 $($o.categoryDefaultPriceInput, $form).val($($o.categoryDefaultPriceDisplay, $form).data('price'));
@@ -741,13 +736,12 @@
                     .parent('label')
                     .addClass($o.selected);
                 // show elements for displaying defined price again
-                $($o.categoryDefaultPriceShowElements, $form)
-                .velocity('slideDown', { duration: 250, easing: 'ease-out' });
+                $($o.categoryDefaultPriceShowElements, $form).slideDown({ duration: 250 });
             }
 
             // show 'Add' button again
             if (!editAnotherCategory) {
-                $o.addCategory.velocity('fadeIn', { duration: 250, display: 'inline-block' });
+                $o.addCategory.fadeIn({ duration: 250 });
             }
         },
 
@@ -755,21 +749,20 @@
             validatePrice($form, false, $('input[name=price]', $form));
             $('input[name=form]', $form).val('price_category_form_delete');
 
+            console.log($form,$form.serializeArray());
             $.post(
                 ajaxurl,
                 $form.serializeArray(),
                 function(r) {
                     if (r.success) {
-                        $form.velocity('slideUp', {
+                        $form.slideUp({
                             duration: 250,
-                            easing: 'ease-out',
                             complete: function() {
                                 $(this).remove();
 
                                 // show empty state hint, if there are no category default prices
                                 if ($($o.categoryDefaultPriceForm + ':visible').length === 0) {
-                                    $($o.emptyState, $o.categoryDefaultPrices)
-                                    .velocity('fadeIn', { duration: 400 });
+                                    $($o.emptyState, $o.categoryDefaultPrices).fadeIn({ duration: 400 });
                                 }
                             }
                         });
@@ -830,11 +823,11 @@
             var $entity = $o[type];
 
             // hide 'add' button
-            $entity.actions.create.velocity('fadeOut', { duration: 250 });
+            $entity.actions.create.fadeOut({ duration: 250 });
 
             // hide empty state hint, if it is visible
             if ($($o.emptyState, $entity.editor).is(':visible')) {
-                $($o.emptyState, $entity.editor).velocity('fadeOut', { duration: 400 });
+                $($o.emptyState, $entity.editor).fadeOut({ duration: 400 });
             }
 
             // prepend cloned entity template to editor
@@ -847,18 +840,15 @@
             populateEntityForm(type, $template);
 
             // show template
-            $template
-            .velocity('slideDown', {
+            $template.slideDown({
                 duration: 250,
-                easing: 'ease-out',
                 complete: function() {
                     $(this).removeClass($o.hidden);
                 }
             })
             .find($entity.form)
-            .velocity('slideDown', {
+            .slideDown({
                 duration: 250,
-                easing: 'ease-out',
                 complete: function() {
                     $(this).removeClass($o.hidden);
                 }
@@ -993,21 +983,20 @@
             if ($($entity.form, $wrapper).hasClass($o.unsaved)) {
                 // remove entire time pass, if it is a new, unsaved pass
                 $wrapper
-                .velocity('fadeOut', {
+                .fadeOut({
                     duration: 250,
                     complete: function() {
                         $(this).remove();
 
                         // show empty state hint, if there are no time passes
                         if ($($entity.wrapper + ':visible').length === 0) {
-                            $($o.emptyState, $entity.editor).velocity('fadeIn', { duration: 400 });
+                            $($o.emptyState, $entity.editor).fadeIn({ duration: 400 });
                         }
                     }
                 });
             } else {
                 // remove cloned time pass form
-                $($entity.form, $wrapper)
-                .velocity('fadeOut', {
+                $($entity.form, $wrapper).fadeOut({
                     duration: 250,
                     complete: function() {
                         $(this).remove();
@@ -1036,7 +1025,7 @@
 
             // show 'create' button, if it is hidden
             if ($entity.actions.create.is(':hidden')) {
-                $entity.actions.create.velocity('fadeIn', { duration: 250, display: 'inline-block' });
+                $entity.actions.create.fadeIn({ duration: 250, display: 'inline-block' });
             }
         },
 
@@ -1063,7 +1052,7 @@
                             $($entity.id, $wrapper)
                             .text(id)
                             .parent()
-                            .velocity('fadeIn', { duration: 250 });
+                            .fadeIn({ duration: 250 });
                         }
 
                         // pass data to list
@@ -1079,8 +1068,7 @@
                         $($entity.actions.modify, $wrapper).removeClass($o.hidden);
 
                         // remove edit form
-                        $($entity.form, $wrapper)
-                        .velocity('fadeOut', {
+                        $($entity.form, $wrapper).fadeOut({
                             duration: 250,
                             complete: function () {
                                 $(this).remove();
@@ -1094,7 +1082,7 @@
 
                         // show create button
                         if ($entity.actions.create.is(':hidden')) {
-                            $entity.actions.create.velocity('fadeIn', { duration: 250, display: 'inline-block' });
+                            $entity.actions.create.fadeIn({ duration: 250, display: 'inline-block' });
                         }
                     }
 
@@ -1110,10 +1098,8 @@
             // require confirmation
             if (confirm($entity.data.deleteConfirm)) {
                 // fade out and remove time pass
-                $wrapper
-                .velocity('slideUp', {
+                $wrapper.slideUp({
                     duration: 250,
-                    easing: 'ease-out',
                     begin: function() {
                         $.post(
                             ajaxurl,
@@ -1128,7 +1114,7 @@
 
                                     // show empty state hint, if there are no time passes
                                     if ($($entity.wrapper + ':visible').length === 0) {
-                                        $($o.emptyState, $entity.editor).velocity('fadeIn', { duration: 400 });
+                                        $($o.emptyState, $entity.editor).fadeIn({ duration: 400 });
 
                                         // switch the purchase mode button back to also allow individual purchases
                                         if ($o.purchaseModeInput.prop('checked')) {
@@ -1246,7 +1232,7 @@
                 .prepend(voucher)
                     .find('div')
                         .first()
-                        .velocity('slideDown', { duration: 250, easing: 'ease-out' });
+                .slideDown({ duration: 250 });
         },
 
         addVoucherToList = function(code, voucherData, $timePass) {
@@ -1277,9 +1263,8 @@
         deleteVoucher = function($voucher) {
             // slide up and remove voucher
             $voucher
-            .velocity('slideUp', {
+            .slideUp({
                 duration: 250,
-                easing: 'ease-out',
                 complete: function() {
                     $(this).remove();
                 }
