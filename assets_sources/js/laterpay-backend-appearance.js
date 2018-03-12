@@ -3,6 +3,8 @@
     // encapsulate all LaterPay Javascript in function laterPayBackendAppearance
     function laterPayBackendAppearance() {
         var $o = {
+                navigation          : $('.lp_navigation'),
+
                 // appearance option
                 savePurchaseForm    : $('.lp_js_savePurchaseForm'),
                 cancelFormEdit      : $('.lp_js_cancelEditingPurchaseForm'),
@@ -323,7 +325,7 @@
                     ajaxurl,
                     $form.serializeArray(),
                     function(data) {
-                        $('.lp_navigation').showMessage(data);
+                        $o.navigation.showMessage(data);
                     }
                 );
             },

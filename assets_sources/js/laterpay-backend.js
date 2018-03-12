@@ -1,10 +1,10 @@
-jQuery.fn.showLoadingIndicator = function() {
+jQuery.fn.showLoadingIndicator = function () {
     var $container = jQuery(this);
 
     // add a state class, indicating that the element will be showing a loading indicator after a delay
     $container.addClass('lp_is-delayed');
 
-    setTimeout(function() {
+    setTimeout(function () {
         if ($container.hasClass('lp_is-delayed')) {
             // inject the loading indicator after a delay, if the element still has that state class
             $container.removeClass('lp_is-delayed');
@@ -13,7 +13,7 @@ jQuery.fn.showLoadingIndicator = function() {
     }, 600);
 };
 
-jQuery.fn.removeLoadingIndicator = function() {
+jQuery.fn.removeLoadingIndicator = function () {
     var $container = jQuery(this);
 
     if ($container.hasClass('lp_is-delayed')) {
@@ -25,33 +25,43 @@ jQuery.fn.removeLoadingIndicator = function() {
     }
 };
 
-jQuery.fn.showMessage = function(message, success) {
-    var $container  = jQuery(this);
+jQuery.fn.showMessage = function (message, success) {
+    var $container = jQuery(this);
+
+    if ($container.find('.lp_flash-message').length > 0) {
+        $container.find('.lp_flash-message').remove();
+    }
 
     try {
         var m = JSON.parse(message);
         success = m.success;
         message = m.message;
-    } catch(e) {
+    } catch (e) {
         if (typeof message !== 'string') {
             success = message.success;
             message = message.message;
         }
     }
 
-    var $message     = jQuery('<div class="lp_flash-message" style="display:none;"><p></p></div>'),
+    var $message = jQuery('<div class="lp_flash-message" style="display:none;"><p></p></div>'),
         messageClass = success ? 'updated' : 'error';
 
     $container.prepend($message);
     $message.addClass(messageClass).find('p').html(message);
     if (jQuery('p:hidden', $message)) {
-        $message.slideDown({ duration: 250 });
+        $message.slideDown({duration: 250});
     }
-    setTimeout(function() { $message.clearMessage(); }, 3000);
+    setTimeout(function () {
+        $message.clearMessage();
+    }, 3000);
 };
 
-jQuery.fn.clearMessage = function() {
-    jQuery(this).slideUp({ duration: 250, complete: function(message) { jQuery(message).remove(); } });
+jQuery.fn.clearMessage = function () {
+    jQuery(this).slideUp({
+        duration: 250, complete: function (message) {
+            jQuery(message).remove();
+        }
+    });
 };
 
 jQuery.noConflict();
