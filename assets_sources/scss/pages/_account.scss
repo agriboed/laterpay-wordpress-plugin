@@ -73,7 +73,7 @@
     .lp_api-credentials__input {
         @extend %input;
 
-        padding-left: round($fs * 2.8);
+        padding-left: round($fs * 2.8) !important;
         width: ($fs * 22);
     }
 }
