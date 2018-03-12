@@ -100,7 +100,9 @@ input[type=text].lp_input__title {
 }
 
 .lp_input {
-  min-width: 250px;
+  &--minimum {
+    min-width: 250px;
+  }
 
   &:focus + label[placeholder]:before,
   &:valid + label[placeholder]:before {

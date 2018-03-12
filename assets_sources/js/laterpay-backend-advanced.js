@@ -31,7 +31,7 @@
                 $o.proMerchant
                     .bind('change', function () {
                         toggleProMerchant();
-                    })
+                    });
             },
 
             saveForm = function () {
@@ -93,7 +93,7 @@
             toggleProMerchant = function () {
                 var message = $o.proMerchant.data('confirm');
                 if ($o.proMerchant.attr('checked') && false === confirm(message)) {
-                    $o.proMerchant.removeAttr('checked')
+                    $o.proMerchant.removeAttr('checked');
                 }
             },
             initializePage = function () {

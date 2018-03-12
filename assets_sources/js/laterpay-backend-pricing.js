@@ -197,7 +197,8 @@
             selected                                : 'lp_is-selected',
             disabled                                : 'lp_is-disabled',
             hidden                                  : 'lp_hidden',
-            navigation                              : $('.lp_navigation')
+            navigation                              : $('.lp_navigation'),
+            doPurchase                              : '.lp_js_doPurchase'
         },
 
         bindEvents = function() {
@@ -479,6 +480,12 @@
                 flipEntity('subscription', this);
             })
             .on('click', $o.subscription.actions.flip, function(e) {e.preventDefault();});
+
+            $o.body
+                .on('click', $o.doPurchase, function (e) {
+                    e.preventDefault();
+                    return false;
+                });
         },
 
         validatePrice = function($form, disableRevenueValidation, $input, subscriptionValidation) {

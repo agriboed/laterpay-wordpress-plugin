@@ -42,58 +42,58 @@
             bindEvents = function() {
                 // switch pricing type
                 $o.pricingTypeButtons
-                .mousedown(function() {
-                    switchPricingType(this);
-                })
-                .click(function(e) {e.preventDefault();});
+                    .mousedown(function() {
+                        switchPricingType(this);
+                    })
+                    .click(function(e) {e.preventDefault();});
 
                 // save pricing data
                 $('#post')
-                .submit(function() {
-                    saveDynamicPricingData();
-                });
+                    .submit(function() {
+                        saveDynamicPricingData();
+                    });
 
                 // validate manually entered prices
                 // (function is only triggered 800ms after the keyup)
                 $o.priceInput
-                .keyup(
-                    debounce(function() {
-                        setPrice($(this).val());
-                    }, 800)
-                );
+                    .keyup(
+                        debounce(function() {
+                            setPrice($(this).val());
+                        }, 800)
+                    );
 
                 // validate choice of revenue model (validating the price switches the revenue model if required)
                 $('input:radio', $o.revenueModel)
-                .change(function() {
-                    validatePrice($o.priceInput.val());
-                });
+                    .change(function() {
+                        validatePrice($o.priceInput.val());
+                    });
 
                 // toggle dynamic pricing widget
                 $o.dynamicPricingToggle
-                .mousedown(function() {
-                    toggleDynamicPricing();
-                })
-                .click(function(e) {e.preventDefault();});
+                    .mousedown(function() {
+                        toggleDynamicPricing();
+                    })
+                    .click(function(e) {e.preventDefault();});
 
                 // reset dynamic pricing date
                 $o.dynamicPricingResetDate
-                .mousedown(function() {
-                    resetPostDate(lpVars.postId);
-                })
-                .click(function(e) {e.preventDefault();});
+                    .mousedown(function() {
+                        resetPostDate(lpVars.postId);
+                    })
+                    .click(function(e) {e.preventDefault();});
 
                 // update list of applicable category prices on change of categories list
                 $('.categorychecklist input:checkbox')
-                .on('change', function() {
-                    updateApplicableCategoriesList();
-                });
+                    .on('change', function() {
+                        updateApplicableCategoriesList();
+                    });
 
                 // apply category default prices when selecting one of the applicable categories
                 $o.categoryPriceDetails
-                .on('mousedown', 'a', function() {
-                    applyCategoryPrice(this);
-                })
-                .on('click', 'a', function(e) {e.preventDefault();});
+                    .on('mousedown', 'a', function() {
+                        applyCategoryPrice(this);
+                    })
+                    .on('click', 'a', function(e) {e.preventDefault();});
             },
 
             switchPricingType = function(trigger) {
@@ -194,7 +194,7 @@
 
                 // enable and check selected revenue model
                 $('input:radio[value=' + revenueModel + ']', $o.revenueModel)
-                .prop('checked', 'checked')
+                    .prop('checked', 'checked')
                     .parent('label')
                     .removeClass($o.disabled)
                     .addClass($o.selected);
@@ -289,7 +289,7 @@
                     $('[data-category=' + selectedCategoryId + ']', $o.categories.parent()).length
                 ) {
                     $('[data-category=' + selectedCategoryId + ']', $o.categories.parent())
-                    .addClass($o.selectedCategory);
+                        .addClass($o.selectedCategory);
                 } else {
                     // select the first category in the list, if none is selected
                     $firstCategory.addClass($o.selectedCategory);
@@ -331,19 +331,26 @@
                     function(data) {
                         // rebuild list of categories in category default pricing tab
                         if (data.success && data.prices) {
+                            $o.categoriesList.html('');
                             data.prices.forEach(function(category) {
                                 var price = parseFloat(category.category_price).toFixed(2) + ' ' + lpVars.currency;
-                                categoriesList +=   '<li data-category="' + category.category_id + '" ' +
-                                                        'class="lp_price-type-categorized__item">' +
-                                                        '<a href="#" ' +
-                                                                'data-price="' + category.category_price + '" ' +
-                                                                'data-revenue-model="' + category.revenue_model + '">' +
-                                                            '<span>' + price + '</span>' +
-                                                            category.category_name +
-                                                        '</a>' +
-                                                    '</li>';
+
+                                $o.categoriesList.append(
+                                    $('<li>', {
+                                        'data-category': category.category_id,
+                                        'class': 'lp_price-type-categorized__item'
+                                    })
+                                        .append($('<a>', {
+                                                'href': '#',
+                                                'data-price': category.category_price,
+                                                'data-revenue-model': category.revenue_model
+                                            })
+                                                .append($('<span>')
+                                                    .html(price))
+                                                .append(category.category_name)
+                                        )
+                                );
                             });
-                            $o.categoriesList.html(categoriesList);
 
                             if (data.prices.length) {
                                 $o.categoryPriceButton.removeClass($o.disabled).removeClass($o.selected);
@@ -512,15 +519,15 @@
 
                             if (data.values.length === 4) {
                                 dynamicPricingWidget
-                                .set_data(data.values)
-                                .setPrice(minPrice, maxPrice, lpVars.globalDefaultPrice)
-                                .plot();
+                                    .set_data(data.values)
+                                    .setPrice(minPrice, maxPrice, lpVars.globalDefaultPrice)
+                                    .plot();
                             } else {
                                 dynamicPricingWidget
-                                .set_data(data.values)
-                                .setPrice(minPrice, maxPrice, lpVars.globalDefaultPrice)
-                                .interpolate('step-before')
-                                .plot();
+                                    .set_data(data.values)
+                                    .setPrice(minPrice, maxPrice, lpVars.globalDefaultPrice)
+                                    .interpolate('step-before')
+                                    .plot();
                             }
                         }
                     },
@@ -555,17 +562,17 @@
 
             // throttle the execution of a function by a given delay
             debounce = function(fn, delay) {
-              var timer;
-              return function() {
-                var context = this,
-                    args    = arguments;
+                var timer;
+                return function() {
+                    var context = this,
+                        args    = arguments;
 
-                clearTimeout(timer);
+                    clearTimeout(timer);
 
-                timer = setTimeout(function() {
-                  fn.apply(context, args);
-                }, delay);
-              };
+                    timer = setTimeout(function() {
+                        fn.apply(context, args);
+                    }, delay);
+                };
             },
 
             initializePage = function() {
