@@ -34,39 +34,41 @@
             bindEvents = function() {
                 // validate and save entered LaterPay API Keys
                 $o.apiKeyInput
-                .bind('input', function() {
-                    var $input = this;
-                    setTimeout(function() {
-                        validateAPIKey($input);
-                    }, 50);
-                });
+                    .bind('input', function() {
+                        var $input = this;
+                        setTimeout(function() {
+                            validateAPIKey($input);
+                            checkMerchantContractsButton();
+                        }, 50);
+                    });
 
                 // validate and save entered LaterPay Merchant IDs
                 $o.merchantIdInput
-                .bind('input', function() {
-                    var $input = this;
-                    setTimeout(function() {
-                        validateMerchantId($input);
-                    }, 50);
-                });
+                    .bind('input', function() {
+                        var $input = this;
+                        setTimeout(function() {
+                            validateMerchantId($input);
+                            checkMerchantContractsButton();
+                        }, 50);
+                    });
 
                 // validate and save entered LaterPay Merchant IDs
                 $o.region
-                .change(function() {
-                    changeRegion();
-                });
+                    .change(function() {
+                        changeRegion();
+                    });
 
                 // switch plugin between TEST and LIVE mode
                 $o.pluginModeToggle
-                .change(function() {
-                    togglePluginMode();
-                });
+                    .change(function() {
+                        togglePluginMode();
+                    });
 
                 // switch plugin visibility in TEST mode
                 $o.pluginVisibilityToggle
-                .change(function() {
-                    toggleVisibilityInTestMode();
-                });
+                    .change(function() {
+                        toggleVisibilityInTestMode();
+                    });
 
                 $o.showMerchantContractsButton.bind('click', function() {
                     $(this).attr('href', $(this).data('href-'+$o.region.val()));
@@ -197,9 +199,9 @@
                         },
                         'json'
                     )
-                    .done(function() {
-                        $o.requestSent = false;
-                    });
+                        .done(function() {
+                            $o.requestSent = false;
+                        });
                 }
             },
 
@@ -269,15 +271,28 @@
                 }
             },
 
+            liveKeysValid = function()
+            {
+                return $o.liveApiKey.val().length === 32 && $o.liveMerchantId.val().length === 22;
+            },
+
             hasNoValidCredentials = function() {
-                var invalidCreds = $o.liveApiKey.val().length !== 32 || $o.liveMerchantId.val().length !== 22;
                 // plugin is in live mode, but there are no valid Live API credentials
-                return $o.pluginModeToggle.prop('checked') && invalidCreds;
+                return $o.pluginModeToggle.prop('checked') && !liveKeysValid();
             },
 
             preventLeavingWithoutValidCredentials = function() {
                 if (hasNoValidCredentials()) {
                     return lpVars.i18nPreventUnload;
+                }
+            },
+
+            // toggle Request Live API Credentials button
+            checkMerchantContractsButton = function () {
+                if (liveKeysValid()) {
+                    $o.showMerchantContractsButton.fadeOut();
+                } else {
+                    $o.showMerchantContractsButton.fadeIn();
                 }
             },
 
