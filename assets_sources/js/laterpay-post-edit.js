@@ -312,7 +312,6 @@
                 var $selectedCategories = $('#categorychecklist :checkbox:checked'),
                     l                   = $selectedCategories.length,
                     categoryIds         = [],
-                    categoriesList      = '',
                     i, categoryId;
 
                 for (i = 0; i < l; i++) {
@@ -331,20 +330,19 @@
                     function(data) {
                         // rebuild list of categories in category default pricing tab
                         if (data.success && data.prices) {
+
+                            // remove previous list
                             $o.categoriesList.html('');
+
                             data.prices.forEach(function(category) {
                                 var price = parseFloat(category.category_price).toFixed(2) + ' ' + lpVars.currency;
 
                                 $o.categoriesList.append(
-                                    $('<li>', {
-                                        'data-category': category.category_id,
-                                        'class': 'lp_price-type-categorized__item'
-                                    })
-                                        .append($('<a>', {
-                                                'href': '#',
-                                                'data-price': category.category_price,
-                                                'data-revenue-model': category.revenue_model
-                                            })
+                                    $('<li class="lp_price-type-categorized__item">')
+                                        .data('category', category.category_id)
+                                        .append($('<a href="#">')
+                                            .data('price', category.category_price)
+                                            .data('revenue-model', category.revenue_model)
                                                 .append($('<span>')
                                                     .html(price))
                                                 .append(category.category_name)
@@ -425,7 +423,7 @@
                     lpVars.ajaxUrl,
                     {
                         action          : 'laterpay_reset_post_publication_date',
-                        post_id         : postId,
+                        post_id         : postId
                     },
                     function(data) {
                         if (data.success) {
