@@ -2,8 +2,10 @@
 
 namespace LaterPay\Core\Logger\Handler;
 
+use LaterPay\Core\Interfaces\ConfigInterface;
 use LaterPay\Core\Logger;
 use LaterPay\Core\Request;
+use LaterPay\Core\View;
 
 /**
  * LaterPay core logger handler WordPress.
@@ -21,10 +23,23 @@ class WordPress extends HandlerAbstract {
 	protected $records = array();
 
 	/**
+	 * @var View
+	 */
+	protected $view;
+
+	/**
+	 * @var ConfigInterface
+	 */
+	protected $config;
+
+	/**
 	 * @param integer $level The minimum logging level at which this handler will be triggered
 	 */
 	public function __construct( $level = Logger::DEBUG ) {
 		parent::__construct( $level );
+
+		$this->config = laterpay_get_plugin_config();
+		$this->view   = new View( $this->config );
 
 		add_action( 'wp_footer', array( $this, 'renderRecords' ), 1000 );
 		add_action( 'admin_footer', array( $this, 'renderRecords' ), 1000 );
@@ -116,9 +131,7 @@ class WordPress extends HandlerAbstract {
 			'formatted_records' => $this->getFormatter()->formatBatch( $this->records ),
 		);
 
-		$this->assign( 'laterpay_records', $view_args );
-
-		echo $this->getTextView( 'backend/logger/wordpress-handler-records' );
+		$this->view->render( 'admin/logger/wordpress-handler-records', array( 'laterpay_records' => $view_args ) );
 	}
 
 	/**

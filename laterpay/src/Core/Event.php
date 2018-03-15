@@ -2,6 +2,7 @@
 
 namespace LaterPay\Core;
 
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Helper\Strings;
 
 /**
@@ -11,7 +12,7 @@ use LaterPay\Helper\Strings;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Event {
+class Event implements EventInterface {
 
 	/**
 	 *

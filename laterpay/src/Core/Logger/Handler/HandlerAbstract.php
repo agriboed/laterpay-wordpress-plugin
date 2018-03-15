@@ -14,7 +14,7 @@ use LaterPay\Core\Logger\Formatter\FormatterInterface;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-abstract class HandlerAbstract extends View implements HandlerInterface {
+abstract class HandlerAbstract implements HandlerInterface {
 
 	/**
 	 * @var \LaterPay\Core\Logger\Formatter\FormatterInterface
@@ -37,7 +37,6 @@ abstract class HandlerAbstract extends View implements HandlerInterface {
 	 */
 	public function __construct( $level = Logger::DEBUG ) {
 		$this->level = $level;
-		parent::__construct();
 	}
 
 	/**

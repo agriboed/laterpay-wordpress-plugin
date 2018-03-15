@@ -94,6 +94,16 @@ class Advanced extends FormAbstract {
 		);
 
 		$this->setField(
+			'debugger_addresses',
+			array(
+				'validators' => array(),
+				'filters'    => array(
+					'to_string',
+				),
+			)
+		);
+
+		$this->setField(
 			'caching_compatibility',
 			array(
 				'validators' => array(),
@@ -107,7 +117,7 @@ class Advanced extends FormAbstract {
 			'enabled_post_types',
 			array(
 				'validators' => array(
-					'is_array'
+					'is_array',
 				),
 			)
 		);
@@ -117,8 +127,8 @@ class Advanced extends FormAbstract {
 			array(
 				'validators' => array(),
 				'filters'    => array(
-					'to_bool'
-				)
+					'to_bool',
+				),
 			)
 		);
 
@@ -127,8 +137,8 @@ class Advanced extends FormAbstract {
 			array(
 				'validators' => array(),
 				'filters'    => array(
-					'to_bool'
-				)
+					'to_bool',
+				),
 			)
 		);
 
@@ -137,8 +147,8 @@ class Advanced extends FormAbstract {
 			array(
 				'validators' => array(),
 				'filters'    => array(
-					'to_int'
-				)
+					'to_int',
+				),
 			)
 		);
 
@@ -147,8 +157,8 @@ class Advanced extends FormAbstract {
 			array(
 				'validators' => array(),
 				'filters'    => array(
-					'to_int'
-				)
+					'to_int',
+				),
 			)
 		);
 
@@ -157,8 +167,8 @@ class Advanced extends FormAbstract {
 			array(
 				'validators' => array(),
 				'filters'    => array(
-					'to_int'
-				)
+					'to_int',
+				),
 			)
 		);
 
@@ -167,8 +177,8 @@ class Advanced extends FormAbstract {
 			array(
 				'validators' => array(),
 				'filters'    => array(
-					'to_int'
-				)
+					'to_int',
+				),
 			)
 		);
 
@@ -177,8 +187,8 @@ class Advanced extends FormAbstract {
 			array(
 				'validators' => array(),
 				'filters'    => array(
-					'to_int'
-				)
+					'to_int',
+				),
 			)
 		);
 
@@ -186,7 +196,7 @@ class Advanced extends FormAbstract {
 			'unlimited_access',
 			array(
 				'validators' => array(
-					'is_array'
+					'is_array',
 				),
 			)
 		);
@@ -195,7 +205,7 @@ class Advanced extends FormAbstract {
 			'api_enabled_on_homepage',
 			array(
 				'filters' => array(
-					'to_bool'
+					'to_bool',
 				),
 			)
 		);
@@ -207,8 +217,8 @@ class Advanced extends FormAbstract {
 					'in_array' => array( 0, 1, 2 ),
 				),
 				'filters'    => array(
-					'to_int'
-				)
+					'to_int',
+				),
 			)
 		);
 
@@ -216,8 +226,8 @@ class Advanced extends FormAbstract {
 			'pro_merchant',
 			array(
 				'filters' => array(
-					'to_bool'
-				)
+					'to_bool',
+				),
 			)
 		);
 	}
