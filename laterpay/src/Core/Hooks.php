@@ -114,7 +114,7 @@ class Hooks {
 		add_filter(
 			'wp_get_attachment_url', array(
 				$this,
-			static::$filterPrefix . 'laterpay_attachment_url',
+				static::$filterPrefix . 'laterpay_get_attachment_url',
 			), 10, 2
 		);
 		add_filter( 'prepend_attachment', array( $this, static::$filterPrefix . 'laterpay_attachment_prepend' ) );
