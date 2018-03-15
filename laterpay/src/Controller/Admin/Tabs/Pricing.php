@@ -351,7 +351,7 @@ class Pricing extends TabAbstract {
 			$args['access_dest'] = $category->name;
 		}
 
-		return $this->getTextView( 'frontend/partials/time-pass', array( '_' => $args ) );
+		return $this->getTextView( 'front/partials/time-pass', array( '_' => $args ) );
 	}
 
 	/**
@@ -424,7 +424,7 @@ class Pricing extends TabAbstract {
 			$args['access_dest'] = $category->name;
 		}
 
-		return $this->getTextView( 'frontend/partials/subscription', array( '_' => $args ) );
+		return $this->getTextView( 'front/partials/subscription', array( '_' => $args ) );
 	}
 
 	/**

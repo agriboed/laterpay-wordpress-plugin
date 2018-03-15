@@ -1,12 +1,12 @@
 <?php
 
-namespace LaterPay\Controller\Frontend;
+namespace LaterPay\Controller\Front;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event;
 use LaterPay\Helper\User;
 use LaterPay\Core\Request;
 use LaterPay\Helper\Pricing;
-use LaterPay\Controller\Base;
 use LaterPay\Form\PreviewModeForm;
 use LaterPay\Form\PreviewModeVisibility;
 use LaterPay\Core\Exception\FormValidation;
@@ -18,7 +18,7 @@ use LaterPay\Core\Exception\FormValidation;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class PreviewMode extends Base {
+class PreviewMode extends ControllerAbstract {
 
 	/**
 	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -81,13 +81,14 @@ class PreviewMode extends Base {
 		}
 
 		// don't collect statistics data, if the current post_type is not an allowed post_type
-		$allowed_post_types = $this->config->get( 'content.enabled_post_types' );
-		if ( ! in_array( $post->post_type, $allowed_post_types, true ) ) {
+		$allowedPostTypes = $this->config->get( 'content.enabled_post_types' );
+
+		if ( ! in_array( $post->post_type, $allowedPostTypes, true ) ) {
 			$this->logger->warning(
 				__METHOD__ . ' - post is not purchasable',
 				array(
 					'post'               => $post,
-					'allowed_post_types' => $allowed_post_types,
+					'allowed_post_types' => $allowedPostTypes,
 				)
 			);
 
@@ -113,9 +114,7 @@ class PreviewMode extends Base {
 	 * Callback to add the statistics placeholder to the footer.
 	 *
 	 * @wp-hook wp_footer
-	 *
 	 * @param Event $event
-	 *
 	 * @return void
 	 */
 	public function modifyFooter( Event $event ) {
@@ -137,7 +136,7 @@ class PreviewMode extends Base {
 			return;
 		}
 
-		$footer  = $event->getResult();
+		$footer = $event->getResult();
 		$footer .= '<div id="lp_js_previewModePlaceholder"></div>';
 		$event->setResult( $footer );
 	}
@@ -146,11 +145,8 @@ class PreviewMode extends Base {
 	 * Ajax callback to toggle the preview mode of the post.
 	 *
 	 * @wp-hook wp_ajax_laterpay_post_toggle_preview
-	 *
 	 * @param Event $event
-	 *
 	 * @throws \LaterPay\Core\Exception\FormValidation
-	 *
 	 * @return void
 	 */
 	public function ajaxTogglePreview( Event $event ) {
@@ -215,21 +211,19 @@ class PreviewMode extends Base {
 	 * Ajax callback to render the preview mode pane.
 	 *
 	 * @wp-hook wp_ajax_laterpay_post_preview_mode_render
-	 *
 	 * @param Event $event
-	 *
 	 * @return void
 	 */
 	public function ajaxRenderTabPreviewMode( Event $event ) {
-		$preview_form = new \LaterPay\Form\PreviewMode( Request::get() );
+		$previewModeForm = new \LaterPay\Form\PreviewMode( Request::get() );
 
-		if ( ! $preview_form->isValid() ) {
+		if ( ! $previewModeForm->isValid() ) {
 			$event->stopPropagation();
 
 			return;
 		}
 
-		$post_id = $preview_form->getFieldValue( 'post_id' );
+		$post_id = $previewModeForm->getFieldValue( 'post_id' );
 		if ( ! User::can( 'laterpay_has_full_access_to_content', $post_id ) ) {
 			$event->stopPropagation();
 
@@ -237,34 +231,32 @@ class PreviewMode extends Base {
 		}
 
 		$post = get_post( $post_id );
+
 		// assign variables
-		$view_args = array(
+		$args = array(
 			'hide_preview_mode_pane'  => User::previewModePaneIsHidden(),
 			'preview_post_as_visitor' => (bool) User::previewPostAsVisitor( $post ),
+			'_wpnonce'                => wp_create_nonce( 'laterpay_form' )
 		);
-		$this->assign( 'laterpay', $view_args );
 
-		$event->setResult( $this->getTextView( 'frontend/partials/post/select-preview-mode-tab' ) );
+		$event->setResult( $this->getTextView( 'front/partials/post/select-preview-mode-tab', array( '_' => $args ) ) );
 	}
 
 	/**
 	 * Ajax callback to toggle the visibility of the statistics pane.
 	 *
 	 * @wp-hook wp_ajax_laterpay_post_statistic_visibility
-	 *
 	 * @param Event $event
-	 *
 	 * @throws \LaterPay\Core\Exception\FormValidation
-	 *
 	 * @return void
 	 */
 	public function ajaxToggleVisibility( Event $event ) {
-		$preview_mode_visibility_form = new PreviewModeVisibility( Request::post() );
+		$previewModeVisibilityForm = new PreviewModeVisibility( Request::post() );
 
-		if ( ! $preview_mode_visibility_form->isValid() ) {
+		if ( ! $previewModeVisibilityForm->isValid() ) {
 			throw new FormValidation(
-				get_class( $preview_mode_visibility_form ),
-				$preview_mode_visibility_form->getErrors()
+				get_class( $previewModeVisibilityForm ),
+				$previewModeVisibilityForm->getErrors()
 			);
 		}
 
@@ -276,8 +268,8 @@ class PreviewMode extends Base {
 
 		// check the admin referer
 		if ( ! check_admin_referer( 'laterpay_form' ) ||
-			 ! is_a( $current_user, 'WP_User' ) ||
-			 ! User::can( 'laterpay_has_full_access_to_content', null, false )
+		     ! is_a( $current_user, 'WP_User' ) ||
+		     ! User::can( 'laterpay_has_full_access_to_content', null, false )
 		) {
 			$event->setResult( $error );
 
@@ -286,7 +278,7 @@ class PreviewMode extends Base {
 
 		$result = User::updateUserMeta(
 			'laterpay_hide_preview_mode_pane',
-			$preview_mode_visibility_form->getFieldValue( 'hide_preview_mode_pane' )
+			$previewModeVisibilityForm->getFieldValue( 'hide_preview_mode_pane' )
 		);
 
 		if ( ! $result ) {

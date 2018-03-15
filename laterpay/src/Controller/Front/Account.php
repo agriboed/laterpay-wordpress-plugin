@@ -1,10 +1,10 @@
 <?php
 
-namespace LaterPay\Controller\Frontend;
+namespace LaterPay\Controller\Front;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event;
 use LaterPay\Helper\API;
-use LaterPay\Controller\Base;
 
 /**
  * LaterPay account controller.
@@ -13,7 +13,7 @@ use LaterPay\Controller\Base;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Account extends Base {
+class Account extends ControllerAbstract {
 
 	/**
 	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -29,7 +29,7 @@ class Account extends Base {
 			),
 			'laterpay_enqueue_scripts' => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
-				array( 'addFrontendScripts' ),
+				array( 'registerAssets' ),
 			),
 		);
 	}
@@ -39,11 +39,8 @@ class Account extends Base {
 	 * /controls/links.
 	 *
 	 * @see https://laterpay.net/developers/docs/inpage-api#GET/controls/links
-	 *
 	 * @wp-hook laterpay_account_links
-	 *
 	 * @param $event Event
-	 *
 	 * @return void
 	 */
 	public function renderAccountLinks( Event $event ) {
@@ -56,7 +53,7 @@ class Account extends Base {
 
 		// add iframe placeholder
 		$event->setEchoOutput( true );
-		$event->setResult( $this->getTextView( 'frontend/partials/widget/account-links' ) );
+		$event->setResult( $this->getTextView( 'front/partials/widget/account-links' ) );
 
 		wp_enqueue_script( 'laterpay-yui' );
 		wp_enqueue_script( 'laterpay-account-links' );
@@ -78,10 +75,9 @@ class Account extends Base {
 	 * Load LaterPay Javascript libraries.
 	 *
 	 * @wp-hook wp_enqueue_scripts
-	 *
 	 * @return void
 	 */
-	public function addFrontendScripts() {
+	public function registerAssets() {
 		wp_register_script(
 			'laterpay-account-links',
 			$this->config->get( 'js_url' ) . 'laterpay-account-links.js',
@@ -93,7 +89,6 @@ class Account extends Base {
 
 	/**
 	 * @param Event $event
-	 *
 	 * @return void
 	 */
 	public function isPageSecure( Event $event ) {

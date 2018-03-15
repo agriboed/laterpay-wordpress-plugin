@@ -1,13 +1,13 @@
 <?php
 
-namespace LaterPay\Controller\Frontend;
+namespace LaterPay\Controller\Front;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event;
 use LaterPay\Helper\Post;
 use LaterPay\Core\Request;
 use LaterPay\Helper\Pricing;
 use LaterPay\Helper\Voucher;
-use LaterPay\Controller\Base;
 use LaterPay\Helper\TimePass;
 use LaterPay\Helper\Attachment;
 use LaterPay\Core\Exception\PostNotFound;
@@ -20,7 +20,7 @@ use LaterPay\Core\Exception\InvalidIncomingData;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Shortcode extends Base {
+class Shortcode extends ControllerAbstract {
 
 	/**
 	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -85,9 +85,7 @@ class Shortcode extends Base {
 	 * teaser_image_path="/uploads/images/concert-video-still.jpg"]
 	 *
 	 * @param Event $event
-	 *
 	 * @throws \Exception
-	 *
 	 * @return void
 	 */
 	public function renderPremiumDownloadBox( Event $event ) {
@@ -106,15 +104,15 @@ class Shortcode extends Base {
 		);
 
 		$error = null;
-		$post = null;
+		$post  = null;
 
 		if ( $a['target_post_id'] !== '' ) {
 			$post = get_post( absint( $a['target_post_id'] ) );
 		}
 
 		if ( $post === null && $a['target_post_title'] !== '' ) {
-			$post_id = post_exists( $a['target_post_title'] );
-			$post    = get_post( $post_id );
+			$postID = post_exists( $a['target_post_title'] );
+			$post    = get_post( $postID );
 		}
 
 		// target_post_title was provided, but didn't work (no invalid target_post_id was provided)
@@ -128,46 +126,45 @@ class Shortcode extends Base {
 		}
 
 		if ( null !== $error ) {
-			$view_args = array(
+			$args = array(
 				'error' => $error,
 			);
 
-			$this->assign( 'laterpay', $view_args );
-			$event->setResult( $this->getTextView( 'frontend/partials/shortcode/error') );
+			$event->setResult( $this->getTextView( 'front/partials/shortcode/error', array( 'laterpay' => $args ) ) );
 
 			return;
 		}
 
 		// check, if page has a custom post type
-		$custom_post_types   = get_post_types( array( '_builtin' => false ) );
-		$custom_types        = array_keys( $custom_post_types );
-		$is_custom_post_type = ! empty( $custom_types ) && in_array( $post->post_type, $custom_types, true );
+		$customPostTypes   = get_post_types( array( '_builtin' => false ) );
+		$customTypes        = array_keys( $customPostTypes );
+		$isCustomPostType = ! empty( $customTypes ) && in_array( $post->post_type, $customTypes, true );
 
 		// get the URL of the target page
-		if ( $is_custom_post_type ) {
+		if ( $isCustomPostType ) {
 			// getting the permalink of a custom post type requires get_post_permalink instead of get_permalink
-			$page_url = get_post_permalink( $post->ID );
+			$pageUrl = get_post_permalink( $post->ID );
 		} else {
-			$page_url = get_permalink( $post->ID );
+			$pageUrl = get_permalink( $post->ID );
 		}
 
-		$content_types = array( 'file', 'gallery', 'audio', 'video', 'text' );
+		$contentTypes = array( 'file', 'gallery', 'audio', 'video', 'text' );
 
 		if ( $a['content_type'] === '' ) {
 			// determine $content_type from MIME type of files attached to post
-			$page_mime_type = get_post_mime_type( $post->ID );
+			$pageMimeType = get_post_mime_type( $post->ID );
 
-			switch ( $page_mime_type ) {
+			switch ( $pageMimeType ) {
 				case 'application/zip':
 				case 'application/x-rar-compressed':
 				case 'application/pdf':
-					$content_type = 'file';
+					$contentType = 'file';
 					break;
 
 				case 'image/jpeg':
 				case 'image/png':
 				case 'image/gif':
-					$content_type = 'gallery';
+					$contentType = 'gallery';
 					break;
 
 				case 'audio/vnd.wav':
@@ -176,35 +173,34 @@ class Shortcode extends Base {
 				case 'audio/ogg':
 				case 'audio/aac':
 				case 'audio/aacp':
-					$content_type = 'audio';
+					$contentType = 'audio';
 					break;
 
 				case 'video/mpeg':
 				case 'video/mp4':
 				case 'video/quicktime':
-					$content_type = 'video';
+					$contentType = 'video';
 					break;
 
 				default:
-					$content_type = 'text';
+					$contentType = 'text';
 			}
-		} elseif ( in_array( $a['content_type'], $content_types, true ) ) {
-			$content_type = $a['content_type'];
+		} elseif ( in_array( $a['content_type'], $contentTypes, true ) ) {
+			$contentType = $a['content_type'];
 		} else {
-			$content_type = 'text';
+			$contentType = 'text';
 		}
 
-		$view_args = array(
-			'post_id' => $post->ID,
-			'image_path' => $a['teaser_image_path'],
-			'content_type' => $content_type,
-			'page_url' => $page_url,
-			'heading' => $a['heading_text'],
-			'description' => $a['description_text'],
+		$args = array(
+			'post_id'      => $post->ID,
+			'image_path'   => $a['teaser_image_path'],
+			'content_type' => $contentType,
+			'page_url'     => $pageUrl,
+			'heading'      => $a['heading_text'],
+			'description'  => $a['description_text'],
 		);
 
-		$this->assign( 'laterpay', $view_args );
-		$event->setResult( $this->getTextView('frontend/partials/shortcode/premium-box') );
+		$event->setResult( $this->getTextView( 'front/partials/shortcode/premium-box', array( '_' => $args ) ) );
 	}
 
 	/**
@@ -232,13 +228,10 @@ class Shortcode extends Base {
 	 * Get premium shortcode link
 	 *
 	 * @hook wp_ajax_laterpay_get_premium_content_url, wp_ajax_nopriv_laterpay_get_premium_content_url
-	 *
 	 * @param Event $event
-	 *
 	 * @throws \LaterPay\Core\Exception\InvalidIncomingData
 	 * @throws \LaterPay\Core\Exception\PostNotFound
 	 * @throws \Exception
-	 *
 	 * @return void
 	 */
 	public function ajaxGetPremiumShortcodeLink( Event $event ) {
@@ -263,62 +256,62 @@ class Shortcode extends Base {
 			throw new PostNotFound( $current_post_id );
 		}
 
-		$ids    = array_map( 'sanitize_text_field', Request::get( 'ids' ) );
+		$IDs    = array_map( 'sanitize_text_field', Request::get( 'ids' ) );
 		$types  = array_map( 'sanitize_text_field', Request::get( 'types' ) );
 		$result = array();
 
-		foreach ( $ids as $key => $id ) {
+		foreach ( $IDs as $key => $id ) {
 			$post = get_post( $id );
 			if ( ! $post ) {
 				continue;
 			}
 
-			$is_purchasable = Pricing::isPurchasable( $id );
-			$content_type   = $types[ $key ];
-			$is_attachment  = $post->post_type === 'attachment';
+			$isPurchasable = Pricing::isPurchasable( $id );
+			$contentType   = $types[ $key ];
+			$isAttachment  = $post->post_type === 'attachment';
 
-			$access = Post::hasAccessToPost( $post, $is_attachment, $current_post_id );
+			$access = Post::hasAccessToPost( $post, $isAttachment, $current_post_id );
 
-			if ( $access || ! $is_purchasable ) {
+			if ( $access || ! $isPurchasable ) {
 				// the user has already purchased the item
-				switch ( $content_type ) {
+				switch ( $contentType ) {
 					case 'file':
-						$button_label = __( 'Download now', 'laterpay' );
+						$buttonLabel = __( 'Download now', 'laterpay' );
 						break;
 
 					case 'video':
 					case 'gallery':
-						$button_label = __( 'Watch now', 'laterpay' );
+						$buttonLabel = __( 'Watch now', 'laterpay' );
 						break;
 
 					case 'music':
 					case 'audio':
-						$button_label = __( 'Listen now', 'laterpay' );
+						$buttonLabel = __( 'Listen now', 'laterpay' );
 						break;
 
 					default:
-						$button_label = __( 'Read now', 'laterpay' );
+						$buttonLabel = __( 'Read now', 'laterpay' );
 						break;
 				}
 
-				if ( $is_attachment && $is_purchasable ) {
+				if ( $isAttachment && $isPurchasable ) {
 					// render link to purchased attachment
-					$button_page_url = Attachment::getEncryptedURL( $post->ID );
+					$buttonPageUrl = Attachment::getEncryptedURL( $post->ID );
 				} else {
-					if ( $is_attachment ) {
+					if ( $isAttachment ) {
 						// render link to attachment
-						$button_page_url = wp_get_attachment_url( $post->ID );
+						$buttonPageUrl = wp_get_attachment_url( $post->ID );
 					} else {
 						// render link to purchased post
-						$button_page_url = get_permalink( $post );
+						$buttonPageUrl = get_permalink( $post );
 					}
 				}
 
-				$html_button = '<a href="' . esc_url($button_page_url) . '" ' .
+				$htmlButton = '<a href="' . esc_url( $buttonPageUrl ) . '" ' .
 							   'class="lp_js_purchaseLink lp_purchase-button lp_purchase-button--shortcode" ' .
 							   'rel="prefetch" ' .
 							   'data-icon="b">' .
-							   esc_html( $button_label ) .
+							   esc_html( $buttonLabel ) .
 							   '</a>';
 			} else {
 				// the user has not purchased the item yet
@@ -332,17 +325,17 @@ class Shortcode extends Base {
 					)
 				);
 				laterpay_event_dispatcher()->dispatch( 'laterpay_purchase_button', $button_event );
-				$html_button = $button_event->getResult();
-				if ( empty( $html_button ) ) {
-					$view_args = array(
+				$htmlButton = $button_event->getResult();
+				if ( empty( $htmlButton ) ) {
+					$args = array(
 						'url' => get_permalink( $post->ID ),
 					);
-					$this->assign( 'laterpay', $view_args );
-					$html_button = $this->getTextView( 'frontend/partials/post/shortcode-purchase-link' );
+
+					$htmlButton = $this->getTextView( 'front/partials/post/shortcode-purchase-link', array( '_' => $args ) );
 				}
 			}
 
-			$result[ $id ] = $html_button;
+			$result[ $id ] = $htmlButton;
 		}
 
 		$event->setResult(
@@ -358,7 +351,6 @@ class Shortcode extends Base {
 	 *
 	 * @param array $time_passes list of time passes
 	 * @param null $link
-	 *
 	 * @return array
 	 */
 	protected function addFreeCodesToPasses( $time_passes, $link = null ) {
@@ -398,7 +390,6 @@ class Shortcode extends Base {
 	 * [laterpay_account_links css="http://assets.yoursite.com/your-styles.css" forcelang="de"]
 	 *
 	 * @param Event $event
-	 *
 	 * @return void
 	 */
 	public function renderAccountLinks( Event $event ) {

@@ -19,7 +19,7 @@ use LaterPay\Model\CategoryPrice;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Install extends Base {
+class Install extends ControllerAbstract {
 
 	/**
 	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -104,7 +104,7 @@ class Install extends Base {
 			// suppress 'Plugin activated' notice
 			unset( $GLOBALS['_GET']['activate'] );
 
-			deactivate_plugins( $this->config->plugin_base_name );
+			deactivate_plugins( $this->config->get( 'plugin_base_name' ) );
 			$notices[] = __(
 				'The LaterPay plugin could not be installed. Please fix the reported issues and try again.',
 				'laterpay'
@@ -122,7 +122,7 @@ class Install extends Base {
 	public function installUpdates() {
 		$current_version = get_option( 'laterpay_plugin_version' );
 
-		if ( version_compare( $current_version, $this->config->version, '!=' ) ) {
+		if ( version_compare( $current_version, $this->config->get( 'version' ), '!=' ) ) {
 			$this->doInstallation();
 		}
 	}
@@ -768,7 +768,6 @@ class Install extends Base {
 		add_option( 'laterpay_debugger_enabled', defined( 'WP_DEBUG' ) && WP_DEBUG );
 		add_option( 'laterpay_debugger_addresses', '127.0.0.1' );
 		add_option( 'laterpay_api_fallback_behavior', 0 );
-		add_option( 'laterpay_api_enabled_on_homepage', 1 );
 		add_option( 'laterpay_only_time_pass_purchases_allowed', 0 );
 
 		// keep the plugin version up to date

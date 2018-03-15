@@ -1,10 +1,10 @@
 <?php
 
-namespace LaterPay\Controller\Frontend;
+namespace LaterPay\Controller\Front;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Helper\API;
 use LaterPay\Core\Event;
-use LaterPay\Controller\Base;
 
 /**
  * LaterPay invoice controller.
@@ -13,7 +13,7 @@ use LaterPay\Controller\Base;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Invoice extends Base {
+class Invoice extends ControllerAbstract {
 
 	/**
 	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -38,14 +38,12 @@ class Invoice extends Base {
 	 * theme that can be freely positioned.
 	 *
 	 * @wp-hook laterpay_invoice_indicator
-	 *
 	 * @param Event $event
-	 *
 	 * @return void
 	 */
 	public function theInvoiceIndicator( Event $event ) {
 		$event->setEchoOutput( true );
-		$event->setResult( $this->getTextView( 'frontend/partials/widget/invoice-indicator' ) );
+		$event->setResult( $this->getTextView( 'front/partials/widget/invoice-indicator' ) );
 
 		wp_enqueue_script( 'laterpay-yui' );
 		wp_enqueue_script( 'laterpay-invoice-indicator' );
@@ -55,7 +53,6 @@ class Invoice extends Base {
 	 * Load LaterPay Javascript libraries.
 	 *
 	 * @wp-hook wp_enqueue_scripts
-	 *
 	 * @return void
 	 */
 	public function addFrontendScripts() {
