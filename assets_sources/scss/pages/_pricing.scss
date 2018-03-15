@@ -3,6 +3,7 @@
 // global / category default prices ------------------------------------------------------------------------------------
 .lp_table--form {
     margin: 0;
+    width: 100%;
 
     th,
     td {
@@ -173,5 +174,5 @@ select.lp_is-disabled {
 }
 
 .select2-input {
-    width: 200px;
+    min-width: 200px;
 }

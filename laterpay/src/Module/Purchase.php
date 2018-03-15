@@ -2,6 +2,7 @@
 
 namespace LaterPay\Module;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Helper\API;
 use LaterPay\Core\Event;
 use LaterPay\Helper\View;
@@ -21,7 +22,7 @@ use LaterPay\Core\Event\SubscriberInterface;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
+class Purchase extends ControllerAbstract {
 
 	/**
 	 * @see SubscriberInterface::getSharedEvents()
@@ -101,58 +102,59 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 			$post = get_post();
 		}
 
-		$current_post_id = null;
+		$currentPostID = null;
+
 		if ( $event->hasArgument( 'current_post' ) ) {
-			$current_post_id = $event->getArgument( 'current_post' );
+			$currentPostID = $event->getArgument( 'current_post' );
 		}
 
-		$back_url    = get_permalink( $current_post_id ?: $post->ID );
-		$content_ids = Post::getContentIDs( $post->ID );
-		$identify_url = API::getIdentifyURL( $back_url, $content_ids );
+		$backUrl     = get_permalink( $currentPostID ?: $post->ID );
+		$contentIDs  = Post::getContentIDs( $post->ID );
+		$identifyUrl = API::getIdentifyURL( $backUrl, $contentIDs );
 
-		$price = Pricing::getPostPrice( $post->ID );
+		$price    = Pricing::getPostPrice( $post->ID );
 		$currency = $this->config->get( 'currency.code' );
 
 		$link = Post::getLaterpayPurchaseLink(
 			$post->ID,
-			$current_post_id
+			$currentPostID
 		);
 
-		$link_text = sprintf(
-			__( '%1$s<small class="lp_purchase-link__currency">%2$s</small>',
-				'laterpay' ),
+		$linkText = sprintf(
+			__(
+				'%1$s<small class="lp_purchase-link__currency">%2$s</small>',
+				'laterpay'
+			),
 			View::formatNumber( $price ),
 			$currency
 		);
 
-		$view_args = array_merge(
+		$args = array_merge(
 			array(
 				'post_id'           => $post->ID,
 				'link'              => $link,
-				'link_text'         => $link_text,
+				'link_text'         => $linkText,
 				'currency'          => $currency,
 				'price'             => $price,
 				'notification_text' => __(
 					'I already bought this',
 					'laterpay'
 				),
-				'identify_url'      => $identify_url,
+				'identify_url'      => $identifyUrl,
 			),
 			$event->getArguments()
 		);
 
-		$this->assign( 'laterpay', $view_args );
-		$html = $this->getTextView( 'frontend/partials/widget/purchase-button' );
+		$html = $this->getTextView( 'front/partials/widget/purchase-button', array( '_' => $args ) );
 
 		$event->setResult( $html )
-		      ->setArguments( $view_args );
+			  ->setArguments( $args );
 	}
 
 	/**
 	 * Renders LaterPay explanatory overlay
 	 *
 	 * @param Event $event
-	 *
 	 * @return void
 	 */
 	public function onExplanatoryOverlay( Event $event ) {
@@ -173,8 +175,7 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 			'data'   => (array) $overlay_content_event->getResult(),
 		);
 
-		$this->assign( 'overlay', $view_args );
-		$html = $this->getTextView( 'frontend/partials/widget/explanatory-overlay' );
+		$html = $this->getTextView( 'front/partials/widget/explanatory-overlay', array( 'overlay' => $view_args ) );
 
 		$event->setResult( $html );
 	}
@@ -183,7 +184,6 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 	 * Renders LaterPay purchase overlay
 	 *
 	 * @param Event $event
-	 *
 	 * @return void
 	 */
 	public function onPurchaseOverlay( Event $event ) {
@@ -212,7 +212,7 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 				break;
 		}
 
-		$view_args = array(
+		$args = array(
 			'title'             => \LaterPay\Helper\Appearance::getCurrentOptions( 'header_title' ),
 			'currency'          => $this->config->get( 'currency.code' ),
 			'teaser'            => $event->getArgument( 'teaser' ),
@@ -226,8 +226,7 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 			'is_preview'        => (int) $event->getArgument( 'is_preview' ),
 		);
 
-		$this->assign( 'overlay', $view_args );
-		$html = $this->getTextView( 'frontend/partials/widget/purchase-overlay' );
+		$html = $this->getTextView( 'front/partials/widget/purchase-overlay', array( '_' => $args ) );
 
 		$event->setResult( View::removeExtraSpaces( $html ) );
 	}
@@ -236,7 +235,6 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 	 * Renders LaterPay purchase link
 	 *
 	 * @param Event $event
-	 *
 	 * @return void
 	 */
 	public function onPurchaseLink( Event $event ) {
@@ -256,15 +254,19 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 
 		if ( 'sis' === $revenue_model ) :
 			$link_text = sprintf(
-				__( 'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small>',
-					'laterpay' ),
+				__(
+					'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small>',
+					'laterpay'
+				),
 				View::formatNumber( $price ),
 				$currency
 			);
 		else :
 			$link_text = sprintf(
-				__( 'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small> and pay later',
-					'laterpay' ),
+				__(
+					'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small> and pay later',
+					'laterpay'
+				),
 				View::formatNumber( $price ),
 				$currency
 			);
@@ -277,16 +279,15 @@ class Purchase extends \LaterPay\Core\View implements SubscriberInterface {
 				'price'         => $price,
 				'revenue_model' => $revenue_model,
 				'link'          => $link,
-				'link_text'     => $link_text
+				'link_text'     => $link_text,
 			),
 			$event->getArguments()
 		);
 
-		$this->assign( 'laterpay', $view_args );
-		$html = $this->getTextView( 'frontend/partials/widget/purchase-link' );
+		$html = $this->getTextView( 'front/partials/widget/purchase-link', array( 'laterpay' => $view_args ) );
 
 		$event->setResult( $html )
-		      ->setArguments( $view_args );
+			  ->setArguments( $view_args );
 	}
 
 	/**

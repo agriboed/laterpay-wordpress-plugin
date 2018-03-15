@@ -2,12 +2,13 @@
 
 namespace LaterPay\Module;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event;
 use LaterPay\Helper\View;
 use LaterPay\Helper\User;
 use LaterPay\Helper\Post;
+use LaterPay\Helper\TimePass;
 use LaterPay\Helper\Subscription;
-use LaterPay\Core\Event\SubscriberInterface;
 
 /**
  * LaterPay Subscriptions class
@@ -16,14 +17,7 @@ use LaterPay\Core\Event\SubscriberInterface;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Subscriptions extends \LaterPay\Core\View implements SubscriberInterface {
-
-	/**
-	 * @see SubscriberInterface::getSharedEvents()
-	 */
-	public static function getSharedEvents() {
-		return array();
-	}
+class Subscriptions extends ControllerAbstract {
 
 	/**
 	 * @see SubscriberInterface::getSubscribedEvents()
@@ -45,6 +39,7 @@ class Subscriptions extends \LaterPay\Core\View implements SubscriberInterface {
 	 * @param Event $event
 	 *
 	 * @return void
+	 * @throws \InvalidArgumentException
 	 */
 	public function renderSubscriptionsList( Event $event ) {
 		if ( $event->hasArgument( 'post' ) ) {
@@ -54,20 +49,24 @@ class Subscriptions extends \LaterPay\Core\View implements SubscriberInterface {
 		}
 
 		// is homepage
-		$is_homepage = is_front_page() && is_home();
+		$isHomepage = is_front_page() && is_home();
 
-		$view_args = array(
-			'subscriptions' => Subscription::getSubscriptionsListByPostID(
-				! $is_homepage && ! empty( $post ) ? $post->ID : null,
-				$this->getPurchasedSubscriptions(),
-				true
-			),
+		$subscriptions = Subscription::getSubscriptionsListByPostID(
+			! $isHomepage && ! empty( $post ) ? $post->ID : null,
+			$this->getPurchasedSubscriptions(),
+			true
 		);
 
-		$this->assign( 'laterpay_sub', $view_args );
+		foreach ( $subscriptions as $key => $subscription ) {
+			$subscriptions[ $key ]['content'] = $this->renderSubscription( $subscription );
+		}
+
+		$args = array(
+			'subscriptions' => $subscriptions,
+		);
 
 		// prepare subscriptions layout
-		$subscriptions = View::removeExtraSpaces( $this->getTextView( 'frontend/partials/widget/subscriptions' ) );
+		$subscriptions = View::removeExtraSpaces( $this->getTextView( 'front/partials/widget/subscriptions', array( '_' => $args ) ) );
 
 		$event->setArgument( 'subscriptions', $subscriptions );
 	}
@@ -78,14 +77,17 @@ class Subscriptions extends \LaterPay\Core\View implements SubscriberInterface {
 	 * @param array $args
 	 *
 	 * @return string
+	 * @throws \InvalidArgumentException
 	 */
 	public function renderSubscription( array $args = array() ) {
 		$defaults = array(
-			'id'          => 0,
-			'title'       => Subscription::getDefaultOptions( 'title' ),
-			'description' => Subscription::getDescription(),
-			'price'       => Subscription::getDefaultOptions( 'price' ),
-			'url'         => '',
+			'id'                      => 0,
+			'title'                   => Subscription::getDefaultOptions( 'title' ),
+			'description'             => Subscription::getDescription(),
+			'price'                   => Subscription::getDefaultOptions( 'price' ),
+			'url'                     => '',
+			'standard_currency'       => $this->config->get( 'currency.code' ),
+			'preview_post_as_visitor' => User::previewPostAsVisitor( get_post() ),
 		);
 
 		$args = array_merge( $defaults, $args );
@@ -94,16 +96,22 @@ class Subscriptions extends \LaterPay\Core\View implements SubscriberInterface {
 			$args['url'] = Subscription::getSubscriptionPurchaseLink( $args['id'] );
 		}
 
-		$args['preview_post_as_visitor'] = User::previewPostAsVisitor( get_post() );
+		$args['price_formatted'] = View::formatNumber( $args['price'] );
 
-		$this->assign( 'laterpay_subscription', $args );
-		$this->assign(
-			'laterpay', array(
-				'standard_currency' => $this->config->get( 'currency.code' ),
-			)
-		);
+		if ( absint( $args['duration'] ) > 1 ) {
+			$args['period'] = TimePass::getPeriodOptions( $args['period'], true );
+		}
 
-		return $this->getTextView( 'backend/partials/subscription' );
+		$args['access_type'] = TimePass::getAccessOptions( $args['access_to'] );
+		$args['access_dest'] = __( 'on this website', 'laterpay' );
+
+		$category = get_category( $args['access_category'] );
+
+		if ( (int) $args['access_to'] !== 0 ) {
+			$args['access_dest'] = $category->name;
+		}
+
+		return $this->getTextView( 'front/partials/subscription', array( '_' => $args ) );
 	}
 
 	/**

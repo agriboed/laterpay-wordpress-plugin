@@ -2,6 +2,7 @@
 
 namespace LaterPay\Module;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event;
 use LaterPay\Helper\View;
 use LaterPay\Helper\User;
@@ -14,7 +15,7 @@ use LaterPay\Core\Event\SubscriberInterface;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Appearance extends \LaterPay\Core\View implements SubscriberInterface {
+class Appearance extends ControllerAbstract {
 
 	/**
 	 * @see SubscriberInterface::getSharedEvents()
@@ -88,8 +89,9 @@ class Appearance extends \LaterPay\Core\View implements SubscriberInterface {
 			$event->stopPropagation();
 		}
 
-		$event->addArgument( 'attributes', array( 'data-preview-post-as-visitor' => $preview_post_as_visitor ) );
-		$event->setArgument( 'preview_post_as_visitor', $preview_post_as_visitor );
+		$event
+			->addArgument( 'attributes', array( 'data-preview-post-as-visitor' => $preview_post_as_visitor ) )
+			->setArgument( 'preview_post_as_visitor', $preview_post_as_visitor );
 	}
 
 	/**
@@ -231,7 +233,8 @@ class Appearance extends \LaterPay\Core\View implements SubscriberInterface {
 	 * @return void
 	 */
 	public function onCheckURLEncrypt( Event $event ) {
-		$event->setEchoOutput( false );
-		$event->setResult( true );
+		$event
+			->setEchoOutput( false )
+			->setResult( true );
 	}
 }

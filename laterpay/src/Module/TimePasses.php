@@ -2,17 +2,16 @@
 
 namespace LaterPay\Module;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event;
 use LaterPay\Helper\API;
 use LaterPay\Helper\Post;
 use LaterPay\Helper\View;
-use LaterPay\Helper\User;
 use LaterPay\Core\Request;
 use LaterPay\Helper\Pricing;
 use LaterPay\Helper\Voucher;
 use LaterPay\Helper\TimePass;
 use LaterPayClient\Auth\Signing;
-use LaterPay\Core\Event\SubscriberInterface;
 
 /**
  * LaterPay TimePasses class
@@ -21,14 +20,7 @@ use LaterPay\Core\Event\SubscriberInterface;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class TimePasses extends \LaterPay\Core\View implements SubscriberInterface {
-
-	/**
-	 * @see SubscriberInterface::getSharedEvents()
-	 */
-	public static function getSharedEvents() {
-		return array();
-	}
+class TimePasses extends ControllerAbstract {
 
 	/**
 	 * @see SubscriberInterface::getSubscribedEvents()
@@ -118,29 +110,33 @@ class TimePasses extends \LaterPay\Core\View implements SubscriberInterface {
 			$post = get_post();
 		}
 
-		$is_homepage = is_front_page() && is_home();
+		$isHomepage = is_front_page() && is_home();
 
-		list($introductory_text, $call_to_action_text, $time_pass_id) = $event->getArguments() + array( '', '', null );
-		if ( empty( $introductory_text ) ) {
-			$introductory_text = '';
+		list($introductoryText, $callToActionText, $timePassID) = $event->getArguments() + array( '', '', null );
+
+		if ( empty( $introductoryText ) ) {
+			$introductoryText = '';
 		}
-		if ( empty( $call_to_action_text ) ) {
-			$call_to_action_text = '';
+
+		if ( empty( $callToActionText ) ) {
+			$callToActionText = '';
 		}
 
 		// get time passes list
-		$time_passes_with_access = $this->getTimePassesWithAccess();
+		$timePassesWithAccess = $this->getTimePassesWithAccess();
 
-		if ( isset( $time_pass_id ) ) {
-			if ( in_array( (string) $time_pass_id, $time_passes_with_access, true ) ) {
+		if ( null !== $timePassID ) {
+			if ( in_array( (string) $timePassID, $timePassesWithAccess, true ) ) {
 				return;
 			}
-			$time_passes_list = array( TimePass::getTimePassByID( $time_pass_id, true ) );
+
+			$timePassesList = array( TimePass::getTimePassByID( $timePassID, true ) );
+
 		} else {
 			// check, if we are on the homepage or on a post / page page
-			$time_passes_list = TimePass::getTimePassesListByPostID(
-				! $is_homepage && ! empty( $post ) ? $post->ID : null,
-				$time_passes_with_access,
+			$timePassesList = TimePass::getTimePassesListByPostID(
+				! $isHomepage && ! empty( $post ) ? $post->ID : null,
+				$timePassesWithAccess,
 				true
 			);
 		}
@@ -149,24 +145,27 @@ class TimePasses extends \LaterPay\Core\View implements SubscriberInterface {
 		$subscriptions = $event->getArgument( 'subscriptions' );
 
 		// don't render the widget, if there are no time passes and no subsriptions
-		if ( ! count( $time_passes_list ) && ! count( $subscriptions ) ) {
+		if ( ! count( $timePassesList ) && ! count( $subscriptions ) ) {
 			return;
 		}
 
 		// check, if the time passes to be rendered have vouchers
-		$has_vouchers = Voucher::passesHaveVouchers( $time_passes_list );
+		$hasVouchers = Voucher::passesHaveVouchers( $timePassesList );
 
-		$view_args = array(
-			'passes_list'                   => $time_passes_list,
+		foreach ( $timePassesList as $key => $timePass ) {
+			$timePassesList[ $key ]['content'] = $this->renderTimePass( $timePass );
+		}
+
+		$args = array(
+			'passes_list'                   => $timePassesList,
 			'subscriptions'                 => $subscriptions,
-			'has_vouchers'                  => $has_vouchers,
-			'time_pass_introductory_text'   => $introductory_text,
-			'time_pass_call_to_action_text' => $call_to_action_text,
+			'has_vouchers'                  => $hasVouchers,
+			'time_pass_introductory_text'   => $introductoryText,
+			'time_pass_call_to_action_text' => $callToActionText,
 		);
 
-		$this->assign( 'laterpay_widget', $view_args );
 		$html  = $event->getResult();
-		$html .= View::removeExtraSpaces( $this->getTextView( 'frontend/partials/widget/time-passes' ) );
+		$html .= View::removeExtraSpaces( $this->getTextView( 'front/partials/widget/time-passes', array( '_' => $args ) ) );
 
 		$event->setResult( $html );
 	}
@@ -231,28 +230,34 @@ class TimePasses extends \LaterPay\Core\View implements SubscriberInterface {
 	 * @return string
 	 */
 	public function renderTimePass( array $pass = array() ) {
-		$defaults = array(
-			'pass_id'     => 0,
-			'title'       => TimePass::getDefaultOptions( 'title' ),
-			'description' => TimePass::getDescription(),
-			'price'       => TimePass::getDefaultOptions( 'price' ),
-			'url'         => '',
-		);
+		$defaults                            = TimePass::getDefaultOptions();
+		$defaults['standard_currency']       = $this->config->get( 'currency.code' );
+		$defaults['url']                     = '';
+		$defaults['preview_post_as_visitor'] = '';
 
-		$laterpay_pass = array_merge( $defaults, $pass );
-		if ( ! empty( $laterpay_pass['pass_id'] ) ) {
-			$laterpay_pass['url'] = TimePass::getLaterpayPurchaseLink( $laterpay_pass['pass_id'] );
+		$args = array_merge( $defaults, $pass );
+
+		if ( ! empty( $args['pass_id'] ) ) {
+			$args['url'] = TimePass::getLaterpayPurchaseLink( $args['pass_id'] );
 		}
 
-		$laterpay_pass['preview_post_as_visitor'] = User::previewPostAsVisitor( get_post() );
+		$args['price_formatted'] = View::formatNumber( $args['price'] );
+		$args['period']          = TimePass::getPeriodOptions( $args['period'] );
 
-		$args = array(
-			'standard_currency' => $this->config->get( 'currency.code' ),
-		);
-		$this->assign( 'laterpay', $args );
-		$this->assign( 'laterpay_pass', $laterpay_pass );
+		if ( $args['duration'] > 1 ) {
+			$args['period'] = TimePass::getPeriodOptions( $args['period'], true );
+		}
 
-		return $this->getTextView( 'backend/partials/time-pass' );
+		$args['access_type'] = TimePass::getAccessOptions( $args['access_to'] );
+		$args['access_dest'] = __( 'on this website', 'laterpay' );
+
+		$category = get_category( $args['access_category'] );
+
+		if ( (int) $args['access_to'] !== 0 ) {
+			$args['access_dest'] = $category->name;
+		}
+
+		return $this->getTextView( 'front/partials/time-pass', array( '_' => $args ) );
 	}
 
 	/**
@@ -460,7 +465,7 @@ class TimePasses extends \LaterPay\Core\View implements SubscriberInterface {
 			$overlay_content  = array(
 				'title'    => $overlay_title,
 				'benefits' => $overlay_benefits,
-				'action'   => $this->getTextView( 'frontend/partials/widget/time-passes-link' ),
+				'action'   => $this->getTextView( 'front/partials/widget/time-passes-link' ),
 			);
 			$event->setResult( $overlay_content );
 		}
