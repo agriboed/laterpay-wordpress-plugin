@@ -136,8 +136,8 @@
 
                     // set the price and revenue model of the selected category
                     var $category   = $('.lp_is-selectedCategory a', $o.categoriesList);
-                    price           = $category.attr('data-price');
-                    revenueModel    = $category.attr('data-revenue-model');
+                    price           = $category.data('price');
+                    revenueModel    = $category.data('revenue-model');
                     setPrice(price);
                     setRevenueModel(revenueModel, true);
 
@@ -300,8 +300,8 @@
                 // in pricing mode 'category default price'
                 if ($o.categoryPriceButton.hasClass($o.selected)) {
                     var $category       = $('.lp_is-selectedCategory a', $o.categoriesList),
-                        price           = $category.attr('data-price'),
-                        revenueModel    = $category.attr('data-revenue-model');
+                        price           = $category.data('price'),
+                        revenueModel    = $category.data('revenue-model');
 
                     setPrice(price);
                     setRevenueModel(revenueModel, true);
@@ -343,9 +343,9 @@
                                         .append($('<a href="#">')
                                             .data('price', category.category_price)
                                             .data('revenue-model', category.revenue_model)
-                                                .append($('<span>')
-                                                    .html(price))
-                                                .append(category.category_name)
+                                            .append($('<span>')
+                                                .html(price))
+                                            .append(category.category_name)
                                         )
                                 );
                             });
@@ -397,9 +397,9 @@
             applyCategoryPrice = function(trigger) {
                 var $this           = $(trigger),
                     $category       = $this.parent(),
-                    category        = $category.attr('data-category'),
-                    price           = $this.attr('data-price'),
-                    revenueModel    = $this.attr('data-revenue-model');
+                    category        = $category.data('category'),
+                    price           = $this.data('price'),
+                    revenueModel    = $this.data('revenue-model');
 
                 $o.categories.removeClass($o.selectedCategory);
                 $category.addClass($o.selectedCategory);
