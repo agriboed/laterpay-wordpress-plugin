@@ -2,10 +2,10 @@
 
 namespace LaterPay\Controller\Admin\Post;
 
+use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event;
 use LaterPay\Helper\View;
 use LaterPay\Helper\Pricing;
-use LaterPay\Controller\Base;
 
 /**
  * LaterPay post column controller.
@@ -14,7 +14,7 @@ use LaterPay\Controller\Base;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Column extends Base {
+class Column extends ControllerAbstract {
 
 	/**
 	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -42,21 +42,23 @@ class Column extends Base {
 	 * @return void
 	 */
 	public function addColumnsToPostsTable( Event $event ) {
-		list( $columns )  = $event->getArguments() + array( array() );
-		$extended_columns = array();
-		$insert_after     = 'title';
+		list( $columns ) = $event->getArguments() + array( array() );
+
+		$extendedColumns = array();
+		$insertAfter     = 'title';
 
 		/**
 		 * @var $columns array
 		 */
 		foreach ( $columns as $key => $val ) {
-			$extended_columns[ $key ] = $val;
-			if ( $key === $insert_after ) {
-				$extended_columns['post_price']      = __( 'Price', 'laterpay' );
-				$extended_columns['post_price_type'] = __( 'Price Type', 'laterpay' );
+			$extendedColumns[ $key ] = $val;
+			if ( $key === $insertAfter ) {
+				$extendedColumns['post_price']      = __( 'Price', 'laterpay' );
+				$extendedColumns['post_price_type'] = __( 'Price Type', 'laterpay' );
 			}
 		}
-		$event->setResult( $extended_columns );
+
+		$event->setResult( $extendedColumns );
 	}
 
 	/**
@@ -69,12 +71,12 @@ class Column extends Base {
 	 * @return void
 	 */
 	public function addDataToPostsTable( Event $event ) {
-		list($column_name, $post_id) = $event->getArguments() + array( '', '' );
+		list($columnName, $postID) = $event->getArguments() + array( '', '' );
 		$event->setEchoOutput( true );
 
-		switch ( $column_name ) {
+		switch ( $columnName ) {
 			case 'post_price':
-				$price           = (float) Pricing::getPostPrice( $post_id );
+				$price           = (float) Pricing::getPostPrice( $postID );
 				$localized_price = View::formatNumber( $price );
 				$currency        = $this->config->get( 'currency.code' );
 
@@ -87,41 +89,42 @@ class Column extends Base {
 				break;
 
 			case 'post_price_type':
-				$post_prices = get_post_meta( $post_id, 'laterpay_post_prices', true );
-				if ( ! is_array( $post_prices ) ) {
-					$post_prices = array();
+				$postPrices = get_post_meta( $postID, 'laterpay_post_prices', true );
+
+				if ( ! is_array( $postPrices ) ) {
+					$postPrices = array();
 				}
 
-				if ( array_key_exists( 'type', $post_prices ) ) {
+				if ( array_key_exists( 'type', $postPrices ) ) {
 					// render the price type of the post, if it exists
-					switch ( $post_prices['type'] ) {
+					switch ( $postPrices['type'] ) {
 						case Pricing::TYPE_INDIVIDUAL_PRICE:
-							$revenue_model   = ( Pricing::getPostRevenueModel( $post_id ) === 'sis' )
+							$revenueModel  = ( Pricing::getPostRevenueModel( $postID ) === 'sis' )
 								? __( 'Pay Now', 'laterpay' )
 								: __( 'Pay Later', 'laterpay' );
-							$post_price_type = __( 'individual price', 'laterpay' ) . ' (' . $revenue_model . ')';
+							$postPriceType = __( 'individual price', 'laterpay' ) . ' (' . $revenueModel . ')';
 							break;
 
 						case Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE:
-							$post_price_type = __( 'dynamic individual price', 'laterpay' );
+							$postPriceType = __( 'dynamic individual price', 'laterpay' );
 							break;
 
 						case Pricing::TYPE_CATEGORY_DEFAULT_PRICE:
-							$post_price_type = __( 'category default price', 'laterpay' );
+							$postPriceType = __( 'category default price', 'laterpay' );
 							break;
 
 						case Pricing::TYPE_GLOBAL_DEFAULT_PRICE:
-							$post_price_type = __( 'global default price', 'laterpay' );
+							$postPriceType = __( 'global default price', 'laterpay' );
 							break;
 
 						default:
-							$post_price_type = '&mdash;';
+							$postPriceType = '&mdash;';
 					}
 
-					$event->setResult( esc_html( $post_price_type ) );
+					$event->setResult( esc_html( $postPriceType ) );
 				} else {
 					// label the post to use the global default price
-					$event->setResult( esc_html( __( 'global default price', 'laterpay' ) ) );
+					$event->setResult( esc_html_e( 'global default price', 'laterpay' ) );
 				}
 				break;
 		}
