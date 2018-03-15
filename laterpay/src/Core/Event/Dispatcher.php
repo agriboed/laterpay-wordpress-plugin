@@ -258,7 +258,7 @@ class Dispatcher implements DispatcherInterface {
 	 *
 	 * @param SubscriberInterface $subscriber The subscriber.
 	 *
-	 * @return void
+	 * @return self
 	 */
 	public function addSubscriber( SubscriberInterface $subscriber ) {
 		foreach ( $subscriber->getSharedEvents() as $event_name => $params ) {
@@ -301,6 +301,8 @@ class Dispatcher implements DispatcherInterface {
 				}
 			}
 		}
+
+		return $this;
 	}
 
 	/**
@@ -311,13 +313,15 @@ class Dispatcher implements DispatcherInterface {
 	 * @param int $priority The higher this value, the earlier an event
 	 *                            listener will be triggered in the chain (defaults to static::DEFAULT_PRIORITY)
 	 *
-	 * @return void
+	 * @return self
 	 */
 	public function addListener( $event_name, $listener, $priority = self::DEFAULT_PRIORITY ) {
 		Hooks::registerLaterpayAction( $event_name );
 		$this->listeners[ $event_name ][ $priority ][] = $listener;
 
 		unset( $this->sorted[ $event_name ] );
+
+		return $this;
 	}
 
 	/**
