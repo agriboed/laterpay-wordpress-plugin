@@ -20,7 +20,7 @@ class CategoryPrice extends ModelAbstract {
 	 *
 	 * @access public
 	 */
-	public $termTable;
+	protected $termTable;
 
 	/**
 	 * Name of prices table.
@@ -29,7 +29,12 @@ class CategoryPrice extends ModelAbstract {
 	 *
 	 * @access public
 	 */
-	public $tablePrices;
+	protected $tablePrices;
+
+	/**
+	 * @var string
+	 */
+	protected $termTablePrices;
 
 	/**
 	 * Constructor for class LaterPay_Currency_Model, load table names.
@@ -37,8 +42,8 @@ class CategoryPrice extends ModelAbstract {
 	public function __construct() {
 		parent::__construct();
 
-		$this->termTable         = $this->db->terms;
-		$this->term_table_prices = $this->db->prefix . 'laterpay_terms_price';
+		$this->termTable       = $this->db->terms;
+		$this->termTablePrices = $this->db->prefix . 'laterpay_terms_price';
 	}
 
 	/**
@@ -57,7 +62,7 @@ class CategoryPrice extends ModelAbstract {
             FROM
                 {$this->termTable} AS tm
                 LEFT JOIN
-                    {$this->term_table_prices} AS tp
+                    {$this->termTablePrices} AS tp
                 ON
                     tp.term_id = tm.term_id
             WHERE
@@ -73,12 +78,12 @@ class CategoryPrice extends ModelAbstract {
 	/**
 	 * Get categories with defined category default prices by list of category ids.
 	 *
-	 * @param array $ids
+	 * @param array $IDs
 	 *
 	 * @return array category_price_data
 	 */
-	public function getCategoryPriceDataByCategoryIDs( $ids ) {
-		$placeholders = array_fill( 0, count( $ids ), '%d' );
+	public function getCategoryPriceDataByCategoryIDs( $IDs ) {
+		$placeholders = array_fill( 0, count( $IDs ), '%d' );
 		$format       = implode( ', ', $placeholders );
 		$sql          = "
             SELECT
@@ -89,7 +94,7 @@ class CategoryPrice extends ModelAbstract {
             FROM
                 {$this->termTable} AS tm
                 LEFT JOIN
-                    {$this->term_table_prices} AS tp
+                    {$this->termTablePrices} AS tp
                 ON
                     tp.term_id = tm.term_id
             WHERE
@@ -100,7 +105,7 @@ class CategoryPrice extends ModelAbstract {
             ;
         ";
 
-		return $this->db->get_results( $this->db->prepare( $sql, $ids ) );
+		return $this->db->get_results( $this->db->prepare( $sql, $IDs ) );
 	}
 
 	/**
@@ -138,92 +143,38 @@ class CategoryPrice extends ModelAbstract {
 	 * @return array $clauses
 	 */
 	public function filterTermsClausesForCategoriesWithoutPrice( $clauses ) {
-		$clauses['join']  .= ' LEFT JOIN ' . $this->term_table_prices . ' AS tp ON tp.term_id = t.term_id ';
+		$clauses['join']  .= ' LEFT JOIN ' . $this->termTablePrices . ' AS tp ON tp.term_id = t.term_id ';
 		$clauses['where'] .= ' AND tp.term_id IS NULL ';
 
 		return $clauses;
 	}
 
 	/**
-	 * Get categories by search term.
-	 *
-	 * @param string $term term string to find categories
-	 * @param int $limit limit categories
-	 *
-	 * @deprecated please use get_terms( 'category', array( 'name__like' => '$term', 'number' => $limit, 'fields' => 'id=>name' ) );
-	 *
-	 * @return array categories
-	 */
-	public function getCategoriesByTerm( $term, $limit ) {
-		$term = $this->db->esc_like( $term );
-
-		$term = esc_sql( $term ) . '%';
-		$sql  = "
-            SELECT
-                tm.term_id AS id,
-                tm.name AS text
-            FROM
-                {$this->termTable} AS tm
-            INNER JOIN
-                {$this->db->term_taxonomy} as tt
-            ON
-                tt.term_id = tm.term_id
-            WHERE
-                tm.name LIKE %s
-            AND
-                tt.taxonomy = 'category'
-            ORDER BY
-                name
-            LIMIT
-                %d
-            ;
-        ";
-
-		return $this->db->get_results( $this->db->prepare( $sql, $term, $limit ) );
-	}
-
-	/**
 	 * Set category default price.
 	 *
-	 * @param integer $id_category id category
+	 * @param int $termID id category
 	 * @param float $price price for category
-	 * @param string $revenue_model revenue model of category
-	 * @param integer $id id price for category
+	 * @param string $revenueModel revenue model of category
+	 * @param int $ID id price for category
 	 *
 	 * @return int|false number of rows affected / selected or false on error
 	 */
-	public function setCategoryPrice( $id_category, $price, $revenue_model, $id = 0 ) {
-		if ( ! empty( $id ) ) {
-			$success = $this->db->update(
-				$this->term_table_prices,
-				array(
-					'term_id'       => $id_category,
-					'price'         => $price,
-					'revenue_model' => $revenue_model,
-				),
-				array( 'ID' => $id ),
-				array(
-					'%d',
-					'%f',
-					'%s',
-				),
-				array( '%d' )
-			);
-		} else {
-			$success = $this->db->insert(
-				$this->term_table_prices,
-				array(
-					'term_id'       => $id_category,
-					'price'         => $price,
-					'revenue_model' => $revenue_model,
-				),
-				array(
-					'%d',
-					'%f',
-					'%s',
-				)
-			);
-		}
+	public function setCategoryPrice( $termID, $price, $revenueModel, $ID = null ) {
+		$success = $this->db->replace(
+			$this->termTablePrices,
+			array(
+				'id'            => $ID,
+				'term_id'       => $termID,
+				'price'         => $price,
+				'revenue_model' => $revenueModel,
+			),
+			array(
+				'%d',
+				'%d',
+				'%f',
+				'%s',
+			)
+		);
 
 		Cache::purgeCache();
 
@@ -233,47 +184,45 @@ class CategoryPrice extends ModelAbstract {
 	/**
 	 * Get price id by category id.
 	 *
-	 * @param integer $id id category
+	 * @param int $termID id category
 	 *
-	 * @return integer id price
+	 * @return int id price
 	 */
-	public function getPriceIDByCategoryID( $id ) {
-		$sql   = "
-            SELECT
+	public function getPriceIDByTermID( $termID ) {
+		$sql = "SELECT
                 id
             FROM
-                {$this->term_table_prices}
+                {$this->termTablePrices}
             WHERE
-                term_id = %d
-            ;
-        ";
-		$price = $this->db->get_row( $this->db->prepare( $sql, $id ) );
+                term_id = %d;";
 
-		if ( empty( $price ) ) {
-			return null;
+		$row = $this->db->get_row( $this->db->prepare( $sql, $termID ) );
+
+		if ( isset( $row->id ) ) {
+			return (int) $row->id;
 		}
 
-		return $price->id;
+		return null;
 	}
 
 	/**
 	 * Get price by category id.
 	 *
-	 * @param integer $id category id
+	 * @param integer $termID category id
 	 *
 	 * @return float|null price category
 	 */
-	public function getPriceByCategoryID( $id ) {
+	public function getPriceByTermID( $termID ) {
 		$sql   = "
             SELECT
                 price
             FROM
-                {$this->term_table_prices}
+                {$this->termTablePrices}
             WHERE
                 term_id = %d
             ;
         ";
-		$price = $this->db->get_row( $this->db->prepare( $sql, $id ) );
+		$price = $this->db->get_row( $this->db->prepare( $sql, $termID ) );
 
 		if ( empty( $price ) ) {
 			return null;
@@ -285,84 +234,45 @@ class CategoryPrice extends ModelAbstract {
 	/**
 	 * Get revenue model by category id.
 	 *
-	 * @param integer $id category id
+	 * @param integer $ID category id
 	 *
 	 * @return string|null category renevue model
 	 */
-	public function getRevenueModelByCategoryID( $id ) {
-		$sql           = "
+	public function getRevenueModelByCategoryID( $ID ) {
+		$sql          = "
             SELECT
                 revenue_model
             FROM
-                {$this->term_table_prices}
+                {$this->termTablePrices}
             WHERE
                 term_id = %d
             ;
         ";
-		$revenue_model = $this->db->get_row( $this->db->prepare( $sql, $id ) );
+		$revenueModel = $this->db->get_row( $this->db->prepare( $sql, $ID ) );
 
-		if ( empty( $revenue_model ) ) {
+		if ( empty( $revenueModel ) ) {
 			return null;
 		}
 
-		return $revenue_model->revenue_model;
-	}
-
-	/**
-	 * Check, if category exists by getting the category id by category name.
-	 *
-	 * @param string $name name category
-	 *
-	 * @return integer category_id
-	 */
-	public function checkExistenceOfCategoryByName( $name ) {
-		$sql      = "
-            SELECT
-                tm.term_id AS id
-            FROM
-                {$this->termTable} AS tm
-                RIGHT JOIN
-                    {$this->term_table_prices} AS tp
-                ON
-                    tm.term_id = tp.term_id
-            WHERE
-                name = %s
-            ;
-        ";
-		$category = $this->db->get_row( $this->db->prepare( $sql, $name ) );
-
-		if ( empty( $category ) ) {
-			return null;
-		}
-
-		return $category->id;
+		return $revenueModel->revenue_model;
 	}
 
 	/**
 	 * Delete price by category id.
 	 *
-	 * @param integer $id category id
+	 * @param int $categoryID category id
 	 *
 	 * @return int|false the number of rows updated, or false on error
 	 */
-	public function deletePricesByCategoryID( $id ) {
-		$where = array(
-			'term_id' => (int) $id,
+	public function deletePriceByCategoryID( $categoryID ) {
+		$success = $this->db->delete(
+			$this->termTablePrices, array(
+				'term_id' => (int) $categoryID,
+			), '%d'
 		);
-
-		$success = $this->db->delete( $this->term_table_prices, $where, '%d' );
 
 		Cache::purgeCache();
 
 		return $success;
-	}
-
-	/**
-	 * Delete all category prices from table.
-	 *
-	 * @return int|false the number of rows updated, or false on error
-	 */
-	public function deleteAllCategoryPrices() {
-		return $this->db->query( 'TRUNCATE TABLE ' . $this->term_table_prices );
 	}
 }

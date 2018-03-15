@@ -34,12 +34,12 @@ class TimePass extends ModelAbstract {
 	/**
 	 * Get time pass data.
 	 *
-	 * @param int $time_pass_id time pass id
-	 * @param bool $ignore_deleted ignore deleted time passes
+	 * @param int $timePassID time pass id
+	 * @param bool $ignoreDeleted ignore deleted time passes
 	 *
 	 * @return array $time_pass array of time pass data
 	 */
-	public function getTimePassData( $time_pass_id, $ignore_deleted = false ) {
+	public function getTimePassData( $timePassID, $ignoreDeleted = false ) {
 		$sql = "
             SELECT
                 *
@@ -49,7 +49,7 @@ class TimePass extends ModelAbstract {
                 pass_id = %d
         ";
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			$sql .= '
                 AND is_deleted = 0
             ';
@@ -57,7 +57,7 @@ class TimePass extends ModelAbstract {
 
 		$sql .= ';';
 
-		return $this->db->get_row( $this->db->prepare( $sql, (int) $time_pass_id ), ARRAY_A );
+		return $this->db->get_row( $this->db->prepare( $sql, (int) $timePassID ), ARRAY_A );
 	}
 
 	/**
@@ -75,7 +75,7 @@ class TimePass extends ModelAbstract {
 		$data = array_merge( \LaterPay\Helper\TimePass::getDefaultOptions(), $data );
 
 		// pass_id is a primary key, set by autoincrement
-		$time_pass_id = $data['pass_id'];
+		$timePassID = $data['pass_id'];
 		unset( $data['pass_id'] );
 
 		// format for insert and update statement
@@ -90,7 +90,7 @@ class TimePass extends ModelAbstract {
 			'%s', // description
 		);
 
-		if ( empty( $time_pass_id ) ) {
+		if ( empty( $timePassID ) ) {
 			$this->db->insert(
 				$this->table,
 				$data,
@@ -101,11 +101,11 @@ class TimePass extends ModelAbstract {
 			$this->db->update(
 				$this->table,
 				$data,
-				array( 'pass_id' => $time_pass_id ),
+				array( 'pass_id' => $timePassID ),
 				$format,
 				array( '%d' ) // pass_id
 			);
-			$data['pass_id'] = $time_pass_id;
+			$data['pass_id'] = $timePassID;
 		}
 
 		// purge cache
@@ -126,18 +126,18 @@ class TimePass extends ModelAbstract {
 	/**
 	 * Get all time passes.
 	 *
-	 * @param bool $ignore_deleted ignore deleted time passes
+	 * @param bool $ignoreDeleted ignore deleted time passes
 	 *
 	 * @return array $time_passes list of time passes
 	 */
-	public function getAllTimePasses( $ignore_deleted = false ) {
+	public function getAllTimePasses( $ignoreDeleted = false ) {
 		$sql = "
             SELECT
                 *
             FROM
                 {$this->table}";
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			$sql .= '
             WHERE
                 is_deleted = 0
@@ -156,13 +156,13 @@ class TimePass extends ModelAbstract {
 	/**
 	 * Get all time passes that apply to a given post by its category ids.
 	 *
-	 * @param null $term_ids array of category ids
+	 * @param null $termIDs array of category ids
 	 * @param bool $exclude categories to be excluded from the list
-	 * @param bool $ignore_deleted ignore deleted time passes
+	 * @param bool $ignoreDeleted ignore deleted time passes
 	 *
 	 * @return array $time_passes list of time passes
 	 */
-	public function getTimePassesByCategoryIDs( $term_ids = null, $exclude = null, $ignore_deleted = false ) {
+	public function getTimePassesByCategoryIDs( $termIDs = null, $exclude = null, $ignoreDeleted = false ) {
 		$sql = "
             SELECT
                 *
@@ -171,18 +171,18 @@ class TimePass extends ModelAbstract {
             WHERE
         ";
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			$sql .= '
                 is_deleted = 0 AND (
             ';
 		}
 
-		if ( $term_ids ) {
-			$prepared_ids = implode( ',', $term_ids );
+		if ( $termIDs ) {
+			$preparedIDs = implode( ',', $termIDs );
 			if ( $exclude ) {
-				$sql .= " pt.access_category NOT IN ( {$prepared_ids} ) AND pt.access_to = 1";
+				$sql .= " pt.access_category NOT IN ( {$preparedIDs} ) AND pt.access_to = 1";
 			} else {
-				$sql .= " pt.access_category IN ( {$prepared_ids} ) AND pt.access_to <> 1";
+				$sql .= " pt.access_category IN ( {$preparedIDs} ) AND pt.access_to <> 1";
 			}
 			$sql .= ' OR ';
 		}
@@ -191,7 +191,7 @@ class TimePass extends ModelAbstract {
                 pt.access_to = 0
             ';
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			$sql .= ' ) ';
 		}
 
@@ -208,13 +208,13 @@ class TimePass extends ModelAbstract {
 	/**
 	 * Delete time pass by id.
 	 *
-	 * @param integer $time_pass_id time pass id
+	 * @param integer $timePassID time pass id
 	 *
 	 * @return int|false the number of rows updated, or false on error
 	 */
-	public function deleteTimePassByID( $time_pass_id ) {
+	public function deleteTimePassByID( $timePassID ) {
 		$where = array(
-			'pass_id' => (int) $time_pass_id,
+			'pass_id' => (int) $timePassID,
 		);
 
 		$result = $this->db->update( $this->table, array( 'is_deleted' => 1 ), $where, array( '%d' ), array( '%d' ) );

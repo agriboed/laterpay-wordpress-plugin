@@ -1,6 +1,7 @@
 <?php
 
 namespace LaterPay\Model;
+use LaterPay\Core\Interfaces\ConfigInterface;
 
 /**
  * Simple property object.
@@ -30,7 +31,7 @@ namespace LaterPay\Model;
  *         ->set( 'first_name', 'Mildred' );
  *
  */
-class Config {
+class Config implements ConfigInterface {
 
 	/**
 	 * List of properties.
@@ -180,8 +181,8 @@ class Config {
 			return $this->properties;
 		}
 
-		$parent_properties = $this->parent->getAll( true );
-		$all               = array_merge( $parent_properties, $this->properties );
+		$parentProperties = $this->parent->getAll( true );
+		$all               = array_merge( $parentProperties, $this->properties );
 
 		// strip out properties existing in the parent but deleted in this instance.
 		return array_diff( $all, $this->deleted );

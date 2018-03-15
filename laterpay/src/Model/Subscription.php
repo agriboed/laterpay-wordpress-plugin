@@ -37,11 +37,11 @@ class Subscription extends ModelAbstract {
 	 * Get time pass data.
 	 *
 	 * @param int $id subscription id
-	 * @param bool $ignore_deleted ignore deleted subscriptions
+	 * @param bool $ignoreDeleted ignore deleted subscriptions
 	 *
 	 * @return array $time_pass array of subscriptions data
 	 */
-	public function getSubscription( $id, $ignore_deleted = false ) {
+	public function getSubscription( $id, $ignoreDeleted = false ) {
 		$sql = "
             SELECT
                 *
@@ -51,7 +51,7 @@ class Subscription extends ModelAbstract {
                 id = %d
         ";
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			$sql .= '
                 AND is_deleted = 0
             ';
@@ -128,18 +128,18 @@ class Subscription extends ModelAbstract {
 	/**
 	 * Get all subscriptions.
 	 *
-	 * @param bool $ignore_deleted ignore deleted subscriptions
+	 * @param bool $ignoreDeleted ignore deleted subscriptions
 	 *
 	 * @return array list of subscriptions
 	 */
-	public function getAllSubscriptions( $ignore_deleted = false ) {
+	public function getAllSubscriptions( $ignoreDeleted = false ) {
 		$sql = "
             SELECT
                 *
             FROM
                 {$this->table}";
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			$sql .= '
             WHERE
                 is_deleted = 0
@@ -158,13 +158,13 @@ class Subscription extends ModelAbstract {
 	/**
 	 * Get all subscriptions that apply to a given post by its category ids.
 	 *
-	 * @param null $term_ids array of category ids
+	 * @param null $termIDs array of category ids
 	 * @param bool $exclude categories to be excluded from the list
-	 * @param bool $ignore_deleted ignore deleted subscriptions
+	 * @param bool $ignoreDeleted ignore deleted subscriptions
 	 *
 	 * @return array $subscriptions list of subscriptions
 	 */
-	public function getSubscriptionsByCategoryIDs( $term_ids = null, $exclude = null, $ignore_deleted = false ) {
+	public function getSubscriptionsByCategoryIDs( $termIDs = null, $exclude = null, $ignoreDeleted = false ) {
 		$sql = "
             SELECT
                 *
@@ -173,18 +173,18 @@ class Subscription extends ModelAbstract {
             WHERE
         ";
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			$sql .= '
                 is_deleted = 0 AND (
             ';
 		}
 
-		if ( $term_ids ) {
-			$prepared_ids = implode( ',', $term_ids );
+		if ( $termIDs ) {
+			$preparedIDs = implode( ',', $termIDs );
 			if ( $exclude ) {
-				$sql .= " subs.access_category NOT IN ( {$prepared_ids} ) AND subs.access_to = 1";
+				$sql .= " subs.access_category NOT IN ( {$preparedIDs} ) AND subs.access_to = 1";
 			} else {
-				$sql .= " subs.access_category IN ( {$prepared_ids} ) AND subs.access_to <> 1";
+				$sql .= " subs.access_category IN ( {$preparedIDs} ) AND subs.access_to <> 1";
 			}
 			$sql .= ' OR ';
 		}
@@ -193,7 +193,7 @@ class Subscription extends ModelAbstract {
                 subs.access_to = 0
             ';
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			$sql .= ' ) ';
 		}
 
