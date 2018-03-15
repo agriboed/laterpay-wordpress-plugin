@@ -2,7 +2,8 @@
 
 namespace LaterPay\Core;
 
-use LaterPay\Model\Config;
+use LaterPay\Core\Interfaces\ConfigInterface;
+use LaterPay\Core\Interfaces\ViewInterface;
 
 /**
  * LaterPay core view.
@@ -11,12 +12,12 @@ use LaterPay\Model\Config;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class View {
+class View implements ViewInterface {
 
 	/**
 	 * Contains all settings for the plugin.
 	 *
-	 * @var Config
+	 * @var ConfigInterface
 	 */
 	protected $config;
 
@@ -28,16 +29,11 @@ class View {
 	protected $variables = array();
 
 	/**
-	 * @param Config $config
 	 *
-	 * @return void
+	 * @param ConfigInterface $config
 	 */
-	public function __construct( $config = null ) {
-
-		$this->config = ( $config && $config instanceof Config ) ? $config : laterpay_get_plugin_config();
-		// assign the config to the views
-		$this->assign( 'config', $this->config );
-		$this->initialize();
+	public function __construct( ConfigInterface $config ) {
+		$this->config = $config;
 	}
 
 	/**
@@ -54,82 +50,64 @@ class View {
 	}
 
 	/**
-	 * Function which will be called on constructor and can be overwritten by child class.
-	 *
-	 * @return void
-	 */
-	protected function initialize() {
-	}
-
-	/**
-	 * Load all assets on boot-up.
-	 *
-	 * @return void
-	 */
-	public function loadAssets() {
-	}
-
-	/**
-	 * Render HTML file.
-	 *
-	 * @param string $file file to get HTML string
-	 * @param string $view_dir view directory
-	 *
-	 * @return void
-	 */
-	public function render( $file, $view_dir = null ) {
-		foreach ( $this->variables as $key => $value ) {
-			${$key} = $value;
-		}
-
-		$view_dir  = isset( $view_dir ) ? $view_dir : $this->config->get( 'view_dir' );
-		$view_file = $view_dir . $file . '.php';
-		if ( ! file_exists( $view_file ) ) {
-			return;
-		}
-
-		include $view_file;
-	}
-
-	/**
 	 * Assign variable for substitution in templates.
 	 *
 	 * @param string $variable name variable to assign
 	 * @param mixed $value value variable for assign
 	 *
-	 * @return void
+	 * @return self
 	 */
 	public function assign( $variable, $value ) {
 		$this->variables[ $variable ] = $value;
+
+		return $this;
 	}
 
 	/**
 	 * Get HTML from file.
 	 *
-	 * @param string $file file to get HTML string
-	 * @param string $view_dir view directory
+	 * @param string $view The view name
+	 * @param array $parameters An array of parameters to pass to the view
 	 *
 	 * @return string $html html output as string
 	 */
-	public function getTextView( $file, $view_dir = null ) {
+	public function getTextView( $view, array $parameters = array() ) {
+		$file = $this->config->get( 'view_dir' ) . $view . '.php';
 
-		ob_start();
-		$this->render($file, $view_dir);
-		$thread = ob_get_contents();
-		ob_end_clean();
-		$html = $thread;
+		if ( ! file_exists( $file ) ) {
+			return '';
+		}
 
-		$this->initAssignments();
+		$parameters = array_merge( $this->variables, $parameters );
 
-		return $html;
+		$closure = function () use ( $file, $parameters ) {
+			foreach ( $parameters as $key => $value ) {
+				${$key} = $value;
+			}
+
+			ob_start();
+			include $file;
+
+			$output = ob_get_contents();
+			ob_end_clean();
+
+			return $output;
+		};
+
+		return $closure();
 	}
 
 	/**
-	 * @return void
+	 * Render HTML file.
+	 *
+	 * @param string $view The view name
+	 * @param array $parameters An array of parameters to pass to the view
+	 *
+	 * @return self
 	 */
-	protected function initAssignments() {
-		$this->variables = array();
-		// assign the config to the views
-		$this->assign( 'config', $this->config );
+	public function render( $view, array $parameters = array() ) {
+		echo $this->getTextView( $view, $parameters );
+
+		return $this;
 	}
 }
