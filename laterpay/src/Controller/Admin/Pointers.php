@@ -68,7 +68,7 @@ class Pointers extends ControllerAbstract {
 	public function footerScripts() {
 		foreach ( $this->getPointersToBeShown() as $pointer ) {
 			$args = array(
-				'pointer' => $pointer
+				'pointer' => $pointer,
 			);
 
 			$this->render( 'admin/pointers/' . $pointer, array( '_' => $args ) );

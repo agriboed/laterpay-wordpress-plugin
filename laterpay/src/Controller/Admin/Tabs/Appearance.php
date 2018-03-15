@@ -1,26 +1,24 @@
 <?php
 
-namespace LaterPay\Controller\Admin;
+namespace LaterPay\Controller\Admin\Tabs;
 
+use LaterPay\Core\Exception\FormValidation;
+use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Core\Event;
-use LaterPay\Helper\View;
 use LaterPay\Core\Request;
-use LaterPay\Model\Config;
 use LaterPay\Form\HideFreePosts;
 use LaterPay\Form\TimePassPosition;
 use LaterPay\Form\PaidContentPreview;
 use LaterPay\Form\PurchaseButtonPosition;
-use LaterPay\Core\Exception\FormValidation;
-use LaterPay\Core\Exception\InvalidIncomingData;
 
 /**
- * LaterPay appearance controller.
+ * LaterPay appearance tab controller.
  *
  * Plugin Name: LaterPay
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Appearance extends Base {
+class Appearance extends TabAbstract {
 
 	/**
 	 * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -38,39 +36,55 @@ class Appearance extends Base {
 			'laterpay_admin_enqueue_scripts' => array(
 				array( 'laterpay_on_admin_view', 200 ),
 				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'registerAssets' ),
 				array( 'addCustomStyles' ),
+			),
+			'laterpay_admin_menu'            => array(
+				array( 'laterpay_on_admin_view', 200 ),
+				array( 'laterpay_on_plugin_is_active', 200 ),
+				array( 'addSubmenuPage', 280 ),
 			),
 		);
 	}
 
 	/**
-	 * Add appearance styles
+	 * Method returns current tab's info.
 	 *
-	 * @return void
+	 * @return array
 	 */
-	public function addCustomStyles() {
-		// apply colors config
-		\LaterPay\Helper\Appearance::addOverlayStyles( 'laterpay-admin' );
+	public static function info() {
+		return array(
+			'key'   => 'appearance',
+			'slug'  => 'laterpay-appearance-tab',
+			'url'   => admin_url( 'admin.php?page=laterpay-appearance-tab' ),
+			'title' => __( 'Appearance', 'laterpay' ),
+			'cap'   => 'activate_plugins',
+		);
 	}
 
 	/**
-	 * @see \LaterPay\Core\View::loadAssets()
+	 * Register JS and CSS in the WordPress.
 	 *
+	 * @wp-hook admin_enqueue_scripts
 	 * @return void
 	 */
-	public function loadAssets() {
-		parent::loadAssets();
-
-		// load page-specific JS
+	public function registerAssets() {
 		wp_register_script(
 			'laterpay-backend-appearance',
-			$this->config->get( 'js_url' ) . '/laterpay-backend-appearance.js',
-			array( 'jquery' ),
+			$this->config->get( 'js_url' ) . 'laterpay-backend-appearance.js',
+			array( 'jquery', 'laterpay-backend', 'laterpay-zendesk' ),
 			$this->config->get( 'version' ),
 			true
 		);
-		wp_enqueue_script( 'laterpay-backend-appearance' );
+	}
 
+	/**
+	 * Load necessary CSS and JS.
+	 *
+	 * @return self
+	 */
+	protected function loadAssets() {
+		wp_enqueue_script( 'laterpay-backend-appearance' );
 		wp_localize_script(
 			'laterpay-backend-appearance',
 			'lpVars',
@@ -84,34 +98,39 @@ class Appearance extends Base {
 				'l10n_print_after' => 'lpVars.overlaySettings = JSON.parse(lpVars.overlaySettings)',
 			)
 		);
+
+		return $this;
 	}
 
 	/**
-	 * @see \LaterPay\Core\View::render_page()
+	 * Method pass data to the template and renders it in admin area.
 	 *
 	 * @return void
+	 * @throws \LaterPay\Core\Exception
 	 */
-	public function renderPage() {
-		$this->loadAssets();
+	public function renderTab() {
 
-		$menu = View::getAdminMenu();
+		$teaserMode     = absint( get_option( 'laterpay_teaser_mode', '2' ) );
+		$overlayOptions = \LaterPay\Helper\Appearance::getCurrentOptions();
 
-		$view_args = array(
-			'plugin_is_in_live_mode'              => $this->config->get( 'is_in_live_mode' ),
-			'teaser_mode'                         => get_option( 'laterpay_teaser_mode', '2' ),
-			'top_nav'                             => $this->getMenu(),
-			'admin_menu'                          => add_query_arg(
-				array( 'page' => $menu['account']['url'] ),
-				admin_url( 'admin.php' )
-			),
+		$args = array(
+			'_wpnonce'                            => wp_create_nonce( 'laterpay_form' ),
+			'teaser_mode'                         => $teaserMode,
+			'teaser_plus_link'                    => $teaserMode === 0,
+			'teaser_plus_explanatory'             => $teaserMode === 1,
+			'teaser_plus_overlay'                 => $teaserMode === 2,
 			'purchase_button_positioned_manually' => get_option( 'laterpay_purchase_button_positioned_manually' ),
 			'time_passes_positioned_manually'     => get_option( 'laterpay_time_passes_positioned_manually' ),
 			'hide_free_posts'                     => get_option( 'laterpay_hide_free_posts' ),
-			'overlay'                             => \LaterPay\Helper\Appearance::getCurrentOptions(),
+			'overlay'                             => $overlayOptions,
+			'overlay_show_footer'                 => $overlayOptions['show_footer'] === '1',
+			'header'                              => $this->renderHeader(),
+			'overlay_content'                     => $this->renderOverlay(),
 		);
 
-		$this->assign( 'laterpay', $view_args );
-		$this->render( 'backend/appearance' );
+		$this
+			->loadAssets()
+			->render( 'admin/tabs/appearance', array( '_' => $args ) );
 	}
 
 	/**
@@ -124,7 +143,7 @@ class Appearance extends Base {
 	 *
 	 * @return void
 	 */
-	public static function processAjaxRequests( Event $event ) {
+	public function processAjaxRequests( Event $event ) {
 		$event->setResult(
 			array(
 				'success' => false,
@@ -146,18 +165,18 @@ class Appearance extends Base {
 		switch ( sanitize_text_field( $form ) ) {
 			// update presentation mode for paid content
 			case 'paid_content_preview':
-				$paid_content_preview_form = new PaidContentPreview();
+				$paidContentPreviewForm = new PaidContentPreview;
 
-				if ( ! $paid_content_preview_form->isValid( Request::post() ) ) {
+				if ( ! $paidContentPreviewForm->isValid( Request::post() ) ) {
 					throw new FormValidation(
-						get_class( $paid_content_preview_form ),
-						$paid_content_preview_form->getErrors()
+						get_class( $paidContentPreviewForm ),
+						$paidContentPreviewForm->getErrors()
 					);
 				}
 
 				$result = update_option(
 					'laterpay_teaser_mode',
-					$paid_content_preview_form->getFieldValue( 'paid_content_preview' )
+					$paidContentPreviewForm->getFieldValue( 'paid_content_preview' )
 				);
 
 				if ( $result ) {
@@ -215,18 +234,18 @@ class Appearance extends Base {
 				break;
 
 			case 'purchase_button_position':
-				$purchase_button_position_form = new PurchaseButtonPosition( Request::post() );
+				$purchaseButtonPositionForm = new PurchaseButtonPosition( Request::post() );
 
-				if ( ! $purchase_button_position_form->isValid() ) {
+				if ( ! $purchaseButtonPositionForm->isValid() ) {
 					throw new FormValidation(
-						get_class( $purchase_button_position_form ),
-						$purchase_button_position_form->getErrors()
+						get_class( $purchaseButtonPositionForm ),
+						$purchaseButtonPositionForm->getErrors()
 					);
 				}
 
 				$result = update_option(
 					'laterpay_purchase_button_positioned_manually',
-					(bool) $purchase_button_position_form->getFieldValue( 'purchase_button_positioned_manually' )
+					(bool) $purchaseButtonPositionForm->getFieldValue( 'purchase_button_positioned_manually' )
 				);
 
 				if ( $result ) {
@@ -253,18 +272,18 @@ class Appearance extends Base {
 				break;
 
 			case 'time_passes_position':
-				$time_passes_position_form = new TimePassPosition( Request::post() );
+				$timePassesPositionForm = new TimePassPosition( Request::post() );
 
-				if ( ! $time_passes_position_form->isValid() ) {
+				if ( ! $timePassesPositionForm->isValid() ) {
 					throw new FormValidation(
-						get_class( $time_passes_position_form ),
-						$time_passes_position_form->getErrors()
+						get_class( $timePassesPositionForm ),
+						$timePassesPositionForm->getErrors()
 					);
 				}
 
 				$result = update_option(
 					'laterpay_time_passes_positioned_manually',
-					(bool) $time_passes_position_form->getFieldValue( 'time_passes_positioned_manually' )
+					(bool) $timePassesPositionForm->getFieldValue( 'time_passes_positioned_manually' )
 				);
 
 				if ( $result ) {
@@ -291,18 +310,18 @@ class Appearance extends Base {
 				break;
 
 			case 'free_posts_visibility':
-				$hide_free_posts_form = new HideFreePosts( Request::post() );
+				$hideFreePostsForm = new HideFreePosts( Request::post() );
 
-				if ( ! $hide_free_posts_form->isValid() ) {
+				if ( ! $hideFreePostsForm->isValid() ) {
 					throw new FormValidation(
-						get_class( $hide_free_posts_form ),
-						$hide_free_posts_form->getErrors()
+						get_class( $hideFreePostsForm ),
+						$hideFreePostsForm->getErrors()
 					);
 				}
 
 				$result = update_option(
 					'laterpay_hide_free_posts',
-					(bool) $hide_free_posts_form->getFieldValue( 'hide_free_posts' )
+					(bool) $hideFreePostsForm->getFieldValue( 'hide_free_posts' )
 				);
 
 				if ( $result ) {
@@ -337,23 +356,108 @@ class Appearance extends Base {
 	}
 
 	/**
+	 * Add appearance styles
+	 *
+	 * @return void
+	 */
+	public function addCustomStyles() {
+		// apply colors config
+		\LaterPay\Helper\Appearance::addOverlayStyles( 'laterpay-admin' );
+	}
+
+	/**
 	 * Render overlay
 	 *
 	 * @return string
 	 */
 	public function renderOverlay() {
-		/**
-		 * @var $config Config
-		 */
-		$config = laterpay_get_plugin_config();
-
-		$additional_data = array(
-			'currency' => $config->get( 'currency.code' ),
-			'icons'    => $config->getSection( 'payment.icons' ),
+		$additional = array(
+			'currency' => $this->config->get( 'currency.code' ),
+			'icons'    => $this->config->getSection( 'payment.icons' ),
 		);
 
-		$this->assign( 'overlay', array_merge( \LaterPay\Helper\Appearance::getCurrentOptions(), $additional_data ) );
+		$args = array_merge( \LaterPay\Helper\Appearance::getCurrentOptions(), $additional );
 
-		return $this->getTextView( 'backend/partials/purchase-overlay' );
+		return $this->getTextView( 'admin/tabs/partials/purchase-overlay', array( '_' => $args ) );
+	}
+
+	/**
+	 *
+	 * @return void
+	 */
+	public function help() {
+		$screen = get_current_screen();
+
+		if ( null === $screen ) {
+			return;
+		}
+
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_appearance_tab_help_preview_mode',
+				'title'   => __( 'Preview Mode', 'laterpay' ),
+				'content' => __(
+					'<p>
+                The preview mode defines, how teaser content is shown to your
+                visitors.<br>
+                You can choose between two preview modes:
+            </p>
+            <ul>
+                <li>
+                    <strong>Teaser only</strong> &ndash; This mode shows only
+                    the teaser with an unobtrusive purchase link below.
+                </li>
+                <li>
+                    <strong>Teaser + overlay</strong> &ndash; This mode shows
+                    the teaser and an excerpt of the full content under a
+                    semi-transparent overlay that briefly explains LaterPay.<br>
+                    The plugin never loads the entire content before a user has
+                    purchased it.
+                </li>
+            </ul>', 'laterpay'
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_appearance_tab_help_purchase_button_position',
+				'title'   => __( 'Purchase Button Position', 'laterpay' ),
+				'content' => __(
+					'
+            <p>
+                You can choose, if the LaterPay purchase button is positioned at its default or a custom position:
+            </p>
+            <ul>
+                <li>
+                    <strong>Default position</strong> &ndash; The LaterPay purchase button is displayed at the top on the right below the title.
+                </li>
+                <li>
+                    <strong>Custom position</strong> &ndash; You can position the LaterPay purchase button yourself by using the stated WordPress action.
+                </li>
+            </ul>', 'laterpay'
+				),
+			)
+		);
+		$screen->add_help_tab(
+			array(
+				'id'      => 'laterpay_appearance_tab_help_time_pass_position',
+				'title'   => __( 'Time Pass Position', 'laterpay' ),
+				'content' => __(
+					'
+            <p>
+                You can choose, if time passes are positioned at their default or a custom position:
+            </p>
+            <ul>
+                <li>
+                    <strong>Default position</strong> &ndash; Time passes are displayed right below each paid article.<br>
+                    If you want to display time passes also for free posts, you can choose \'I want to display the time passes widget on free and paid posts\' in the plugin\'s advanced settings (Settings > LaterPay).
+                </li>
+                <li>
+                    <strong>Custom position</strong> &ndash; You can position time passes yourself by using the stated WordPress action.
+                </li>
+            </ul>', 'laterpay'
+				),
+			)
+		);
 	}
 }
