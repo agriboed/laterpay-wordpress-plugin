@@ -99,7 +99,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<tr>
 							<td>
 								<input type="text"
-									   class="lp_input"
+									   class="lp_input lp_input--minimum"
 									   id="debugger_addresses"
 									   name="debugger_addresses"
 									   value="<?php esc_attr_e( $_['debugger_addresses'] ); ?>">
@@ -263,7 +263,7 @@ checked<?php endif; ?>>
 								<input type="number"
 									   min="0"
 									   step="1"
-									   class="lp_input"
+									   class="lp_input lp_input--minimum"
 									   id="maximum_redemptions_per_gift_code"
 									   required
 									   name="maximum_redemptions_per_gift_code"
@@ -297,7 +297,7 @@ checked<?php endif; ?>>
 						<tr>
 							<td>
 								<input type="number"
-									   class="lp_input"
+									   class="lp_input lp_input--minimum"
 									   id="teaser_content_word_count"
 									   required
 									   min="0"
@@ -335,7 +335,7 @@ checked<?php endif; ?>>
 						<tr>
 							<td>
 								<input type="number"
-									   class="lp_input"
+									   class="lp_input lp_input--minimum"
 									   id="preview_excerpt_percentage_of_content"
 									   required
 									   min="0"
@@ -354,7 +354,7 @@ checked<?php endif; ?>>
 						<tr>
 							<td>
 								<input type="number"
-									   class="lp_input"
+									   class="lp_input lp_input--minimum"
 									   id="preview_excerpt_word_count_min"
 									   required
 									   min="0"
@@ -371,7 +371,7 @@ checked<?php endif; ?>>
 						<tr>
 							<td>
 								<input type="number"
-									   class="lp_input"
+									   class="lp_input lp_input--minimum"
 									   id="preview_excerpt_word_count_max"
 									   required
 									   min="0"
@@ -481,7 +481,7 @@ checked<?php endif; ?> />
 					<table class="lp_table--form">
 						<tr>
 							<td>
-								<select class="lp_input" name="api_fallback_behavior">
+								<select class="lp_input lp_input--minimum" name="api_fallback_behavior">
 									<option 
 									<?php
 									if ( $_['api_fallback_behavior'] === 0 ) :

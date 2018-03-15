@@ -42,10 +42,11 @@ class Advanced extends TabAbstract {
 	}
 
 	/**
+	 * Method returns current tab's info.
 	 *
 	 * @return array
 	 */
-	public static function getInfo() {
+	public static function info() {
 		return array(
 			'key'   => 'advanced',
 			'slug'  => 'laterpay-advanced-tab',
@@ -56,6 +57,9 @@ class Advanced extends TabAbstract {
 	}
 
 	/**
+	 * Register JS and CSS in the WordPress.
+	 *
+	 * @wp-hook admin_enqueue_scripts
 	 * @return void
 	 */
 	public function registerAssets() {
@@ -69,22 +73,25 @@ class Advanced extends TabAbstract {
 	}
 
 	/**
-	 * @return void
+	 * Load necessary CSS and JS.
+	 *
+	 * @return self
 	 */
-	public function loadAssets() {
+	protected function loadAssets() {
 		wp_enqueue_script( 'laterpay-backend-advanced' );
+
+		return $this;
 	}
 
 	/**
-	 * @throws \LogicException
+	 * Method pass data to the template and renders it in admin area.
+	 *
 	 * @throws \LaterPay\Core\Exception
 	 */
-	public function renderPage() {
-		$this->loadAssets();
-
-		$view_args = array(
+	public function renderTab() {
+		$args = array(
 			'nonce'                                 => wp_create_nonce( 'laterpay' ),
-			'header'                                => $this->getHeader(),
+			'header'                                => $this->renderHeader(),
 			'main_color'                            => get_option( 'laterpay_main_color' ),
 			'hover_color'                           => get_option( 'laterpay_hover_color' ),
 			'debugger_enabled'                      => get_option( 'laterpay_debugger_enabled' ),
@@ -104,9 +111,9 @@ class Advanced extends TabAbstract {
 			'pro_merchant'                          => get_option( 'laterpay_pro_merchant' ),
 		);
 
-		$this->view
-			->assign( '_', $view_args )
-			->render( 'admin/tabs/advanced' );
+		$this
+			->loadAssets()
+			->render( 'admin/tabs/advanced', array( '_' => $args ) );
 	}
 
 	/**
