@@ -193,6 +193,7 @@ html body .lp_purchase-overlay {
     padding: 0 $fs !important;
 
     &:hover {
+      text-decoration: none !important;
       color: $purchase-button-text;
     }
 
