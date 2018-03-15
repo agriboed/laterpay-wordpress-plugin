@@ -2,6 +2,7 @@
 
 namespace LaterPay\Core;
 
+use LaterPay\Core\Interfaces\LoggerInterface;
 use LaterPay\Core\Logger\Handler\Nothing;
 use LaterPay\Core\Logger\Handler\HandlerInterface;
 use LaterPay\Core\Logger\Processor\ProcessorInterface;
@@ -13,7 +14,7 @@ use LaterPay\Core\Logger\Processor\ProcessorInterface;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Logger {
+class Logger implements LoggerInterface {
 
 	/**
 	 * Logger levels
