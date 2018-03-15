@@ -16,16 +16,18 @@ use LaterPay\Core\Response;
 class Attachment {
 
 	 /**
-	 *
-	 * @param $attachment_id
-	 *
-	 * @return string
-	 */
-	public static function getEncryptedURL( $attachment_id ) {
+	  * @param $attachment_id
+	  * @param $post
+	  *
+	  *
+	  * @return string
+	  */
+	public static function getEncryptedURL( $attachment_id, \WP_Post $post = null ) {
 		$new_url = admin_url( 'admin-ajax.php' );
 		$params  = array(
 			'attachment_id' => $attachment_id,
 			'action'        => 'laterpay_attachment',
+			'post_id'       => $post ? $post->ID : null,
 		);
 
 		return $new_url . '?' . API::signAndEncode( $params, $new_url );
@@ -40,6 +42,7 @@ class Attachment {
 		$lptoken      = Request::get( 'lptoken' );             // optional, to update token
 		$hmac         = Request::get( 'hmac' );                // required, token to validate request
 		$ts           = Request::get( 'ts' );                  // required, timestamp
+		$post_id      = Request::get( 'post_id' );             // if attachment placed in other post
 
 		$response = new Response();
 
@@ -65,11 +68,18 @@ class Attachment {
 			$attachment->post_parent,
 		);
 
+		// if attachment placed in other post
+		if ( $post_id ) {
+			$ids[] = $post_id;
+		}
+
 		$access = API::getAccess( $ids );
 
 		// if user already bought parent attachment post than he also has access to attachment
 		if ( ! empty( $access['articles'][ $attachment->post_parent ]['access'] ) ||
-			 ! empty( $access['articles'][ $attachmentID ]['access'] ) ) {
+			 ! empty( $access['articles'][ $attachmentID ]['access'] ) ||
+			 ( $post_id && ! empty( $access['articles'][ $post_id ]['access'] ) )
+		) {
 
 			$file = get_attached_file( $attachmentID );
 
@@ -81,7 +91,7 @@ class Attachment {
 			$response
 				->setHeader( 'Content-Transfer-Encoding', 'binary' )
 				->setHeader( 'Content-Type', $filetype['type'] )
-				->setHeader( 'Content-Disposition', 'attachment; filename="' . $filename . '"')
+				->setHeader( 'Content-Disposition', 'attachment; filename="' . $filename . '"' )
 				->setHeader( 'Content-Length', $fsize )
 				->setBody( $data )
 				->setHTTPCode( 200 )

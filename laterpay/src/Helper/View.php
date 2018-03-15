@@ -2,8 +2,6 @@
 
 namespace LaterPay\Helper;
 
-use LaterPay\Core\Event;
-
 /**
  * LaterPay view helper.
  *
@@ -12,52 +10,6 @@ use LaterPay\Core\Event;
  * Author URI: https://laterpay.net/
  */
 class View {
-
-	/**
-	 * @var string
-	 */
-	public static $pluginPage = 'laterpay-pricing-tab';
-
-	/**
-	 * Helper function to render a plugin backend navigation tab link.
-	 *
-	 * @param array $page array(
-	 *                      'url'   => String
-	 *                      'title' => String
-	 *                      'cap'   => String
-	 *                      'data'  => Array|String     // optional
-	 *                    )
-	 *
-	 * @return string $link
-	 */
-	public static function getAdminMenuLink( $page ) {
-		$query_args = array(
-			'page' => $page['url'],
-		);
-		$href       = admin_url( 'admin.php' );
-		$href       = add_query_arg( $query_args, $href );
-
-		$data = '';
-		if ( isset( $page['data'] ) ) {
-			$data = wp_json_encode( $page['data'] );
-			$data = 'data="' . esc_attr( $data ) . '"';
-		}
-
-		return '<a href="' . esc_url( $href ) . '" ' . $data . ' class="lp_navigation-tabs__link">' . esc_html( $page['title'] ) . '</a>';
-	}
-
-	/**
-	 * Get links to be rendered in the plugin backend navigation.
-	 *
-	 * @return array
-	 */
-	public static function getAdminMenu() {
-		$event = new Event();
-		$event->setEchoOutput( false );
-		laterpay_event_dispatcher()->dispatch( 'laterpay_admin_menu_data', $event );
-
-		return (array) $event->getResult();
-	}
 
 	/**
 	 * Check, if plugin is fully functional.
@@ -192,13 +144,13 @@ class View {
 		if ( $main_color ) {
 			$custom_css .= '
                 .lp_purchase-button, .lp_redeem-code__button, .lp_time-pass__front-side-link {
-                    background-color: '.esc_attr($main_color).' !important;
+                    background-color: ' . esc_attr( $main_color ) . ' !important;
                 }
                 body .lp_time-pass__actions .lp_time-pass__terms {
-                    color: '.esc_attr($main_color).' !important;
+                    color: ' . esc_attr( $main_color ) . ' !important;
                 }
                 .lp_bought_notification, .lp_purchase-link, .lp_redeem-code__hint {
-                    color: '.esc_attr($main_color).' !important;
+                    color: ' . esc_attr( $main_color ) . ' !important;
                 }
             ';
 		}
@@ -206,16 +158,16 @@ class View {
 		if ( $hover_color ) {
 			$custom_css .= '
                 .lp_purchase-button:hover {
-                    background-color: '.esc_attr($hover_color).' !important;
+                    background-color: ' . esc_attr( $hover_color ) . ' !important;
                 }
                 .lp_time-pass__front-side-link:hover {
-                    background-color: '.esc_attr($hover_color).' !important;
+                    background-color: ' . esc_attr( $hover_color ) . ' !important;
                 }
                 body .lp_time-pass__actions .lp_time-pass__terms:hover {
-                    color: '.esc_attr($hover_color).' !important;
+                    color: ' . esc_attr( $hover_color ) . ' !important;
                 }
                 .lp_bought_notification:hover, .lp_purchase-link:hover, .lp_redeem-code__hint:hover {
-                    color: '.esc_attr($hover_color).' !important;
+                    color: ' . esc_attr( $hover_color ) . ' !important;
                 }
             ';
 		}

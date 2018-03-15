@@ -208,47 +208,45 @@ class TimePass {
 	}
 
 	/**
-	 * Get time pass select options by type.
+	 * @param $type
 	 *
-	 * @param string $type type of select
-	 *
-	 * @return string of options
+	 * @return array
 	 */
-	public static function getSelectOptions( $type ) {
-		$options_html  = '';
-		$default_value = null;
+	public static function getOptions( $type ) {
+		$return  = array();
+		$default = null;
 
 		switch ( $type ) {
 			case 'duration':
-				$elements      = self::getDurationOptions();
-				$default_value = self::getDefaultOptions( 'duration' );
+				$elements = self::getDurationOptions();
+				$default  = self::getDefaultOptions( 'duration' );
 				break;
 
 			case 'period':
-				$elements      = self::getPeriodOptions();
-				$default_value = self::getDefaultOptions( 'period' );
+				$elements = self::getPeriodOptions();
+				$default  = self::getDefaultOptions( 'period' );
 				break;
 
 			case 'access':
-				$elements      = self::getAccessOptions();
-				$default_value = self::getDefaultOptions( 'access_to' );
+				$elements = self::getAccessOptions();
+				$default  = self::getDefaultOptions( 'access_to' );
 				break;
 
 			default:
-				return $options_html;
+				return $return;
 		}
 
 		if ( $elements && is_array( $elements ) ) {
 			foreach ( $elements as $id => $name ) {
-				if ( (string) $id === (string) $default_value ) {
-					$options_html .= '<option selected="selected" value="' . esc_attr( $id ) . '">' . esc_attr( $name ) . '</option>';
-				} else {
-					$options_html .= '<option value="' . esc_attr( $id ) . '">' . esc_attr( $name ) . '</option>';
-				}
+				$return[ $id ] = array(
+					'id'      => $id,
+					'name'    => $name,
+					'default' => (string) $id === (string) $default,
+				);
 			}
 		}
 
-		return $options_html;
+		return $return;
 	}
 
 	/**
@@ -281,19 +279,19 @@ class TimePass {
 	/**
 	 * Get all tokenized time pass ids.
 	 *
-	 * @param null $time_passes array of time passes
+	 * @param null $passes array of time passes
 	 *
 	 * @return array $result
 	 */
-	public static function getTokenizedTimePassIDs( $time_passes = null ) {
-		if ( null === $time_passes ) {
-			$model       = new \LaterPay\Model\TimePass();
-			$time_passes = $model->getAllTimePasses();
+	public static function getTokenizedTimePassIDs( $passes = null ) {
+		if ( null === $passes ) {
+			$timePassModel = new \LaterPay\Model\TimePass();
+			$passes        = $timePassModel->getAllTimePasses();
 		}
 
 		$result = array();
-		foreach ( $time_passes as $time_pass ) {
-			$result[] = self::getTokenizedTimePassID( $time_pass['pass_id'] );
+		foreach ( $passes as $pass ) {
+			$result[] = self::getTokenizedTimePassID( $pass['pass_id'] );
 		}
 
 		return $result;
@@ -549,8 +547,8 @@ class TimePass {
 	 * @return int count of time passes
 	 */
 	public static function getTimePassesCount() {
-		$model = new \LaterPay\Model\TimePass();
+		$timePassModel = new \LaterPay\Model\TimePass();
 
-		return $model->getTimePassesCount();
+		return $timePassModel->getTimePassesCount();
 	}
 }

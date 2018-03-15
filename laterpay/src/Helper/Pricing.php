@@ -902,4 +902,6 @@ class Pricing {
 
 		return __( 'Pay Later', 'laterpay' );
 	}
+
+
 }
