@@ -41,6 +41,11 @@ class WordPress extends HandlerAbstract {
 		$this->config = laterpay_get_plugin_config();
 		$this->view   = new View( $this->config );
 
+		// show debugger only for admin
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+
 		add_action( 'wp_footer', array( $this, 'renderRecords' ), 1000 );
 		add_action( 'admin_footer', array( $this, 'renderRecords' ), 1000 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'loadAssets' ) );
