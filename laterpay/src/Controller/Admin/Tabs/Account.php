@@ -4,7 +4,7 @@ namespace LaterPay\Controller\Admin\Tabs;
 
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\InvalidIncomingData;
-use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Core\Request;
 use LaterPay\Helper\Config;
 use LaterPay\Form\ApiKey;
@@ -141,14 +141,14 @@ class Account extends TabAbstract {
 	/**
 	 * Process Ajax requests from account tab.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws InvalidIncomingData
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	public function processAjaxRequests( Event $event ) {
+	public function processAjaxRequests( EventInterface $event ) {
 		$event->setResult(
 			array(
 				'success' => false,
@@ -209,13 +209,13 @@ class Account extends TabAbstract {
 	 * Update LaterPay Merchant ID, required for making test transactions
 	 * against Sandbox or Live environments.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	protected function updateMerchantId( Event $event ) {
+	protected function updateMerchantId( EventInterface $event ) {
 		$isLive = null;
 
 		if ( $event->hasArgument( 'is_live' ) ) {
@@ -270,13 +270,13 @@ class Account extends TabAbstract {
 	 * Update LaterPay API Key, required for making test transactions against
 	 * Sandbox or Live environments.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	protected function updateApiKey( Event $event ) {
+	protected function updateApiKey( EventInterface $event ) {
 		$isLive = null;
 
 		if ( $event->hasArgument( 'is_live' ) ) {
@@ -331,13 +331,13 @@ class Account extends TabAbstract {
 	/**
 	 * Toggle LaterPay plugin mode between TEST and LIVE.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	protected function updatePluginMode( Event $event ) {
+	protected function updatePluginMode( EventInterface $event ) {
 		$pluginModeForm = new PluginMode();
 
 		if ( ! $pluginModeForm->isValid( Request::post() ) ) {
@@ -406,13 +406,13 @@ class Account extends TabAbstract {
 	}
 
 	/**
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws \LaterPay\Core\Exception\FormValidation
 	 *
 	 * @return void
 	 */
-	protected function changeRegion( Event $event ) {
+	protected function changeRegion( EventInterface $event ) {
 		$regionForm = new Region();
 
 		if ( ! $regionForm->isValid( Request::post() ) ) {
@@ -450,13 +450,13 @@ class Account extends TabAbstract {
 	/**
 	 * Toggle LaterPay plugin test mode between INVISIBLE and VISIBLE.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	public function updatePluginVisibilityInTestMode( Event $event ) {
+	public function updatePluginVisibilityInTestMode( EventInterface $event ) {
 		$pluginTestModeForm = new TestMode();
 
 		if ( ! $pluginTestModeForm->isValid( Request::post() ) ) {

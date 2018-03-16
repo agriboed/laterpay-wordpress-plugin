@@ -3,7 +3,7 @@
 namespace LaterPay\Controller\Admin\Tabs;
 
 use LaterPay\Core\Request;
-use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Helper\TimePass;
@@ -430,14 +430,14 @@ class Pricing extends TabAbstract {
 	/**
 	 * Process Ajax requests from pricing tab.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws \LaterPay\Core\Exception\InvalidIncomingData
 	 * @throws \LaterPay\Core\Exception\FormValidation
 	 *
 	 * @return void
 	 */
-	public function processAjaxRequests( Event $event ) {
+	public function processAjaxRequests( EventInterface $event ) {
 		$event->setResult(
 			array(
 				'success' => false,
@@ -559,13 +559,13 @@ class Pricing extends TabAbstract {
 	 * - it is > 0 and
 	 * - there isn't a more specific price for a given post.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	protected function updateGlobalDefaultPrice( Event $event ) {
+	protected function updateGlobalDefaultPrice( EventInterface $event ) {
 		$global_price_form = new GlobalPrice();
 
 		if ( ! $global_price_form->isValid( Request::post() ) ) {
@@ -613,13 +613,13 @@ class Pricing extends TabAbstract {
 	 * Set the category price, if a given category does not have a category
 	 * price yet.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws \LaterPay\Core\Exception\FormValidation
 	 *
 	 * @return void
 	 */
-	protected function setCategoryDefaultPrice( Event $event ) {
+	protected function setCategoryDefaultPrice( EventInterface $event ) {
 		$priceCategoryForm = new PriceCategory();
 
 		if ( ! $priceCategoryForm->isValid( Request::post() ) ) {
@@ -696,13 +696,13 @@ class Pricing extends TabAbstract {
 	/**
 	 * Delete the category price for a given category.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	protected function deleteCategoryDefaultPrice( Event $event ) {
+	protected function deleteCategoryDefaultPrice( EventInterface $event ) {
 		$priceCategoryForm = new PriceCategory();
 
 		$event->setResult(
@@ -777,13 +777,13 @@ class Pricing extends TabAbstract {
 	/**
 	 * Save time pass
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws \LaterPay\Core\Exception\FormValidation
 	 *
 	 * @return void
 	 */
-	protected function timePassSave( Event $event ) {
+	protected function timePassSave( EventInterface $event ) {
 		$timePassForm  = new Pass( Request::post() );
 		$timePassModel = new \LaterPay\Model\TimePass();
 
@@ -860,11 +860,11 @@ class Pricing extends TabAbstract {
 	/**
 	 * Remove time pass by pass_id.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	protected function timePassDelete( Event $event ) {
+	protected function timePassDelete( EventInterface $event ) {
 		$id = Request::post( 'id' );
 
 		if ( null !== $id ) {
@@ -896,13 +896,13 @@ class Pricing extends TabAbstract {
 	/**
 	 * Save subscription
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws \LaterPay\Core\Exception\FormValidation
 	 *
 	 * @return void
 	 */
-	protected function subscriptionFormSave( Event $event ) {
+	protected function subscriptionFormSave( EventInterface $event ) {
 		$subscriptionForm  = new \LaterPay\Form\Subscription( Request::post() );
 		$subscriptionModel = new \LaterPay\Model\Subscription();
 
@@ -947,11 +947,11 @@ class Pricing extends TabAbstract {
 	/**
 	 * Remove subscription by id.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	protected function subscriptionDelete( Event $event ) {
+	protected function subscriptionDelete( EventInterface $event ) {
 		$id = Request::post( 'id' );
 
 		if ( null !== $id ) {
@@ -1020,13 +1020,13 @@ class Pricing extends TabAbstract {
 	/**
 	 * Get generated voucher code.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws InvalidIncomingData
 	 *
 	 * @return void
 	 */
-	protected function generateVoucherCode( Event $event ) {
+	protected function generateVoucherCode( EventInterface $event ) {
 		$currency = Config::getCurrencyConfig();
 		$price    = Request::post( 'price' );
 
@@ -1063,11 +1063,11 @@ class Pricing extends TabAbstract {
 	 * Do nothing and render an error message, if no time pass is defined when
 	 * trying to switch to time pass only mode.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	protected function changePurchaseMode( Event $event ) {
+	protected function changePurchaseMode( EventInterface $event ) {
 		$onlyTimePassPurchaseMode = Request::post( 'only_time_pass_purchase_mode' );
 		$onlyTimePass             = 0; // allow individual and time pass purchases
 
@@ -1100,11 +1100,11 @@ class Pricing extends TabAbstract {
 
 	/**
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function updatePostPricesAfterCategoryDelete( Event $event ) {
+	public function updatePostPricesAfterCategoryDelete( EventInterface $event ) {
 		$args       = (array) $event->getArguments();
 		$categoryID = $args[0];
 

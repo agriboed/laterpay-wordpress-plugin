@@ -3,7 +3,7 @@
 namespace LaterPay\Controller\Front;
 
 use LaterPay\Controller\ControllerAbstract;
-use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Helper\API;
 
 /**
@@ -40,10 +40,12 @@ class Account extends ControllerAbstract {
 	 *
 	 * @see https://laterpay.net/developers/docs/inpage-api#GET/controls/links
 	 * @wp-hook laterpay_account_links
-	 * @param $event Event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function renderAccountLinks( Event $event ) {
+	public function renderAccountLinks( EventInterface $event ) {
 		list( $css, $forcelang, $show, $next ) = $event->getArguments() + array(
 			$this->config->get( 'css_url' ) . 'laterpay-account-links.css',
 			substr( get_locale(), 0, 2 ),
@@ -75,6 +77,7 @@ class Account extends ControllerAbstract {
 	 * Load LaterPay Javascript libraries.
 	 *
 	 * @wp-hook wp_enqueue_scripts
+	 *
 	 * @return void
 	 */
 	public function registerAssets() {
@@ -88,10 +91,11 @@ class Account extends ControllerAbstract {
 	}
 
 	/**
-	 * @param Event $event
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function isPageSecure( Event $event ) {
+	public function isPageSecure( EventInterface $event ) {
 		if ( ! is_ssl() ) {
 			$event->stopPropagation();
 		}

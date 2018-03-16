@@ -10,7 +10,7 @@ use LaterPay\Helper\View;
 use LaterPay\Model\CategoryPrice;
 use LaterPay\Form\Post;
 use LaterPay\Form\DynamicPricingData;
-use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Core\Request;
 use LaterPay\Core\Exception\PostNotFound;
 use LaterPay\Core\Exception\FormValidation;
@@ -332,12 +332,11 @@ class Metabox extends ControllerAbstract {
 				$categoryDefaultPriceRevenueModel = (string) $categoryPriceModel->getRevenueModelByCategoryID( $postDefaultCategory );
 			}
 
-			foreach ($categoryPriceData as $key => $category)
-			{
-				$category['selected'] = $category['category_id'] === $postDefaultCategory;
+			foreach ( $categoryPriceData as $key => $category ) {
+				$category['selected']       = $category['category_id'] === $postDefaultCategory;
 				$category['category_price'] = View::formatNumber( $category['category_price'] );
 
-				$categoryPriceData[$key] = $category;
+				$categoryPriceData[ $key ] = $category;
 			}
 		}
 
@@ -362,7 +361,7 @@ class Metabox extends ControllerAbstract {
 		$sisDisabled = false;
 
 		if ( $postPriceType === Pricing::TYPE_INDIVIDUAL_PRICE ||
-		     $postPriceType === Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE ) {
+			 $postPriceType === Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE ) {
 			if ( $price > $currency['ppu_max'] ) {
 				$ppuDisabled = true;
 			}
@@ -370,7 +369,6 @@ class Metabox extends ControllerAbstract {
 			if ( $price > $currency['sis_min'] ) {
 				$sisDisabled = true;
 			}
-
 		} else {
 			if ( $postRevenueModel !== 'ppu' || $price > $currency['ppu_max'] ) {
 				$ppuDisabled = true;
@@ -382,7 +380,7 @@ class Metabox extends ControllerAbstract {
 		}
 
 		$args = array(
-			'_wpnonce'                                => wp_create_nonce( $this->config->get( 'plugin_base_name' ) ),
+			'_wpnonce'                             => wp_create_nonce( $this->config->get( 'plugin_base_name' ) ),
 			'post_id'                              => $post->ID,
 			'post_price_type'                      => $postPriceType,
 			'is_published'                         => $post->post_status !== Pricing::STATUS_POST_PUBLISHED,
@@ -397,23 +395,27 @@ class Metabox extends ControllerAbstract {
 			'category_prices'                      => $categoryPriceData,
 			'post_default_category'                => $postDefaultCategory,
 			'global_default_price'                 => $globalDefaultPrice,
-			'global_default_price_formatted'       => View::formatNumber($globalDefaultPrice),
+			'global_default_price_formatted'       => View::formatNumber( $globalDefaultPrice ),
 			'has_individual_price'                 => $postPriceType === Pricing::TYPE_INDIVIDUAL_PRICE,
 			'has_individual_dynamic_price'         => $postPriceType === Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
 			'global_default_price_revenue_model'   => $globalDefaultPriceRevenueModel,
 			'category_default_price_revenue_model' => $categoryDefaultPriceRevenueModel,
 			'price_ranges'                         => $currency,
-			'is_dynamic_or_category'                  => in_array( $postPriceType, array(
-				Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
-				Pricing::TYPE_CATEGORY_DEFAULT_PRICE
-			), true ),
-			'is_dynamic_or_individual'                  => in_array( $postPriceType, array(
-				Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
-				Pricing::TYPE_INDIVIDUAL_PRICE
-			), true ),
-			'is_category_default' => $postPriceType === Pricing::TYPE_CATEGORY_DEFAULT_PRICE,
-			'category_prices_count' => count($categoryPriceData),
-			'is_global_default' => $postPriceType === Pricing::TYPE_GLOBAL_DEFAULT_PRICE
+			'is_dynamic_or_category'               => in_array(
+				$postPriceType, array(
+					Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
+					Pricing::TYPE_CATEGORY_DEFAULT_PRICE,
+				), true
+			),
+			'is_dynamic_or_individual'             => in_array(
+				$postPriceType, array(
+					Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
+					Pricing::TYPE_INDIVIDUAL_PRICE,
+				), true
+			),
+			'is_category_default'                  => $postPriceType === Pricing::TYPE_CATEGORY_DEFAULT_PRICE,
+			'category_prices_count'                => count( $categoryPriceData ),
+			'is_global_default'                    => $postPriceType === Pricing::TYPE_GLOBAL_DEFAULT_PRICE,
 		);
 
 		$this->render( 'admin/post/post-pricing-form', array( '_' => $args ) );
@@ -424,14 +426,14 @@ class Metabox extends ControllerAbstract {
 	 *
 	 * @wp-hook save_post, edit_attachments
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws PostNotFound
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	public function savePostData( Event $event ) {
+	public function savePostData( EventInterface $event ) {
 		list( $postID ) = $event->getArguments() + array( '' );
 
 		if ( ! $this->hasPermission( $postID ) ) {
@@ -480,9 +482,9 @@ class Metabox extends ControllerAbstract {
 			// apply revenue model
 			if ( in_array(
 				$type, array(
-				Pricing::TYPE_INDIVIDUAL_PRICE,
-				Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
-			), true
+					Pricing::TYPE_INDIVIDUAL_PRICE,
+					Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
+				), true
 			) ) {
 				$metaValues['revenue_model'] = $postForm->getFieldValue( 'post_revenue_model' );
 			}
@@ -549,11 +551,11 @@ class Metabox extends ControllerAbstract {
 	 *
 	 * @wp-hook publish_post
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function updatePostPublicationDate( Event $event ) {
+	public function updatePostPublicationDate( EventInterface $event ) {
 		list( $statusAfterUpdate, $statusBeforeUpdate, $post ) = $event->getArguments() + array( '', '', '' );
 
 		// skip on insufficient permission
@@ -584,13 +586,13 @@ class Metabox extends ControllerAbstract {
 	 *
 	 * @wp-hook wp_ajax_laterpay_reset_post_publication_date
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws InvalidIncomingData
 	 *
 	 * @return void
 	 */
-	public function resetPostPublicationDate( Event $event ) {
+	public function resetPostPublicationDate( EventInterface $event ) {
 		$event->setResult(
 			array(
 				'success' => false,
@@ -624,13 +626,13 @@ class Metabox extends ControllerAbstract {
 	 *
 	 * @wp-hook wp_ajax_laterpay_get_dynamic_pricing_data
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	public function getDynamicPricingData( Event $event ) {
+	public function getDynamicPricingData( EventInterface $event ) {
 
 		$dynamicPricingDataForm = new DynamicPricingData();
 
@@ -660,13 +662,13 @@ class Metabox extends ControllerAbstract {
 	 *
 	 * @wp-hook wp_ajax_laterpay_remove_post_dynamic_pricing
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws InvalidIncomingData
 	 *
 	 * @return void
 	 */
-	public function removeDynamicPricingData( Event $event ) {
+	public function removeDynamicPricingData( EventInterface $event ) {
 		$event->setResult(
 			array(
 				'success' => false,

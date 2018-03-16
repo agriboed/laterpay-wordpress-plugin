@@ -17,6 +17,7 @@ use LaterPay\Helper\TimePass;
 use LaterPay\Helper\Appearance;
 use LaterPay\Helper\Attachment;
 use LaterPay\Helper\Subscription;
+use LaterPay\Core\Interfaces\EventInterface;
 
 /**
  * LaterPay post controller.
@@ -103,11 +104,12 @@ class Post extends ControllerAbstract {
 	 * @wp-hook wp_ajax_laterpay_post_load_purchased_content,
 	 *     wp_ajax_nopriv_laterpay_post_load_purchased_content
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
+	 *
 	 * @throws \LaterPay\Core\Exception\InvalidIncomingData
 	 * @throws \LaterPay\Core\Exception\PostNotFound
 	 */
-	public function ajaxLoadPurchasedContent( Event $event ) {
+	public function ajaxLoadPurchasedContent( EventInterface $event ) {
 		$action = Request::get( 'action' );
 		$postID = Request::get( 'id' );
 
@@ -154,11 +156,13 @@ class Post extends ControllerAbstract {
 	 * @wp-hook wp_ajax_laterpay_redeem_voucher_code,
 	 *     wp_ajax_nopriv_laterpay_redeem_voucher_code
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
+	 *
 	 * @throws \LaterPay\Core\Exception\InvalidIncomingData
+	 *
 	 * @return void
 	 */
-	public function ajaxRedeemVoucherCode( Event $event ) {
+	public function ajaxRedeemVoucherCode( EventInterface $event ) {
 		$action = Request::get( 'action' );
 		$code   = Request::get( 'code' );
 		$link   = Request::get( 'link' );
@@ -230,12 +234,15 @@ class Post extends ControllerAbstract {
 	 * Encrypt attachment URL to prevent direct access.
 	 *
 	 * @wp-hook wp_get_attachment_url
-	 * @param Event $event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @throws \Exception
+	 *
 	 * @return void
 	 */
-	public function encryptAttachmentURL( Event $event ) {
-		list( $url, $attachment_id ) = $event->getArguments() + array( '', '' );
+	public function encryptAttachmentURL( EventInterface $event ) {
+		list( $url, $attachmentID ) = $event->getArguments() + array( '', '' );
 		unset( $url );
 
 		$cachingIsActive          = (bool) $this->config->get( 'caching.compatible_mode' );
@@ -271,7 +278,7 @@ class Post extends ControllerAbstract {
 				return;
 			}
 
-			$url = Attachment::getEncryptedURL( $attachment_id, $post );
+			$url = Attachment::getEncryptedURL( $attachmentID);
 		}
 
 		$event->setResult( $url );
@@ -281,10 +288,12 @@ class Post extends ControllerAbstract {
 	 * Prevent prepending of attachment before paid content.
 	 *
 	 * @wp-hook prepend_attachment
-	 * @param Event $event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function prependAttachment( Event $event ) {
+	public function prependAttachment( EventInterface $event ) {
 		$attachment = $event->getResult();
 
 		// get current post
@@ -298,21 +307,21 @@ class Post extends ControllerAbstract {
 			return;
 		}
 
-		$is_purchasable          = Pricing::isPurchasable( $post->ID );
+		$isPurchasable          = Pricing::isPurchasable( $post->ID );
 		$access                  = \LaterPay\Helper\Post::hasAccessToPost( $post );
-		$preview_post_as_visitor = User::previewPostAsVisitor( $post );
+		$previewPostAsVisitor = User::previewPostAsVisitor( $post );
 
-		if ( ( $is_purchasable && ! $access ) || $preview_post_as_visitor ) {
+		if ( ( $isPurchasable && ! $access ) || $previewPostAsVisitor ) {
 			$event->setResult( '' );
 
 			return;
 		}
 
-		$caching_is_active             = (bool) $this->config->get( 'caching.compatible_mode' );
-		$is_ajax_and_caching_is_active = defined( 'DOING_AJAX' ) && DOING_AJAX && $caching_is_active;
-		if ( $is_ajax_and_caching_is_active ) {
-			$event->setResult( '' );
+		$cachingIsActive             = (bool) $this->config->get( 'caching.compatible_mode' );
+		$isAjaxAndCachingIsActive = defined( 'DOING_AJAX' ) && DOING_AJAX && $cachingIsActive;
 
+		if ( $isAjaxAndCachingIsActive ) {
+			$event->setResult( '' );
 			return;
 		}
 
@@ -323,10 +332,12 @@ class Post extends ControllerAbstract {
 	 * Hide free posts with premium content from the homepage.
 	 *
 	 * @wp-hook the_posts
-	 * @param Event $event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function hideFreePostsWithPremiumContent( Event $event ) {
+	public function hideFreePostsWithPremiumContent( EventInterface $event ) {
 		$posts = (array) $event->getResult();
 
 		// check if current page is a homepage and hide free posts option enabled
@@ -355,10 +366,12 @@ class Post extends ControllerAbstract {
 	 * post.
 	 *
 	 * @wp-hook the_posts
-	 * @param Event $event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @return array|void $posts
 	 */
-	public function prefetchPostAccess( Event $event ) {
+	public function prefetchPostAccess( EventInterface $event ) {
 		$posts = (array) $event->getResult();
 		// prevent exec if admin
 		if ( is_admin() ) {
@@ -426,11 +439,13 @@ class Post extends ControllerAbstract {
 	 * purchase button is shown after the content.
 	 *
 	 * @wp-hook the_content
-	 * @param Event $event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 * @throws \Exception
 	 */
-	public function modifyPostContent( Event $event ) {
+	public function modifyPostContent( EventInterface $event ) {
 		$content = $event->getResult();
 
 		if ( $event->hasArgument( 'post' ) ) {
@@ -650,10 +665,12 @@ class Post extends ControllerAbstract {
 	 * post.
 	 *
 	 * @wp-hook the_posts
-	 * @param Event $event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function hidePaidPosts( Event $event ) {
+	public function hidePaidPosts( EventInterface $event ) {
 		if ( is_admin() || true === API::isActive() ) {
 			return;
 		}
@@ -685,10 +702,11 @@ class Post extends ControllerAbstract {
 	}
 
 	/**
-	 * @param Event $event
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function generatePostTeaser( Event $event ) {
+	public function generatePostTeaser( EventInterface $event ) {
 		global $wp_embed;
 
 		if ( $event->hasArgument( 'post' ) ) {
@@ -727,10 +745,11 @@ class Post extends ControllerAbstract {
 	}
 
 	/**
-	 * @param Event $event
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function generateFeedContent( Event $event ) {
+	public function generateFeedContent( EventInterface $event ) {
 		if ( $event->hasArgument( 'post' ) ) {
 			$post = $event->getArgument( 'post' );
 		} else {
@@ -768,9 +787,9 @@ class Post extends ControllerAbstract {
 	/**
 	 * Setup default teaser content preview mode
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 */
-	public function getTeaserMode( Event $event ) {
+	public function getTeaserMode( EventInterface $event ) {
 		$event->setResult( get_option( 'laterpay_teaser_mode' ) );
 	}
 
@@ -778,10 +797,12 @@ class Post extends ControllerAbstract {
 	 * Ajax callback to load a file through a script to prevent direct access.
 	 *
 	 * @wp-hook wp_ajax_laterpay_attachment, wp_ajax_nopriv_laterpay_attachment
-	 * @param Event $event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function ajaxLoadAttachment( Event $event ) {
+	public function ajaxLoadAttachment( EventInterface $event ) {
 		Attachment::getAttachmentSource( $event );
 	}
 }

@@ -4,7 +4,7 @@ namespace LaterPay\Controller\Front;
 
 use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Helper\API;
-use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 
 /**
  * LaterPay invoice controller.
@@ -38,10 +38,12 @@ class Invoice extends ControllerAbstract {
 	 * theme that can be freely positioned.
 	 *
 	 * @wp-hook laterpay_invoice_indicator
-	 * @param Event $event
+	 *
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function theInvoiceIndicator( Event $event ) {
+	public function theInvoiceIndicator( EventInterface $event ) {
 		$event->setEchoOutput( true );
 		$event->setResult( $this->getTextView( 'front/partials/widget/invoice-indicator' ) );
 
@@ -53,6 +55,7 @@ class Invoice extends ControllerAbstract {
 	 * Load LaterPay Javascript libraries.
 	 *
 	 * @wp-hook wp_enqueue_scripts
+	 *
 	 * @return void
 	 */
 	public function addFrontendScripts() {

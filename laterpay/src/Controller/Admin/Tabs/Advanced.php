@@ -2,7 +2,7 @@
 
 namespace LaterPay\Controller\Admin\Tabs;
 
-use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Core\Request;
 use LaterPay\Core\Exception\FormValidation;
 
@@ -117,11 +117,11 @@ class Advanced extends TabAbstract {
 	}
 
 	/**
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws FormValidation
 	 */
-	public function processAjaxRequests( Event $event ) {
+	public function processAjaxRequests( EventInterface $event ) {
 		$event->setResult(
 			array(
 				'success' => false,

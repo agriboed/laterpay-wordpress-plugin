@@ -3,7 +3,7 @@
 namespace LaterPay\Controller\Admin\Post;
 
 use LaterPay\Controller\ControllerAbstract;
-use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Helper\View;
 use LaterPay\Helper\Pricing;
 
@@ -37,11 +37,11 @@ class Column extends ControllerAbstract {
 	/**
 	 * Add custom columns to posts table.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function addColumnsToPostsTable( Event $event ) {
+	public function addColumnsToPostsTable( EventInterface $event ) {
 		list( $columns ) = $event->getArguments() + array( array() );
 
 		$extendedColumns = array();
@@ -66,12 +66,12 @@ class Column extends ControllerAbstract {
 	 *
 	 * @wp-hook manage_post_posts_custom_column
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function addDataToPostsTable( Event $event ) {
-		list($columnName, $postID) = $event->getArguments() + array( '', '' );
+	public function addDataToPostsTable( EventInterface $event ) {
+		list( $columnName, $postID ) = $event->getArguments() + array( '', '' );
 		$event->setEchoOutput( true );
 
 		switch ( $columnName ) {

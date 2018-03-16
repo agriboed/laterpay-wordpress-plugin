@@ -2,12 +2,12 @@
 
 namespace LaterPay\Helper;
 
-use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Core\Request;
 use LaterPay\Core\Response;
 
 /**
- * LaterPay file helper.
+ * LaterPay attachment helper.
  *
  * Plugin Name: LaterPay
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
@@ -15,34 +15,34 @@ use LaterPay\Core\Response;
  */
 class Attachment {
 
-	 /**
-	  * @param $attachment_id
-	  * @param $post
-	  *
-	  *
-	  * @return string
-	  */
-	public static function getEncryptedURL( $attachment_id, \WP_Post $post = null ) {
-		$new_url = admin_url( 'admin-ajax.php' );
-		$params  = array(
-			'attachment_id' => $attachment_id,
+	/**
+	 * @param $attachmentID
+	 * @param $parentPost
+	 *
+	 *
+	 * @return string
+	 */
+	public static function getEncryptedURL( $attachmentID, \WP_Post $parentPost = null ) {
+		$url    = admin_url( 'admin-ajax.php' );
+		$params = array(
+			'attachment_id' => $attachmentID,
 			'action'        => 'laterpay_attachment',
-			'post_id'       => $post ? $post->ID : null,
+			'post_id'       => $parentPost ? $parentPost->ID : null,
 		);
 
-		return $new_url . '?' . API::signAndEncode( $params, $new_url );
+		return $url . '?' . API::signAndEncode( $params, $url );
 	}
 
 	/**
 	 *
-	 * @param \LaterPay\Core\Event $event
+	 * @param EventInterface $event
 	 */
-	public static function getAttachmentSource( Event $event ) {
+	public static function getAttachmentSource( EventInterface $event ) {
 		$attachmentID = Request::get( 'attachment_id' );       // post(attachment) id
 		$lptoken      = Request::get( 'lptoken' );             // optional, to update token
 		$hmac         = Request::get( 'hmac' );                // required, token to validate request
 		$ts           = Request::get( 'ts' );                  // required, timestamp
-		$post_id      = Request::get( 'post_id' );             // if attachment placed in other post
+		$parentPostID = Request::get( 'post_id' );             // if attachment placed in other post
 
 		$response = new Response();
 
@@ -63,24 +63,14 @@ class Attachment {
 			exit();
 		}
 
-		$ids = array(
-			$attachmentID,
-			$attachment->post_parent,
-		);
-
-		// if attachment placed in other post
-		if ( $post_id ) {
-			$ids[] = $post_id;
+		if ( $parentPostID === $attachmentID ) {
+			$parentPostID = null;
 		}
 
-		$access = API::getAccess( $ids );
+		$access = Post::hasAccessToPost( $attachment, $parentPostID );
 
 		// if user already bought parent attachment post than he also has access to attachment
-		if ( ! empty( $access['articles'][ $attachment->post_parent ]['access'] ) ||
-			 ! empty( $access['articles'][ $attachmentID ]['access'] ) ||
-			 ( $post_id && ! empty( $access['articles'][ $post_id ]['access'] ) )
-		) {
-
+		if ( $access ) {
 			$file = get_attached_file( $attachmentID );
 
 			$filetype = wp_check_filetype( $file );

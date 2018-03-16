@@ -4,8 +4,8 @@ namespace LaterPay\Controller\Admin\Tabs;
 
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\InvalidIncomingData;
-use LaterPay\Core\Event;
 use LaterPay\Core\Request;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Form\HideFreePosts;
 use LaterPay\Form\TimePassPosition;
 use LaterPay\Form\PaidContentPreview;
@@ -136,14 +136,14 @@ class Appearance extends TabAbstract {
 	/**
 	 * Process Ajax requests from appearance tab.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @throws InvalidIncomingData
 	 * @throws FormValidation
 	 *
 	 * @return void
 	 */
-	public function processAjaxRequests( Event $event ) {
+	public function processAjaxRequests( EventInterface $event ) {
 		$event->setResult(
 			array(
 				'success' => false,
