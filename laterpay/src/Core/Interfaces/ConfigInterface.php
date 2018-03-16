@@ -3,13 +3,14 @@
 namespace LaterPay\Core\Interfaces;
 
 /**
- * LaterPay bootstrap class.
+ * LaterPay interface.
  *
  * Plugin Name: LaterPay
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
 interface ConfigInterface {
+
 	/**
 	 * @param $name
 	 * @param $value

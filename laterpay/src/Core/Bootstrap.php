@@ -20,11 +20,11 @@ use LaterPay\Controller\Install;
 class Bootstrap {
 
 	/**
-	 * Contains all controller instances.
+	 * Contains all instances.
 	 *
 	 * @var array
 	 */
-	protected static $controllers = array();
+	protected static $instances = array();
 
 	/**
 	 * Contains all settings for the plugin.
@@ -114,11 +114,11 @@ class Bootstrap {
 			throw new Exception( $msg );
 		}
 
-		if ( ! array_key_exists( $class, static::$controllers ) ) {
-			static::$controllers[ $class ] = new $class( static::$config, new View( static::$config ), static::$logger );
+		if ( ! array_key_exists( $class, static::$instances ) ) {
+			static::$instances[ $class ] = new $class( static::$config, new View( static::$config ), static::$logger );
 		}
 
-		return static::$controllers[ $class ];
+		return static::$instances[ $class ];
 	}
 
 	/**
@@ -213,10 +213,9 @@ class Bootstrap {
 	 * @return void
 	 */
 	protected function registerCacheHelper() {
-		// cache helper to purge the cache on update_option()
-		$cache_helper = new Cache();
-
-		static::$dispatcher->addListener( 'laterpay_option_update', array( $cache_helper, 'purgeCache' ) );
+		$cache                                       = new Cache();
+		static::$instances['\LaterPay\Helper\Cache'] = $cache;
+		static::$dispatcher->addListener( 'laterpay_option_update', array( $cache, 'purgeCache' ) );
 	}
 
 	/**

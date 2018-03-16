@@ -3,7 +3,7 @@
 namespace LaterPay\Core\Interfaces;
 
 /**
- * LaterPay bootstrap class.
+ * LaterPay interface.
  *
  * Plugin Name: LaterPay
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
@@ -12,18 +12,26 @@ namespace LaterPay\Core\Interfaces;
 interface LoggerInterface {
 
 	/**
-	 * @param $message
-	 * @param array $data
+	 * @param string $message
+	 * @param array $parameters
 	 *
 	 * @return mixed
 	 */
-	public function error( $message, array $data = array() );
+	public function error( $message, array $parameters = array() );
 
 	/**
-	 * @param $message
-	 * @param array $data
+	 * @param string $message
+	 * @param array $parameters
 	 *
 	 * @return mixed
 	 */
-	public function warning( $message, array $data = array() );
+	public function warning( $message, array $parameters = array() );
+
+	/**
+	 * @param string $message
+	 * @param array $parameters
+	 *
+	 * @return mixed
+	 */
+	public function info( $message, array $parameters = array() );
 }

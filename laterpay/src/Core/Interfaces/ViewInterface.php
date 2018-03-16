@@ -3,7 +3,7 @@
 namespace LaterPay\Core\Interfaces;
 
 /**
- * LaterPay bootstrap class.
+ * LaterPay interface.
  *
  * Plugin Name: LaterPay
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
