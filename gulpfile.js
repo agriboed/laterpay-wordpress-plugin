@@ -9,6 +9,7 @@ var gulp = require('gulp'),
     Q = require('q'),
     prompt = require('prompt'),
     dateFormat = require('dateformat'),
+    babel = require('gulp-babel'),
     p = {
         allFiles: [
             './laterpay/**/*.php',
@@ -114,6 +115,9 @@ gulp.task('js-build', function () {
     gulp.src(p.src.js + '*.js')
         .pipe(plugins.jshint('.jshintrc'))
         .pipe(plugins.jshint.reporter(plugins.stylish))
+        .pipe(babel({
+            presets: ['@babel/env']
+        }))
         .pipe(plugins.uglify())                                                 // compress with uglify
         .pipe(gulp.dest(p.dist.js));                                             // move to target folder
 });

@@ -1,110 +1,107 @@
 (function ($) {
 
-    // encapsulate all LaterPay Javascript in function laterPayBackendAccount
-    function laterPayBackendAdvanced() {
-        var $o = {
+    class Advanced {
+        constructor() {
+            this.$o = {
                 form: $('#lp_js_advancedForm'),
                 navigation: $('.lp_navigation'),
                 unlimitedAccessNone: $('.lp_access-none'),
                 unlimitedAccessAll: $('.lp_access-all'),
                 unlimitedAccessInput: $('.lp_category-access-input'),
                 proMerchant: $('#lp_js_proMerchant')
-            },
-
-            bindEvents = function () {
-                $o.form
-                    .bind('submit', function (e) {
-                        e.preventDefault();
-                        saveForm();
-                    });
-
-                $o.unlimitedAccessNone
-                    .bind('change', function (e) {
-                        toggleUnlimitedAccessNone(e.target);
-                    });
-
-                $o.unlimitedAccessAll
-                    .bind('change', function (e) {
-                        toggleUnlimitedAccessAll(e.target);
-                    });
-
-                $o.proMerchant
-                    .bind('change', function () {
-                        toggleProMerchant();
-                    });
-            },
-
-            saveForm = function () {
-                $.post(
-                    ajaxurl,
-                    $o.form.serializeArray(),
-                    function (data) {
-                        $o.navigation.showMessage(data);
-                    },
-                    'json'
-                );
-            },
-
-            toggleUnlimitedAccessNone = function (e) {
-                var el = $(e);
-                var categories = el.closest('tr').find($o.unlimitedAccessInput);
-                var all = el.closest('tr').find($o.unlimitedAccessAll);
-
-                if (el.attr('checked') === 'checked') {
-                    all.removeAttr('checked');
-                    categories.each(function (i, category) {
-                        $(category).removeAttr('checked');
-                        $(category).closest('label').hide();
-                    });
-                } else if (all.attr('checked') !== 'checked') {
-                    categories.each(function (i, category) {
-                        $(category).closest('label').fadeIn();
-                    });
-                }
-            },
-
-            toggleUnlimitedAccessAll = function (e) {
-                var el = $(e);
-                var categories = el.closest('tr').find($o.unlimitedAccessInput);
-                var none = el.closest('tr').find($o.unlimitedAccessNone);
-
-                if (el.attr('checked') === 'checked') {
-                    none.removeAttr('checked');
-                    categories.each(function (i, category) {
-                        $(category).removeAttr('checked');
-                        $(category).closest('label').hide();
-                    });
-                } else if (none.attr('checked') !== 'checked') {
-                    categories.each(function (i, category) {
-                        $(category).closest('label').fadeIn();
-                    });
-                }
-            },
-
-            prepareUnlimitedAccess = function () {
-                $o.unlimitedAccessNone.each(function (i, el) {
-                    toggleUnlimitedAccessNone(el);
-                });
-                $o.unlimitedAccessAll.each(function (i, el) {
-                    toggleUnlimitedAccessAll(el);
-                });
-            },
-
-            toggleProMerchant = function () {
-                var message = $o.proMerchant.data('confirm');
-                if ($o.proMerchant.attr('checked') && false === confirm(message)) {
-                    $o.proMerchant.removeAttr('checked');
-                }
-            },
-            initializePage = function () {
-                bindEvents();
-                prepareUnlimitedAccess();
             };
 
-        initializePage();
+            this.bindEvents();
+            this.prepareUnlimitedAccess();
+        }
+
+        bindEvents() {
+            this.$o.form
+                .bind('submit', (e) => {
+                    e.preventDefault();
+                    this.saveForm();
+                });
+
+            this.$o.unlimitedAccessNone
+                .bind('change', (e) => {
+                    this.toggleUnlimitedAccessNone(e.target);
+                });
+
+            this.$o.unlimitedAccessAll
+                .bind('change', (e) => {
+                    this.toggleUnlimitedAccessAll(e.target);
+                });
+
+            this.$o.proMerchant
+                .bind('change', () => {
+                    this.toggleProMerchant();
+                });
+        };
+
+        saveForm() {
+            $.post(
+                ajaxurl,
+                this.$o.form.serializeArray(),
+                function (data) {
+                    this.$o.navigation.showMessage(data);
+                },
+                'json'
+            );
+        }
+
+        toggleUnlimitedAccessNone(e) {
+            let el = $(e);
+            let categories = el.closest('tr').find(this.$o.unlimitedAccessInput);
+            let all = el.closest('tr').find(this.$o.unlimitedAccessAll);
+
+            if (el.attr('checked') === 'checked') {
+                all.removeAttr('checked');
+                categories.each((i, category) => {
+                    $(category).removeAttr('checked');
+                    $(category).closest('label').hide();
+                });
+            } else if (all.attr('checked') !== 'checked') {
+                categories.each(function (i, category) {
+                    $(category).closest('label').fadeIn();
+                });
+            }
+        }
+
+        toggleUnlimitedAccessAll(e) {
+            let el = $(e);
+            let categories = el.closest('tr').find(this.$o.unlimitedAccessInput);
+            let none = el.closest('tr').find(this.$o.unlimitedAccessNone);
+
+            if (el.attr('checked') === 'checked') {
+                none.removeAttr('checked');
+                categories.each((i, category) => {
+                    $(category).removeAttr('checked');
+                    $(category).closest('label').hide();
+                });
+            } else if (none.attr('checked') !== 'checked') {
+                categories.each((i, category) => {
+                    $(category).closest('label').fadeIn();
+                });
+            }
+        };
+
+        prepareUnlimitedAccess() {
+            this.$o.unlimitedAccessNone.each((i, el) => {
+                this.toggleUnlimitedAccessNone(el);
+            });
+            this.$o.unlimitedAccessAll.each((i, el) => {
+                this.toggleUnlimitedAccessAll(el);
+            });
+        };
+
+        toggleProMerchant() {
+            let message = this.$o.proMerchant.data('confirm');
+
+            if (this.$o.proMerchant.attr('checked') && false === confirm(message)) {
+                this.$o.proMerchant.removeAttr('checked');
+            }
+        }
     }
 
-    // initialize page
-    laterPayBackendAdvanced();
-
+    new Advanced();
 })(jQuery);
