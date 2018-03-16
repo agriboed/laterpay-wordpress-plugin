@@ -2,6 +2,8 @@
 
 namespace LaterPay\Helper;
 
+use LaterPay\Core\Interfaces\CacheInterface;
+
 /**
  * LaterPay cache helper.
  *
@@ -9,7 +11,14 @@ namespace LaterPay\Helper;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Cache {
+class Cache implements CacheInterface {
+
+	/**
+	 * Default expiration time in seconds.
+	 *
+	 * @var int
+	 */
+	protected static $expiration = 1800;
 
 	/**
 	 * @param $key
@@ -18,8 +27,13 @@ class Cache {
 	 *
 	 * @return bool
 	 */
-	public static function set( $key, $value, $expiration = 0 ) {
-		return set_transient( $key, $value, $expiration );
+	public static function set( $key, $value, $expiration = null ) {
+
+		if ( null === $expiration ) {
+			$expiration = static::$expiration;
+		}
+
+		return set_transient( $key, $value, (int) $expiration );
 	}
 
 	/**

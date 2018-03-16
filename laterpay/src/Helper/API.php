@@ -158,9 +158,9 @@ class API {
 
 		// set values to the cache
 		if ( empty( $cache ) ) {
-			Cache::set( static::$client->getToken(), $result['articles'], 1800 );
+			Cache::set( static::$client->getToken(), $result['articles'] );
 		} else {
-			Cache::set( static::$client->getToken(), $cache + $result['articles'], 1800 );
+			Cache::set( static::$client->getToken(), $cache + $result['articles'] );
 		}
 
 		return $result;
@@ -171,7 +171,7 @@ class API {
 	 * and API Client. That means you can call any public
 	 * \LaterPayClient\Client's method using current instance, for example:
 	 *
-	 * $buy_url = LaterPay\Helper\API::getBuyURL();
+	 * $buy_url = \LaterPay\Helper\API::getBuyURL();
 	 *
 	 * In that case will be called \LaterPayClient\Client->getBuyURL();
 	 *
