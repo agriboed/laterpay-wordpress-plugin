@@ -2,6 +2,8 @@
 
 namespace LaterPay\Helper;
 
+use LaterPay\Core\Request;
+
 /**
  * LaterPay time pass helper.
  *
@@ -113,13 +115,13 @@ class TimePass {
 			__( 'Years', 'laterpay' ),
 		);
 
-		$selected_array = $pluralized ? $periods_pluralized : $periods;
+		$selectedArray = $pluralized ? $periods_pluralized : $periods;
 
-		if ( isset( $selected_array[ $key ] ) ) {
-			return $selected_array[ $key ];
+		if ( isset( $selectedArray[ $key ] ) ) {
+			return $selectedArray[ $key ];
 		}
 
-		return $selected_array;
+		return $selectedArray;
 	}
 
 	/**
@@ -150,58 +152,58 @@ class TimePass {
 	 * @return mixed option value | array of options
 	 */
 	public static function getAccessOptions( $key = null ) {
-		$access_to = array(
+		$accessTo = array(
 			__( 'All content', 'laterpay' ),
 			__( 'All content except for category', 'laterpay' ),
 			__( 'All content in category', 'laterpay' ),
 		);
 
-		if ( isset( $access_to[ $key ] ) ) {
-			return $access_to[ $key ];
+		if ( isset( $accessTo[ $key ] ) ) {
+			return $accessTo[ $key ];
 		}
 
-		return $access_to;
+		return $accessTo;
 	}
 
 	/**
 	 * Get short time pass description.
 	 *
-	 * @param  array $time_pass time pass data
-	 * @param  bool $full_info need to display full info
+	 * @param  array $timePass time pass data
+	 * @param  bool $fullInfo need to display full info
 	 *
 	 * @return string short time pass description
 	 */
-	public static function getDescription( array $time_pass = array(), $full_info = false ) {
+	public static function getDescription( array $timePass = array(), $fullInfo = false ) {
 		$details = array();
 		$config  = laterpay_get_plugin_config();
 
-		if ( ! $time_pass ) {
-			$time_pass['duration']  = self::getDefaultOptions( 'duration' );
-			$time_pass['period']    = self::getDefaultOptions( 'period' );
-			$time_pass['access_to'] = self::getDefaultOptions( 'access_to' );
+		if ( ! $timePass ) {
+			$timePass['duration']  = self::getDefaultOptions( 'duration' );
+			$timePass['period']    = self::getDefaultOptions( 'period' );
+			$timePass['access_to'] = self::getDefaultOptions( 'access_to' );
 		}
 
 		$currency = $config->get( 'currency.code' );
 
-		$details['duration'] = $time_pass['duration'] . ' ' .
-							static::getPeriodOptions(
-								$time_pass['period'],
-								$time_pass['duration'] > 1
-							);
+		$details['duration'] = $timePass['duration'] . ' ' .
+							   static::getPeriodOptions(
+								   $timePass['period'],
+								   $timePass['duration'] > 1
+							   );
 		$details['access']   = __( 'access to', 'laterpay' ) . ' ' .
-							   static::getAccessOptions( $time_pass['access_to'] );
+							   static::getAccessOptions( $timePass['access_to'] );
 
 		// also display category, price, and revenue model, if full_info flag is used
-		if ( $full_info ) {
-			if ( $time_pass['access_to'] > 0 ) {
-				$category_id         = $time_pass['access_category'];
-				$details['category'] = '"' . get_the_category_by_ID( $category_id ) . '"';
+		if ( $fullInfo ) {
+			if ( $timePass['access_to'] > 0 ) {
+				$categoryID          = $timePass['access_category'];
+				$details['category'] = '"' . get_the_category_by_ID( $categoryID ) . '"';
 			}
 
 			$details['price']   = __( 'for', 'laterpay' ) . ' ' .
-								  View::formatNumber( $time_pass['price'] ) .
+								  View::formatNumber( $timePass['price'] ) .
 								  ' ' . strtoupper( $currency );
-			$details['revenue'] = '(' . strtoupper( $time_pass['revenue_model'] ) . ')';
+			$details['revenue'] = '(' . strtoupper( $timePass['revenue_model'] ) . ')';
 		}
 
 		return implode( ' ', $details );
@@ -252,25 +254,26 @@ class TimePass {
 	/**
 	 * Get tokenized time pass id.
 	 *
-	 * @param string $untokenized_time_pass_id untokenized time pass id
+	 * @param string $untokenizedTimePassID untokenized time pass id
 	 *
 	 * @return array $result
 	 */
-	public static function getTokenizedTimePassID( $untokenized_time_pass_id ) {
-		return sprintf( '%s_%s', self::PASS_TOKEN, $untokenized_time_pass_id );
+	public static function getTokenizedTimePassID( $untokenizedTimePassID ) {
+		return sprintf( '%s_%s', self::PASS_TOKEN, $untokenizedTimePassID );
 	}
 
 	/**
 	 * Get untokenized time pass id.
 	 *
-	 * @param $tokenized_time_pass_id
+	 * @param $tokenizedTimePassID
 	 *
 	 * @return string|null pass id
 	 */
-	public static function getUntokenizedTimePassID( $tokenized_time_pass_id ) {
-		$time_pass_parts = explode( '_', $tokenized_time_pass_id );
-		if ( $time_pass_parts[0] === self::PASS_TOKEN ) {
-			return $time_pass_parts[1];
+	public static function getUntokenizedTimePassID( $tokenizedTimePassID ) {
+		$timePassParts = explode( '_', $tokenizedTimePassID );
+
+		if ( $timePassParts[0] === self::PASS_TOKEN ) {
+			return $timePassParts[1];
 		}
 
 		return null;
@@ -290,6 +293,7 @@ class TimePass {
 		}
 
 		$result = array();
+
 		foreach ( $passes as $pass ) {
 			$result[] = self::getTokenizedTimePassID( $pass['pass_id'] );
 		}
@@ -300,113 +304,116 @@ class TimePass {
 	/**
 	 * Get all time passes for a given post.
 	 *
-	 * @param int $post_id post id
-	 * @param null $time_passes_with_access ids of time passes with access
-	 * @param bool $ignore_deleted ignore deleted time passes
+	 * @param int $postID post id
+	 * @param null $timePassesWithAccess ids of time passes with access
+	 * @param bool $ignoreDeleted ignore deleted time passes
 	 *
 	 * @return array $time_passes
 	 */
 	public static function getTimePassesListByPostID(
-		$post_id,
-		$time_passes_with_access = null,
-		$ignore_deleted = false
+		$postID,
+		$timePassesWithAccess = null,
+		$ignoreDeleted = false
 	) {
-		$model = new \LaterPay\Model\TimePass();
+		$timePassModel = new \LaterPay\Model\TimePass();
 
-		if ( $post_id !== null ) {
+		if ( $postID !== null ) {
 			// get all post categories
-			$post_categories   = get_the_category( $post_id );
-			$post_category_ids = array();
+			$postCategories  = get_the_category( $postID );
+			$postCategoryIDs = array();
 
 			// get category ids
-			foreach ( $post_categories as $category ) {
-				$post_category_ids[] = $category->term_id;
+			foreach ( $postCategories as $category ) {
+				$postCategoryIDs[] = $category->term_id;
 				// get category parents and include them in the ids array as well
-				$parent_id = get_category( $category->term_id )->parent;
-				while ( $parent_id ) {
-					$post_category_ids[] = $parent_id;
-					$parent_id           = get_category( $parent_id )->parent;
+				$parentID = get_category( $category->term_id )->parent;
+				while ( $parentID ) {
+					$postCategoryIDs[] = $parentID;
+					$parentID          = get_category( $parentID )->parent;
 				}
 			}
 
 			// get list of time passes that cover this post
-			$time_passes = $model->getTimePassesByCategoryIDs( $post_category_ids );
+			$timePasses = $timePassModel->getTimePassesByCategoryIDs( $postCategoryIDs );
 		} else {
-			$time_passes = $model->getTimePassesByCategoryIDs();
+			$timePasses = $timePassModel->getTimePassesByCategoryIDs();
 		}
 
 		// correct result, if we have purchased time passes
-		if ( null !== $time_passes_with_access && is_array( $time_passes_with_access ) && ! empty( $time_passes_with_access ) ) {
+		if ( null !== $timePassesWithAccess && is_array( $timePassesWithAccess ) && ! empty( $timePassesWithAccess ) ) {
 			// check, if user has access to the current post with time pass
-			$has_access = false;
-			foreach ( $time_passes as $time_pass ) {
-				if ( in_array( (string) $time_pass['pass_id'], $time_passes_with_access, true ) ) {
-					$has_access = true;
+			$hasAccess = false;
+
+			foreach ( $timePasses as $timePass ) {
+				if ( in_array( (string) $timePass['pass_id'], $timePassesWithAccess, true ) ) {
+					$hasAccess = true;
 					break;
 				}
 			}
 
-			if ( $has_access ) {
+			if ( $hasAccess ) {
 				// categories with access (type 2)
-				$covered_categories = array(
+				$coveredCategories = array(
 					'included' => array(),
 					'excluded' => null,
 				);
+
 				// excluded categories (type 1)
-				$excluded_categories = array();
+				$excludedCategories = array();
 
 				// go through time passes with access and find covered and excluded categories
-				foreach ( $time_passes_with_access as $time_pass_with_access_id ) {
-					$time_pass_with_access_data = $model->getTimePassData( $time_pass_with_access_id );
-					$access_category            = $time_pass_with_access_data['access_category'];
-					$access_type                = $time_pass_with_access_data['access_to'];
-					if ( $access_type === 2 ) {
-						$covered_categories['included'][] = $access_category;
-					} elseif ( $access_type === 1 ) {
-						$excluded_categories[] = $access_category;
+				foreach ( $timePassesWithAccess as $time_pass_with_access_id ) {
+					$timePassWithAccessData = $timePassModel->getTimePassData( $time_pass_with_access_id );
+					$accessCategory         = $timePassWithAccessData['access_category'];
+					$accessType             = $timePassWithAccessData['access_to'];
+
+					if ( $accessType === 2 ) {
+						$coveredCategories['included'][] = $accessCategory;
+					} elseif ( $accessType === 1 ) {
+						$excludedCategories[] = $accessCategory;
 					} else {
 						return array();
 					}
 				}
 
 				// case: full access, except for specific categories
-				if ( $excluded_categories ) {
-					foreach ( $excluded_categories as $excluded_category_id ) {
+				if ( $excludedCategories ) {
+					foreach ( $excludedCategories as $excludedCategoryID ) {
 						// search for excluded category in covered categories
-						$has_covered_category = array_search( (string) $excluded_category_id, $covered_categories, true );
-						if ( $has_covered_category !== false ) {
+						$hasCoveredCategory = array_search( (string) $excludedCategoryID, $coveredCategories, true );
+						if ( $hasCoveredCategory !== false ) {
 							return array();
 						} else {
 							//  if more than 1 time pass with excluded category was purchased,
 							//  and if its values are not matched, then all categories are covered
-							if ( isset( $covered_categories['excluded'] ) && ( $covered_categories['excluded'] !== $excluded_category_id ) ) {
+							if ( isset( $coveredCategories['excluded'] ) && ( $coveredCategories['excluded'] !== $excludedCategoryID ) ) {
 								return array();
 							}
 							// store the only category not covered
-							$covered_categories['excluded'] = $excluded_category_id;
+							$coveredCategories['excluded'] = $excludedCategoryID;
 						}
 					}
 				}
 
 				// get data without covered categories or only excluded
-				if ( isset( $covered_categories['excluded'] ) ) {
-					$time_passes = $model->getTimePassesByCategoryIDs( array( $covered_categories['excluded'] ) );
+				if ( isset( $coveredCategories['excluded'] ) ) {
+					$timePasses = $timePassModel->getTimePassesByCategoryIDs( array( $coveredCategories['excluded'] ) );
 				} else {
-					$time_passes = $model->getTimePassesByCategoryIDs( $covered_categories['included'], true );
+					$timePasses = $timePassModel->getTimePassesByCategoryIDs( $coveredCategories['included'], true );
 				}
 			}
 		}
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			// filter deleted time passes
-			foreach ( $time_passes as $key => $time_pass ) {
-				if ( $time_pass['is_deleted'] ) {
-					unset( $time_passes[ $key ] );
+			foreach ( $timePasses as $key => $timePass ) {
+				if ( $timePass['is_deleted'] ) {
+					unset( $timePasses[ $key ] );
 				}
 			}
 		}
 
-		return $time_passes;
+		return $timePasses;
 	}
 
 	/**
@@ -415,24 +422,24 @@ class TimePass {
 	 * @return array of time passes
 	 */
 	public static function getActiveTimePasses() {
-		$model = new \LaterPay\Model\TimePass();
+		$timePassModel = new \LaterPay\Model\TimePass();
 
-		return $model->getActiveTimePasses();
+		return $timePassModel->getActiveTimePasses();
 	}
 
 	/**
 	 * Get time pass data by id.
 	 *
-	 * @param  int $time_pass_id
-	 * @param  bool $ignore_deleted ignore deleted time passes
+	 * @param  int $timePassID
+	 * @param  bool $ignoreDeleted ignore deleted time passes
 	 *
 	 * @return array
 	 */
-	public static function getTimePassByID( $time_pass_id = null, $ignore_deleted = false ) {
-		$model = new \LaterPay\Model\TimePass();
+	public static function getTimePassByID( $timePassID = null, $ignoreDeleted = false ) {
+		$timePassModel = new \LaterPay\Model\TimePass();
 
-		if ( $time_pass_id ) {
-			return $model->getTimePassData( (int) $time_pass_id, $ignore_deleted );
+		if ( $timePassID ) {
+			return $timePassModel->getTimePassData( (int) $timePassID, $ignoreDeleted );
 		}
 
 		return array();
@@ -441,22 +448,22 @@ class TimePass {
 	/**
 	 * Get the LaterPay purchase link for a time pass.
 	 *
-	 * @param int $time_pass_id pass id
+	 * @param int $timePassID pass id
 	 * @param null $data additional data
-	 * @param bool $is_code_purchase code purchase link generation
+	 * @param bool $isCodePurchase code purchase link generation
 	 *
 	 * @return string url || empty string if something went wrong
 	 */
-	public static function getLaterpayPurchaseLink( $time_pass_id, $data = null, $is_code_purchase = false ) {
-		$time_pass_model = new \LaterPay\Model\TimePass();
-		$time_pass       = $time_pass_model->getTimePassData( $time_pass_id );
+	public static function getLaterpayPurchaseLink( $timePassID, $data = null, $isCodePurchase = false ) {
+		$timePassModel = new \LaterPay\Model\TimePass();
+		$timePass      = $timePassModel->getTimePassData( $timePassID );
 
-		if ( empty( $time_pass ) ) {
+		if ( empty( $timePass ) ) {
 			return '';
 		}
 
 		// return empty url if code not specified for gift code purchase
-		if ( $is_code_purchase && ! isset( $data['voucher'] ) ) {
+		if ( $isCodePurchase && ! isset( $data['voucher'] ) ) {
 			return '';
 		}
 
@@ -464,34 +471,44 @@ class TimePass {
 			$data = array();
 		}
 
-		$config        = laterpay_get_plugin_config();
-		$currency      = $config->get( 'currency.code' );
-		$price         = isset( $data['price'] ) ? $data['price'] : $time_pass['price'];
-		$revenue_model = Pricing::ensureValidRevenueModel( $time_pass['revenue_model'], $price );
-		$link          = isset( $data['link'] ) ? $data['link'] : get_permalink();
+		$config       = laterpay_get_plugin_config();
+		$currency     = $config->get( 'currency.code' );
+		$price        = isset( $data['price'] ) ? $data['price'] : $timePass['price'];
+		$revenueModel = Pricing::ensureValidRevenueModel( $timePass['revenue_model'], $price );
+		$backURL      = isset( $data['link'] ) ? $data['link'] : get_permalink();
 
 		// prepare URL
-		$url_params = array(
-			'pass_id' => self::getTokenizedTimePassID( $time_pass_id ),
-			'link'    => $link,
+		$urlParams = array(
+			'pass_id' => self::getTokenizedTimePassID( $timePassID ),
+			'buy'     => true,
 		);
+
+		if ( empty( $data['link'] ) ) {
+			$parsedLink = explode( '?', Request::server( 'REQUEST_URI' ) );
+			$backURL    = $backURL . '?' . build_query( $urlParams );
+
+			// if params exists in uri
+			if ( ! empty( $parsedLink[1] ) ) {
+				$backURL .= '&' . $parsedLink[1];
+			}
+		}
 
 		// set voucher param
 		if ( isset( $data['voucher'] ) ) {
-			$url_params['voucher'] = $data['voucher'];
+			$urlParams['voucher'] = $data['voucher'];
 		}
 
 		// parameters for LaterPay purchase form
 		$params = array(
-			'article_id'    => $is_code_purchase ? '[#' . $data['voucher'] . ']' : self::getTokenizedTimePassID( $time_pass_id ),
+			'article_id'    => $isCodePurchase ? '[#' . $data['voucher'] . ']' : self::getTokenizedTimePassID( $timePassID ),
 			'pricing'       => $currency . ( $price * 100 ),
-			'expiry'        => '+' . self::getTimePassExpiryTime( $time_pass ),
-			'url'           => $link . '?' . build_query( $url_params ),
-			'title'         => $is_code_purchase ? $time_pass['title'] . ', Code: ' . $data['voucher'] : $time_pass['title'],
+			'expiry'        => '+' . self::getTimePassExpiryTime( $timePass ),
+			'url'           => $backURL,
+			'title'         => $isCodePurchase ? $timePass['title'] . ', Code: ' . $data['voucher'] : $timePass['title'],
 			'require_login' => (int) get_option( 'laterpay_require_login', 0 ),
 		);
 
-		if ( $revenue_model === 'sis' ) {
+		if ( $revenueModel === 'sis' ) {
 			// Single Sale purchase
 			return API::getBuyURL( $params );
 		}
@@ -503,35 +520,35 @@ class TimePass {
 	/**
 	 * Get time pass expiry time.
 	 *
-	 * @param array $time_pass
+	 * @param array $timePass
 	 *
 	 * @return int $time expiry time
 	 */
-	protected static function getTimePassExpiryTime( $time_pass ) {
-		switch ( $time_pass['period'] ) {
+	protected static function getTimePassExpiryTime( $timePass ) {
+		switch ( $timePass['period'] ) {
 			// hours
 			case 0:
-				$time = $time_pass['duration'] * 60 * 60;
+				$time = $timePass['duration'] * 60 * 60;
 				break;
 
 			// days
 			case 1:
-				$time = $time_pass['duration'] * 60 * 60 * 24;
+				$time = $timePass['duration'] * 60 * 60 * 24;
 				break;
 
 			// weeks
 			case 2:
-				$time = $time_pass['duration'] * 60 * 60 * 24 * 7;
+				$time = $timePass['duration'] * 60 * 60 * 24 * 7;
 				break;
 
 			// months
 			case 3:
-				$time = $time_pass['duration'] * 60 * 60 * 24 * 31;
+				$time = $timePass['duration'] * 60 * 60 * 24 * 31;
 				break;
 
 			// years
 			case 4:
-				$time = $time_pass['duration'] * 60 * 60 * 24 * 365;
+				$time = $timePass['duration'] * 60 * 60 * 24 * 365;
 				break;
 
 			default:

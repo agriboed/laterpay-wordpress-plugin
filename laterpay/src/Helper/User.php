@@ -96,13 +96,15 @@ class User {
 			return true;
 		}
 
-		$unlimited_access = get_option( 'laterpay_unlimited_access' );
-		if ( ! $unlimited_access ) {
+		$unlimitedAccess = get_option( 'laterpay_unlimited_access' );
+
+		if ( ! $unlimitedAccess ) {
 			return false;
 		}
 
 		// check, if user has a role that has the given capability
 		$user = wp_get_current_user();
+
 		if ( ! $user instanceof \WP_User || ! $user->roles ) {
 			return false;
 		}
@@ -111,29 +113,30 @@ class User {
 			return false;
 		}
 
-		$has_cap = false;
+		$hasCap = false;
 
 		foreach ( $user->roles as $role ) {
-			if ( ! isset( $unlimited_access[ $role ] ) || in_array( 'none', $unlimited_access[ $role ], true ) ) {
+			if ( ! isset( $unlimitedAccess[ $role ] ) || in_array( 'none', $unlimitedAccess[ $role ], true ) ) {
 				continue;
 			}
 
 			$categories = array( 'all' );
 			// get post categories and their parents
-			$post_categories = wp_get_post_categories( $post->ID );
-			foreach ( $post_categories as $post_category_id ) {
-				$categories[] = $post_category_id;
-				$parents      = Pricing::getCategoryParents( $post_category_id );
+			$postCategories = wp_get_post_categories( $post->ID );
+
+			foreach ( $postCategories as $postCategoryID ) {
+				$categories[] = $postCategoryID;
+				$parents      = Pricing::getCategoryParents( $postCategoryID );
 				$categories   = array_merge( $categories, $parents );
 			}
 
-			if ( array_intersect( $categories, $unlimited_access[ $role ] ) ) {
-				$has_cap = true;
+			if ( array_intersect( $categories, $unlimitedAccess[ $role ] ) ) {
+				$hasCap = true;
 				break;
 			}
 		}
 
-		return $has_cap;
+		return $hasCap;
 	}
 
 	/**
@@ -214,7 +217,7 @@ class User {
 			$current_user                = wp_get_current_user();
 
 			if ( $current_user instanceof \WP_User &&
-				true === (bool) static::getUserMeta( 'laterpay_hide_preview_mode_pane' )
+				 true === (bool) static::getUserMeta( 'laterpay_hide_preview_mode_pane' )
 			) {
 				static::$hidePreviewModePane = true;
 			}

@@ -127,14 +127,14 @@ class Config {
 		$list = array();
 
 		foreach ( $settings as $key => $value ) {
-			$setting_name = $prefix . $key;
+			$settingName = $prefix . $key;
 
 			if ( is_array( $value ) ) {
-				$list = array_merge( $list, static::buildSettingsList( $value, $setting_name . '.' ) );
+				$list = array_merge( $list, static::buildSettingsList( $value, $settingName . '.' ) );
 				continue;
 			}
 
-			$list[ $setting_name ] = $value;
+			$list[ $settingName ] = $value;
 		}
 
 		return $list;
@@ -146,13 +146,13 @@ class Config {
 	 * @return array
 	 */
 	public static function getCurrencyConfig() {
-		$config         = laterpay_get_plugin_config();
-		$limits_section = 'currency.limits';
-		$plan           = get_option( 'laterpay_pro_merchant', 0 ) ? 'pro' : 'default';
+		$config        = laterpay_get_plugin_config();
+		$limitsSection = 'currency.limits';
+		$plan          = get_option( 'laterpay_pro_merchant', 0 ) ? 'pro' : 'default';
 
 		// get limits
-		$currency_limits  = $config->getSection( $limits_section . '.' . $plan );
-		$currency_general = array(
+		$currencyLimits  = $config->getSection( $limitsSection . '.' . $plan );
+		$currencyGeneral = array(
 			'code'          => $config->get( 'currency.code' ),
 			'dynamic_start' => $config->get( 'currency.dynamic_start' ),
 			'dynamic_end'   => $config->get( 'currency.dynamic_end' ),
@@ -160,14 +160,14 @@ class Config {
 		);
 
 		// process limits keys
-		foreach ( $currency_limits as $key => $val ) {
-			$key_components                 = explode( '.', $key );
-			$simple_key                     = end( $key_components );
-			$currency_limits[ $simple_key ] = $val;
-			unset( $currency_limits[ $key ] );
+		foreach ( $currencyLimits as $key => $val ) {
+			$keyComponents                = explode( '.', $key );
+			$simpleKey                    = end( $keyComponents );
+			$currencyLimits[ $simpleKey ] = $val;
+			unset( $currencyLimits[ $key ] );
 		}
 
-		return array_merge( $currency_limits, $currency_general );
+		return array_merge( $currencyLimits, $currencyGeneral );
 	}
 
 	/**
@@ -176,36 +176,36 @@ class Config {
 	 * @return array $credentials
 	 */
 	public static function prepareSandboxCredentials() {
-		$regional_settings         = static::getRegionalSettings();
-		$credentials_match_default = false;
+		$regionalSettings        = static::getRegionalSettings();
+		$credentialsMatchDefault = false;
 
-		$cp_key  = get_option( 'laterpay_sandbox_merchant_id' );
-		$api_key = get_option( 'laterpay_sandbox_api_key' );
+		$merchantID = get_option( 'laterpay_sandbox_merchant_id' );
+		$APIKey     = get_option( 'laterpay_sandbox_api_key' );
 
 		// detect if sandbox creds were modified
-		if ( $cp_key && $api_key ) {
+		if ( $merchantID && $APIKey ) {
 			foreach ( static::$regionalSettings as $settings ) {
-				if ( $settings['api']['sandbox_merchant_id'] === $cp_key &&
-					$settings['api']['sandbox_api_key'] === $api_key ) {
-					$credentials_match_default = true;
+				if ( $settings['api']['sandbox_merchant_id'] === $merchantID &&
+					$settings['api']['sandbox_api_key'] === $APIKey ) {
+					$credentialsMatchDefault = true;
 					break;
 				}
 			}
 		} else {
-			$credentials_match_default = true;
+			$credentialsMatchDefault = true;
 		}
 
-		if ( $credentials_match_default ) {
-			$cp_key  = $regional_settings['api.sandbox_merchant_id'];
-			$api_key = $regional_settings['api.sandbox_api_key'];
+		if ( $credentialsMatchDefault ) {
+			$merchantID = $regionalSettings['api.sandbox_merchant_id'];
+			$APIKey     = $regionalSettings['api.sandbox_api_key'];
 
-			update_option( 'laterpay_sandbox_merchant_id', $cp_key );
-			update_option( 'laterpay_sandbox_api_key', $api_key );
+			update_option( 'laterpay_sandbox_merchant_id', $merchantID );
+			update_option( 'laterpay_sandbox_api_key', $APIKey );
 		}
 
 		return array(
-			'cp_key'  => $cp_key,
-			'api_key' => $api_key,
+			'cp_key'  => $merchantID,
+			'api_key' => $APIKey,
 		);
 	}
 }

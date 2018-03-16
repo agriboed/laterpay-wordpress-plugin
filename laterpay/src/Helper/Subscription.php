@@ -24,7 +24,7 @@ class Subscription {
 	 * @return mixed option value | array of options
 	 */
 	public static function getDefaultOptions( $key = null ) {
-		$currency_config = Config::getCurrencyConfig();
+		$config = Config::getCurrencyConfig();
 
 		$defaults = array(
 			'id'              => '0',
@@ -32,7 +32,7 @@ class Subscription {
 			'period'          => '3',
 			'access_to'       => '0',
 			'access_category' => '',
-			'price'           => $currency_config['sis_min'],
+			'price'           => $config['sis_min'],
 			'title'           => __( '1 Month Subscription', 'laterpay' ),
 			'description'     => __( '1 month access to all content on this website (cancellable anytime)', 'laterpay' ),
 		);
@@ -50,11 +50,11 @@ class Subscription {
 	 * Get short subscription description.
 	 *
 	 * @param  array $subscription subscription data
-	 * @param  bool $full_info need to display full info
+	 * @param  bool $fullInfo need to display full info
 	 *
 	 * @return string short subscription description
 	 */
-	public static function getDescription( $subscription = array(), $full_info = false ) {
+	public static function getDescription( array $subscription = array(), $fullInfo = false ) {
 		$details = array();
 		$config  = laterpay_get_plugin_config();
 
@@ -67,18 +67,18 @@ class Subscription {
 		$currency = $config->get( 'currency.code' );
 
 		$details['duration'] = $subscription['duration'] . ' ' .
-							TimePass::getPeriodOptions(
-								$subscription['period'],
-								$subscription['duration'] > 1
-							);
+							   TimePass::getPeriodOptions(
+								   $subscription['period'],
+								   $subscription['duration'] > 1
+							   );
 		$details['access']   = __( 'access to', 'laterpay' ) . ' ' .
 							   TimePass::getAccessOptions( $subscription['access_to'] );
 
 		// also display category, price, and revenue model, if full_info flag is used
-		if ( $full_info ) {
+		if ( $fullInfo ) {
 			if ( $subscription['access_to'] > 0 ) {
-				$category_id         = $subscription['access_category'];
-				$details['category'] = '"' . get_the_category_by_ID( $category_id ) . '"';
+				$categoryID          = $subscription['access_category'];
+				$details['category'] = '"' . get_the_category_by_ID( $categoryID ) . '"';
 			}
 
 			$details['price']       = __( 'for', 'laterpay' ) . ' ' .
@@ -88,50 +88,6 @@ class Subscription {
 		}
 
 		return implode( ' ', $details );
-	}
-
-	/**
-	 * Get subscriptions select options by type.
-	 *
-	 * @param string $type type of select
-	 *
-	 * @return string of options
-	 */
-	public static function getSelectOptions( $type ) {
-		$options_html  = '';
-		$default_value = null;
-
-		switch ( $type ) {
-			case 'duration':
-				$elements      = TimePass::getDurationOptions();
-				$default_value = self::getDefaultOptions( 'duration' );
-				break;
-
-			case 'period':
-				$elements      = TimePass::getPeriodOptions();
-				$default_value = self::getDefaultOptions( 'period' );
-				break;
-
-			case 'access':
-				$elements      = TimePass::getAccessOptions();
-				$default_value = self::getDefaultOptions( 'access_to' );
-				break;
-
-			default:
-				return $options_html;
-		}
-
-		if ( $elements && is_array( $elements ) ) {
-			foreach ( $elements as $id => $name ) {
-				if ( (string) $id === (string) $default_value ) {
-					$options_html .= '<option selected="selected" value="' . esc_attr( $id ) . '">' . esc_html( $name ) . '</option>';
-				} else {
-					$options_html .= '<option value="' . esc_attr( $id ) . '">' . esc_html( $name ) . '</option>';
-				}
-			}
-		}
-
-		return $options_html;
 	}
 
 	/**
@@ -148,12 +104,12 @@ class Subscription {
 	/**
 	 * Get untokenized subscription id.
 	 *
-	 * @param string $tokenized_id tokenized subscription id
+	 * @param string $tokenizedID tokenized subscription id
 	 *
 	 * @return string|null pass id
 	 */
-	public static function getUntokenizedID( $tokenized_id ) {
-		list( $prefix, $id ) = array_pad( explode( '_', $tokenized_id ), 2, null );
+	public static function getUntokenizedID( $tokenizedID ) {
+		list( $prefix, $id ) = array_pad( explode( '_', $tokenizedID ), 2, null );
 
 		if ( $prefix === self::TOKEN ) {
 			return $id;
@@ -171,8 +127,8 @@ class Subscription {
 	 */
 	public static function getTokenizedIDs( $subscriptions = null ) {
 		if ( null === $subscriptions ) {
-			$model         = new \LaterPay\Model\Subscription();
-			$subscriptions = $model->getAllSubscriptions();
+			$subscriptionModel = new \LaterPay\Model\Subscription();
+			$subscriptions     = $subscriptionModel->getAllSubscriptions();
 		}
 
 		$result = array();
@@ -190,9 +146,9 @@ class Subscription {
 	 * @return array of subscriptions
 	 */
 	public static function getActiveSubscriptions() {
-		$model = new \LaterPay\Model\Subscription();
+		$subscriptionModel = new \LaterPay\Model\Subscription();
 
-		return $model->getActiveSubscriptions();
+		return $subscriptionModel->getActiveSubscriptions();
 	}
 
 	/**
@@ -204,10 +160,10 @@ class Subscription {
 	 * @return array
 	 */
 	public static function getSubscriptionByID( $id = null, $ignore_deleted = false ) {
-		$model = new \LaterPay\Model\Subscription();
+		$subscriptionModel = new \LaterPay\Model\Subscription();
 
 		if ( $id ) {
-			return $model->getSubscription( (int) $id, $ignore_deleted );
+			return $subscriptionModel->getSubscription( (int) $id, $ignore_deleted );
 		}
 
 		return array();
@@ -223,8 +179,8 @@ class Subscription {
 	 * @throws \InvalidArgumentException
 	 */
 	public static function getSubscriptionPurchaseLink( $id, $data = null ) {
-		$subscription_model = new \LaterPay\Model\Subscription();
-		$subscription       = $subscription_model->getSubscription( $id );
+		$subscriptionModel = new \LaterPay\Model\Subscription();
+		$subscription      = $subscriptionModel->getSubscription( $id );
 
 		if ( empty( $subscription ) ) {
 			return '';
@@ -256,107 +212,109 @@ class Subscription {
 	/**
 	 * Get all subscriptions for a given post.
 	 *
-	 * @param int $post_id post id
-	 * @param null $subscriptions_with_access ids of subscriptions with access
-	 * @param bool $ignore_deleted ignore deleted subsciptions
+	 * @param int $postID post id
+	 * @param null $subscriptionsWithAccess ids of subscriptions with access
+	 * @param bool $ignoreDeleted ignore deleted subsciptions
 	 *
 	 * @return array $subscriptions
 	 */
 	public static function getSubscriptionsListByPostID(
-		$post_id,
-		$subscriptions_with_access = null,
-		$ignore_deleted = false
+		$postID,
+		$subscriptionsWithAccess = null,
+		$ignoreDeleted = false
 	) {
-		$model = new \LaterPay\Model\Subscription();
+		$subscriptionModel = new \LaterPay\Model\Subscription();
 
-		if ( $post_id !== null ) {
+		if ( $postID !== null ) {
 			// get all post categories
-			$post_categories   = get_the_category( $post_id );
-			$post_category_ids = array();
+			$postCategories  = get_the_category( $postID );
+			$postCategoryIDs = array();
 
 			// get category ids
 			/**
 			 * @var $category \WP_Term
 			 */
-			foreach ( $post_categories as $category ) {
-				$post_category_ids[] = $category->term_id;
+			foreach ( $postCategories as $category ) {
+				$postCategoryIDs[] = $category->term_id;
 				// get category parents and include them in the ids array as well
-				$parent_id = get_category( $category->term_id )->parent;
-				while ( $parent_id ) {
-					$post_category_ids[] = $parent_id;
-					$parent_id           = get_category( $parent_id )->parent;
+				$parentID = get_category( $category->term_id )->parent;
+				while ( $parentID ) {
+					$postCategoryIDs[] = $parentID;
+					$parentID          = get_category( $parentID )->parent;
 				}
 			}
 
 			// get list of subscriptions that cover this post
-			$subscriptions = $model->getSubscriptionsByCategoryIDs( $post_category_ids );
+			$subscriptions = $subscriptionModel->getSubscriptionsByCategoryIDs( $postCategoryIDs );
 		} else {
-			$subscriptions = $model->getSubscriptionsByCategoryIDs();
+			$subscriptions = $subscriptionModel->getSubscriptionsByCategoryIDs();
 		}
 
 		// correct result, if we have purchased subscriptions
-		if ( null !== $subscriptions_with_access && is_array( $subscriptions_with_access ) && ! empty( $subscriptions_with_access ) ) {
+		if ( null !== $subscriptionsWithAccess && is_array( $subscriptionsWithAccess ) && ! empty( $subscriptionsWithAccess ) ) {
 			// check, if user has access to the current post with subscription
-			$has_access = false;
+			$hasAccess = false;
+
 			foreach ( $subscriptions as $subscription ) {
-				if ( in_array( (string) $subscription['pass_id'], $subscriptions_with_access, true ) ) {
-					$has_access = true;
+				if ( in_array( (string) $subscription['pass_id'], $subscriptionsWithAccess, true ) ) {
+					$hasAccess = true;
 					break;
 				}
 			}
 
-			if ( $has_access ) {
+			if ( $hasAccess ) {
 				// categories with access (type 2)
-				$covered_categories = array(
+				$coveredCategories = array(
 					'included' => array(),
 					'excluded' => null,
 				);
+
 				// excluded categories (type 1)
-				$excluded_categories = array();
+				$excludedCategories = array();
 
 				// go through subscriptions with access and find covered and excluded categories
-				foreach ( $subscriptions_with_access as $subscription_with_access_id ) {
-					$subscription_with_access_data = $model->getSubscription( $subscription_with_access_id );
-					$access_category               = $subscription_with_access_data['access_category'];
-					$access_type                   = $subscription_with_access_data['access_to'];
-					if ( $access_type === 2 ) {
-						$covered_categories['included'][] = $access_category;
-					} elseif ( $access_type === 1 ) {
-						$excluded_categories[] = $access_category;
+				foreach ( $subscriptionsWithAccess as $subscription_with_access_id ) {
+					$subscriptionWithAccessData = $subscriptionModel->getSubscription( $subscription_with_access_id );
+					$accessCategory             = $subscriptionWithAccessData['access_category'];
+					$accessType                 = $subscriptionWithAccessData['access_to'];
+					if ( $accessType === 2 ) {
+						$coveredCategories['included'][] = $accessCategory;
+					} elseif ( $accessType === 1 ) {
+						$excludedCategories[] = $accessCategory;
 					} else {
 						return array();
 					}
 				}
 
 				// case: full access, except for specific categories
-				if ( $excluded_categories ) {
-					foreach ( $excluded_categories as $excluded_category_id ) {
+				if ( $excludedCategories ) {
+					foreach ( $excludedCategories as $excluded_category_id ) {
 						// search for excluded category in covered categories
-						$has_covered_category = array_search( (string) $excluded_category_id, $covered_categories, true );
-						if ( $has_covered_category !== false ) {
+						$hasCoveredCategory = array_search( (string) $excluded_category_id, $coveredCategories, true );
+						if ( $hasCoveredCategory !== false ) {
 							return array();
 						} else {
 							//  if more than 1 subscription with excluded category was purchased,
 							//  and if its values are not matched, then all categories are covered
-							if ( isset( $covered_categories['excluded'] ) && ( $covered_categories['excluded'] !== $excluded_category_id ) ) {
+							if ( isset( $coveredCategories['excluded'] ) && ( $coveredCategories['excluded'] !== $excluded_category_id ) ) {
 								return array();
 							}
 							// store the only category not covered
-							$covered_categories['excluded'] = $excluded_category_id;
+							$coveredCategories['excluded'] = $excluded_category_id;
 						}
 					}
 				}
 
 				// get data without covered categories or only excluded
-				if ( isset( $covered_categories['excluded'] ) ) {
-					$subscriptions = $model->getSubscriptionsByCategoryIDs( array( $covered_categories['excluded'] ) );
+				if ( isset( $coveredCategories['excluded'] ) ) {
+					$subscriptions = $subscriptionModel->getSubscriptionsByCategoryIDs( array( $coveredCategories['excluded'] ) );
 				} else {
-					$subscriptions = $model->getSubscriptionsByCategoryIDs( $covered_categories['included'], true );
+					$subscriptions = $subscriptionModel->getSubscriptionsByCategoryIDs( $coveredCategories['included'], true );
 				}
 			}
 		}
 
-		if ( $ignore_deleted ) {
+		if ( $ignoreDeleted ) {
 			// filter deleted subscriptions
 			foreach ( $subscriptions as $key => $subscription ) {
 				if ( $subscription['is_deleted'] ) {
@@ -415,8 +373,8 @@ class Subscription {
 	 * @return int count of subscriptions
 	 */
 	public static function getSubscriptionsCount() {
-		$model = new \LaterPay\Model\Subscription();
+		$subscriptionModel = new \LaterPay\Model\Subscription();
 
-		return $model->getSubscriptionsCount();
+		return $subscriptionModel->getSubscriptionsCount();
 	}
 }

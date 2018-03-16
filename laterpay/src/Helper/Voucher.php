@@ -49,16 +49,16 @@ class Voucher {
 	 * @return string voucher code
 	 */
 	public static function generateVoucherCode( $length = self::VOUCHER_CODE_LENGTH ) {
-		$voucher_code  = '';
+		$voucherCode   = '';
 		$possibleChars = self::VOUCHER_CHARS;
 
-		for ( $i = 0; $i < $length; $i++ ) {
+		for ( $i = 0; $i < $length; $i ++ ) {
 			mt_srand();
-			$rand          = mt_rand( 0, strlen( $possibleChars ) - 1 );
-			$voucher_code .= $possibleChars[ $rand ];
+			$rand         = mt_rand( 0, strlen( $possibleChars ) - 1 );
+			$voucherCode .= $possibleChars[ $rand ];
 		}
 
-		return $voucher_code;
+		return $voucherCode;
 	}
 
 	/**
@@ -71,8 +71,8 @@ class Voucher {
 	 * @return void
 	 */
 	public static function savePassVouchers( $pass_id, $data, $is_gift = false ) {
-		$vouchers    = self::getAllVouchers( $is_gift );
-		$option_name = $is_gift ? self::GIFT_CODES_OPTION : self::VOUCHER_CODES_OPTION;
+		$vouchers   = self::getAllVouchers( $is_gift );
+		$optionName = $is_gift ? self::GIFT_CODES_OPTION : self::VOUCHER_CODES_OPTION;
 
 		if ( ! $data ) {
 			unset( $vouchers[ $pass_id ] );
@@ -81,9 +81,9 @@ class Voucher {
 		}
 
 		// save new voucher data
-		update_option( $option_name, $vouchers );
+		update_option( $optionName, $vouchers );
 		// actualize voucher statistic
-		self::actualizeVoucherStatistic( $is_gift );
+		static::actualizeVoucherStatistic( $is_gift );
 	}
 
 	/**
@@ -95,7 +95,8 @@ class Voucher {
 	 * @return array
 	 */
 	public static function getTimePassVouchers( $pass_id, $is_gift = false ) {
-		$vouchers = self::getAllVouchers( $is_gift );
+		$vouchers = static::getAllVouchers( $is_gift );
+
 		if ( ! isset( $vouchers[ $pass_id ] ) ) {
 			return array();
 		}
@@ -111,20 +112,22 @@ class Voucher {
 	 * @return array of vouchers
 	 */
 	public static function getAllVouchers( $is_gift = false ) {
-		$option_name = $is_gift ? self::GIFT_CODES_OPTION : self::VOUCHER_CODES_OPTION;
-		$vouchers    = get_option( $option_name );
+
+		$optionName = $is_gift ? self::GIFT_CODES_OPTION : self::VOUCHER_CODES_OPTION;
+		$vouchers   = get_option( $optionName );
+
 		if ( ! $vouchers || ! is_array( $vouchers ) ) {
-			update_option( $option_name, '' );
+			update_option( $optionName, '' );
 			$vouchers = array();
 		}
 
 		// format prices
-		foreach ( $vouchers as $time_pass_id => $time_pass_voucher ) {
+		foreach ( $vouchers as $timePassID => $timePassVoucher ) {
 			/**
-			 * @var $time_pass_voucher array
+			 * @var $timePassVoucher array
 			 */
-			foreach ( $time_pass_voucher as $code => $data ) {
-				$vouchers[ $time_pass_id ][ $code ]['price'] = View::formatNumber( $data['price'] );
+			foreach ( $timePassVoucher as $code => $data ) {
+				$vouchers[ $timePassID ][ $code ]['price'] = View::formatNumber( $data['price'] );
 			}
 		}
 
@@ -134,48 +137,49 @@ class Voucher {
 	/**
 	 * Delete voucher code.
 	 *
-	 * @param int $pass_id
+	 * @param int $passID
 	 * @param string $code
-	 * @param bool $is_gift
+	 * @param bool $isGift
 	 *
 	 * @return void
 	 */
-	public static function deleteVoucherCode( $pass_id, $code = null, $is_gift = false ) {
-		$pass_vouchers = self::getTimePassVouchers( $pass_id, $is_gift );
-		if ( $pass_vouchers && is_array( $pass_vouchers ) ) {
+	public static function deleteVoucherCode( $passID, $code = null, $isGift = false ) {
+		$passVouchers = self::getTimePassVouchers( $passID, $isGift );
+
+		if ( $passVouchers && is_array( $passVouchers ) ) {
 			if ( $code ) {
-				unset( $pass_vouchers[ $code ] );
+				unset( $passVouchers[ $code ] );
 			} else {
-				$pass_vouchers = array();
+				$passVouchers = array();
 			}
 		}
 
-		self::savePassVouchers( $pass_id, $pass_vouchers, $is_gift );
+		static::savePassVouchers( $passID, $passVouchers, $isGift );
 	}
 
 	/**
 	 * Check, if voucher code exists and return pass_id and new price.
 	 *
 	 * @param string $code
-	 * @param bool $is_gift
+	 * @param bool $isGift
 	 *
 	 * @return mixed $voucher_data
 	 */
-	public static function checkVoucherCode( $code, $is_gift = false ) {
-		$vouchers = self::getAllVouchers( $is_gift );
+	public static function checkVoucherCode( $code, $isGift = false ) {
+		$vouchers = static::getAllVouchers( $isGift );
 
 		// search code
-		foreach ( $vouchers as $pass_id => $pass_vouchers ) {
+		foreach ( $vouchers as $passID => $passVouchers ) {
 			/**
-			 * @var $pass_vouchers array
+			 * @var $passVouchers array
 			 */
-			foreach ( $pass_vouchers as $voucher_code => $voucher_data ) {
-				if ( $code === $voucher_code ) {
+			foreach ( $passVouchers as $voucherCode => $data ) {
+				if ( $code === $voucherCode ) {
 					$data = array(
-						'pass_id' => $pass_id,
-						'code'    => $voucher_code,
-						'price'   => number_format( View::normalize( $voucher_data['price'] ), 2 ),
-						'title'   => $voucher_data['title'],
+						'pass_id' => $passID,
+						'code'    => $voucherCode,
+						'price'   => number_format( View::normalize( $data['price'] ), 2 ),
+						'title'   => $data['title'],
 					);
 
 					return $data;
@@ -189,84 +193,84 @@ class Voucher {
 	/**
 	 * Check, if given time passes have vouchers.
 	 *
-	 * @param array $time_passes array of time passes
-	 * @param bool $is_gift
+	 * @param array $timePasses array of time passes
+	 * @param bool $isGift
 	 *
 	 * @return bool $has_vouchers
 	 */
-	public static function passesHaveVouchers( $time_passes, $is_gift = false ) {
-		$has_vouchers = false;
+	public static function passesHaveVouchers( $timePasses, $isGift = false ) {
+		$hasVouchers = false;
 
-		if ( $time_passes && is_array( $time_passes ) ) {
-			foreach ( $time_passes as $time_pass ) {
-				if ( self::getTimePassVouchers( $time_pass['pass_id'], $is_gift ) ) {
-					$has_vouchers = true;
+		if ( $timePasses && is_array( $timePasses ) ) {
+			foreach ( $timePasses as $time_pass ) {
+				if ( self::getTimePassVouchers( $time_pass['pass_id'], $isGift ) ) {
+					$hasVouchers = true;
 					break;
 				}
 			}
 		}
 
-		return $has_vouchers;
+		return $hasVouchers;
 	}
 
 
 	/**
 	 * Actualize voucher statistic.
 	 *
-	 * @param bool $is_gift
+	 * @param bool $isGift
 	 *
 	 * @return void
 	 */
-	public static function actualizeVoucherStatistic( $is_gift = false ) {
-		$vouchers    = self::getAllVouchers( $is_gift );
-		$statistic   = self::getAllVouchersStatistic( $is_gift );
-		$result      = $statistic;
-		$option_name = $is_gift ? self::GIFT_STAT_OPTION : self::VOUCHER_STAT_OPTION;
+	public static function actualizeVoucherStatistic( $isGift = false ) {
+		$vouchers   = self::getAllVouchers( $isGift );
+		$statistic  = self::getAllVouchersStatistic( $isGift );
+		$result     = $statistic;
+		$optionName = $isGift ? self::GIFT_STAT_OPTION : self::VOUCHER_STAT_OPTION;
 
-		foreach ( $statistic as $pass_id => $statistic_data ) {
-			if ( ! isset( $vouchers[ $pass_id ] ) ) {
-				unset( $result[ $pass_id ] );
+		foreach ( $statistic as $passID => $statisticData ) {
+			if ( ! isset( $vouchers[ $passID ] ) ) {
+				unset( $result[ $passID ] );
 			} else {
-				foreach ( array_keys( $statistic_data ) as $code ) {
-					if ( ! isset( $vouchers[ $pass_id ][ $code ] ) ) {
-						unset( $result[ $pass_id ][ $code ] );
+				foreach ( array_keys( $statisticData ) as $code ) {
+					if ( ! isset( $vouchers[ $passID ][ $code ] ) ) {
+						unset( $result[ $passID ][ $code ] );
 					}
 				}
 			}
 		}
 
 		// update voucher statistics
-		update_option( $option_name, $result );
+		update_option( $optionName, $result );
 	}
 
 	/**
 	 * Update voucher statistic.
 	 *
-	 * @param int $pass_id time pass id
+	 * @param int $passID time pass id
 	 * @param string $code voucher code
-	 * @param bool $is_gift
+	 * @param bool $isGift
 	 *
 	 * @return bool success or error
 	 */
-	public static function updateVoucherStatistic( $pass_id, $code, $is_gift = false ) {
-		$pass_vouchers = self::getTimePassVouchers( $pass_id, $is_gift );
-		$option_name   = $is_gift ? self::GIFT_STAT_OPTION : self::VOUCHER_STAT_OPTION;
+	public static function updateVoucherStatistic( $passID, $code, $isGift = false ) {
+		$passVouchers = self::getTimePassVouchers( $passID, $isGift );
+		$option_name  = $isGift ? self::GIFT_STAT_OPTION : self::VOUCHER_STAT_OPTION;
 
 		// check, if such a voucher exists
-		if ( $pass_vouchers && isset( $pass_vouchers[ $code ] ) ) {
+		if ( $passVouchers && isset( $passVouchers[ $code ] ) ) {
 			// get all voucher statistics for this pass
-			$voucher_statistic_data = self::getTimePassVouchersStatistic( $pass_id, $is_gift );
+			$voucherStatisticData = self::getTimePassVouchersStatistic( $passID, $isGift );
 			// check, if statistic is empty
-			if ( $voucher_statistic_data ) {
+			if ( $voucherStatisticData ) {
 				// increment counter by 1, if statistic exists
-				++$voucher_statistic_data[ $code ];
+				++ $voucherStatisticData[ $code ];
 			} else {
 				// create new data array, if statistic is empty
-				$voucher_statistic_data[ $code ] = 1;
+				$voucherStatisticData[ $code ] = 1;
 			}
 
-			$statistic             = self::getAllVouchersStatistic( $is_gift );
-			$statistic[ $pass_id ] = $voucher_statistic_data;
+			$statistic            = self::getAllVouchersStatistic( $isGift );
+			$statistic[ $passID ] = $voucherStatisticData;
 
 			update_option( $option_name, $statistic );
 
@@ -279,16 +283,16 @@ class Voucher {
 	/**
 	 * Get time pass voucher statistic by time pass id.
 	 *
-	 * @param  int $pass_id time pass id
-	 * @param  bool $is_gift
+	 * @param  int $passID time pass id
+	 * @param  bool $isGift
 	 *
 	 * @return array $statistic
 	 */
-	public static function getTimePassVouchersStatistic( $pass_id, $is_gift = false ) {
-		$statistic = self::getAllVouchersStatistic( $is_gift );
+	public static function getTimePassVouchersStatistic( $passID, $isGift = false ) {
+		$statistic = self::getAllVouchersStatistic( $isGift );
 
-		if ( isset( $statistic[ $pass_id ] ) ) {
-			return $statistic[ $pass_id ];
+		if ( isset( $statistic[ $passID ] ) ) {
+			return $statistic[ $passID ];
 		}
 
 		return array();
@@ -297,15 +301,17 @@ class Voucher {
 	/**
 	 * Get statistics for all vouchers.
 	 *
-	 * @param bool $is_gift
+	 * @param bool $isGift
 	 *
 	 * @return array $statistic
 	 */
-	public static function getAllVouchersStatistic( $is_gift = false ) {
-		$option_name = $is_gift ? self::GIFT_STAT_OPTION : self::VOUCHER_STAT_OPTION;
-		$statistic   = get_option( $option_name );
+	public static function getAllVouchersStatistic( $isGift = false ) {
+
+		$optionName = $isGift ? self::GIFT_STAT_OPTION : self::VOUCHER_STAT_OPTION;
+		$statistic  = get_option( $optionName );
+
 		if ( ! $statistic || ! is_array( $statistic ) ) {
-			update_option( $option_name, '' );
+			update_option( $optionName, '' );
 
 			return array();
 		}
@@ -335,10 +341,12 @@ class Voucher {
 	 */
 	public static function updateGiftCodeUsages( $code ) {
 		$usages = get_option( 'laterpay_gift_codes_usages' );
+
 		if ( ! $usages ) {
 			$usages = array();
 		}
-		isset( $usages[ $code ] ) ? ++$usages[ $code ] : $usages[ $code ] = 1;
+
+		isset( $usages[ $code ] ) ? ++ $usages[ $code ] : $usages[ $code ] = 1;
 		update_option( 'laterpay_gift_codes_usages', $usages );
 	}
 

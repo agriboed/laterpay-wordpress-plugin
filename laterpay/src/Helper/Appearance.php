@@ -81,7 +81,7 @@ class Appearance {
 	public static function addOverlayStyles( $handle ) {
 		$options = static::getCurrentOptions();
 
-		$custom_css = '
+		$customCss = '
             .lp_purchase-overlay__header {
                 background-color: ' . esc_attr( $options['header_bg_color'] ) . ' !important;
                 color: ' . esc_attr( $options['header_color'] ) . ' !important;
@@ -113,6 +113,6 @@ class Appearance {
             }
         ';
 
-		wp_add_inline_style( $handle, $custom_css );
+		wp_add_inline_style( $handle, $customCss );
 	}
 }

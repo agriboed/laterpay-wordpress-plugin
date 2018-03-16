@@ -17,32 +17,32 @@ class View {
 	 * @return bool
 	 */
 	public static function pluginIsWorking() {
-		$is_in_live_mode         = get_option( 'laterpay_plugin_is_in_live_mode' );
-		$sandbox_api_key         = get_option( 'laterpay_sandbox_api_key' );
-		$live_api_key            = get_option( 'laterpay_live_api_key' );
-		$is_in_visible_test_mode = get_option( 'laterpay_is_in_visible_test_mode' );
+		$isInLiveMode        = get_option( 'laterpay_plugin_is_in_live_mode' );
+		$sandboxAPIKey       = get_option( 'laterpay_sandbox_api_key' );
+		$liveAPIkey          = get_option( 'laterpay_live_api_key' );
+		$isInVisibleTestMode = get_option( 'laterpay_is_in_visible_test_mode' );
 
 		if ( ! function_exists( 'wp_get_current_user' ) ) {
 			include_once ABSPATH . 'wp-includes/pluggable.php';
 		}
 
 		// check, if plugin operates in live mode and Live API key exists
-		if ( $is_in_live_mode && empty( $live_api_key ) ) {
+		if ( $isInLiveMode && empty( $liveAPIkey ) ) {
 			return false;
 		}
 
 		// check, if plugin is not in live mode and Sandbox API key exists
-		if ( ! $is_in_live_mode && empty( $sandbox_api_key ) ) {
+		if ( ! $isInLiveMode && empty( $sandboxAPIKey ) ) {
 			return false;
 		}
 
 		// check, if plugin is not in live mode and is in visible test mode
-		if ( ! $is_in_live_mode && $is_in_visible_test_mode ) {
+		if ( ! $isInLiveMode && $isInVisibleTestMode ) {
 			return true;
 		}
 
 		// check, if plugin is not in live mode and current user has sufficient capabilities
-		if ( ! $is_in_live_mode ) {
+		if ( ! $isInLiveMode ) {
 			return false;
 		}
 
@@ -120,12 +120,12 @@ class View {
 	 * @return string $error_message
 	 */
 	public static function getErrorMessage( $error_reason, $atts ) {
-		$error_message  = '<div class="lp_shortcodeError">';
-		$error_message .= __( 'Problem with inserted shortcode:', 'laterpay' ) . '<br>';
-		$error_message .= $error_reason;
-		$error_message .= '</div>';
+		$errorMessage  = '<div class="lp_shortcodeError">';
+		$errorMessage .= __( 'Problem with inserted shortcode:', 'laterpay' ) . '<br>';
+		$errorMessage .= $error_reason;
+		$errorMessage .= '</div>';
 
-		return $error_message;
+		return $errorMessage;
 	}
 
 	/**
@@ -136,44 +136,44 @@ class View {
 	 * @return void
 	 */
 	public static function applyColors( $handle ) {
-		$main_color  = get_option( 'laterpay_main_color' );
-		$hover_color = get_option( 'laterpay_hover_color' );
+		$mainColor  = get_option( 'laterpay_main_color' );
+		$hoverColor = get_option( 'laterpay_hover_color' );
 
-		$custom_css = '';
+		$customCss = '';
 
-		if ( $main_color ) {
-			$custom_css .= '
+		if ( $mainColor ) {
+			$customCss .= '
                 .lp_purchase-button, .lp_redeem-code__button, .lp_time-pass__front-side-link {
-                    background-color: ' . esc_attr( $main_color ) . ' !important;
+                    background-color: ' . esc_attr( $mainColor ) . ' !important;
                 }
                 body .lp_time-pass__actions .lp_time-pass__terms {
-                    color: ' . esc_attr( $main_color ) . ' !important;
+                    color: ' . esc_attr( $mainColor ) . ' !important;
                 }
                 .lp_bought_notification, .lp_purchase-link, .lp_redeem-code__hint {
-                    color: ' . esc_attr( $main_color ) . ' !important;
+                    color: ' . esc_attr( $mainColor ) . ' !important;
                 }
             ';
 		}
 
-		if ( $hover_color ) {
-			$custom_css .= '
+		if ( $hoverColor ) {
+			$customCss .= '
                 .lp_purchase-button:hover {
-                    background-color: ' . esc_attr( $hover_color ) . ' !important;
+                    background-color: ' . esc_attr( $hoverColor ) . ' !important;
                 }
                 .lp_time-pass__front-side-link:hover {
-                    background-color: ' . esc_attr( $hover_color ) . ' !important;
+                    background-color: ' . esc_attr( $hoverColor ) . ' !important;
                 }
                 body .lp_time-pass__actions .lp_time-pass__terms:hover {
-                    color: ' . esc_attr( $hover_color ) . ' !important;
+                    color: ' . esc_attr( $hoverColor ) . ' !important;
                 }
                 .lp_bought_notification:hover, .lp_purchase-link:hover, .lp_redeem-code__hint:hover {
-                    color: ' . esc_attr( $hover_color ) . ' !important;
+                    color: ' . esc_attr( $hoverColor ) . ' !important;
                 }
             ';
 		}
 
-		if ( $custom_css ) {
-			wp_add_inline_style( $handle, $custom_css );
+		if ( $customCss ) {
+			wp_add_inline_style( $handle, $customCss );
 		}
 	}
 }

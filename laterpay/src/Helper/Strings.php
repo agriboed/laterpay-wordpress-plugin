@@ -33,8 +33,8 @@ class Strings {
 	 * @return int $number_of_words
 	 */
 	public static function determineNumberOfWords( $content ) {
-		$content     = preg_replace( '/\s+/', ' ', $content );
-		$total_words = substr_count( $content, ' ' ) + 1;
+		$content    = preg_replace( '/\s+/', ' ', $content );
+		$totalWords = substr_count( $content, ' ' ) + 1;
 
 		$config = laterpay_get_plugin_config();
 
@@ -43,10 +43,10 @@ class Strings {
 		$min     = (int) $config->get( 'content.preview_word_count_min' );
 		$max     = (int) $config->get( 'content.preview_word_count_max' );
 
-		$number_of_words = $total_words * ( $percent / 100 );
-		$number_of_words = max( min( $number_of_words, $max ), $min );
+		$numberOfWords = $totalWords * ( $percent / 100 );
+		$numberOfWords = max( min( $numberOfWords, $max ), $min );
 
-		return $number_of_words;
+		return $numberOfWords;
 	}
 
 	/**
@@ -76,11 +76,13 @@ class Strings {
 			'html'     => false,
 			'words'    => false,
 		);
+
 		if ( isset( $options['ending'] ) ) {
 			$default['ellipsis'] = $options['ending'];
 		} elseif ( ! empty( $options['html'] ) ) {
 			$default['ellipsis'] = "\xe2\x80\xa6";
 		}
+
 		$options = array_merge( $default, $options );
 
 		if ( ! function_exists( 'mb_strlen' ) ) {
@@ -89,17 +91,21 @@ class Strings {
 
 		if ( $options['html'] ) {
 			$text = preg_replace( '/<! --(.*?)-->/i', '', $text );
+
 			if ( $options['words'] ) {
 				$length = mb_strlen( self::limitWords( preg_replace( '/<.*?>/', '', $text ), $length ) );
 			}
+
 			if ( mb_strlen( preg_replace( '/<.*?>/', '', $text ) ) <= $length ) {
 				return $text;
 			}
+
 			$totalLength = mb_strlen( wp_strip_all_tags( $options['ellipsis'] ) );
 			$openTags    = array();
 			$truncate    = '';
 
 			preg_match_all( '/(<\/?([\w+]+)[^>]*>)?([^<>]*)/', $text, $tags, PREG_SET_ORDER );
+
 			foreach ( $tags as $tag ) {
 				if ( ! preg_match( '/img|br|input|hr|area|base|basefont|col|frame|isindex|link|meta|param/s', $tag[2] ) ) {
 					if ( preg_match( '/<[\w]+[^>]*>/s', $tag[0] ) ) {
@@ -128,7 +134,7 @@ class Strings {
 					) ) {
 						foreach ( $entities[0] as $entity ) {
 							if ( $entity[1] + 1 - $entitiesLength <= $left ) {
-								$left--;
+								$left --;
 								$entitiesLength += mb_strlen( $entity[0] );
 							} else {
 								break;

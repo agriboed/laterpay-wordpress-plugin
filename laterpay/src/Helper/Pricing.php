@@ -64,21 +64,21 @@ class Pricing {
 	 * @return array
 	 */
 	public static function getPostIDsWithPriceByCategoryID( $categoryID ) {
-		$laterpay_category_model = new CategoryPrice();
-		$config                  = laterpay_get_plugin_config();
-		$ids                     = array( $categoryID );
+		$categoryPriceModel = new CategoryPrice();
+		$config             = laterpay_get_plugin_config();
+		$IDs                = array( $categoryID );
 
 		// get all childs for $category_id
-		$category_children = get_categories(
+		$categoryChildren = get_categories(
 			array(
 				'child_of' => $categoryID,
 			)
 		);
 
-		foreach ( $category_children as $category ) {
+		foreach ( $categoryChildren as $category ) {
 			// filter ids with category prices
-			if ( ! $laterpay_category_model->getCategoryPriceDataByCategoryIDs( $category->term_id ) ) {
-				$ids[] = (int) $category->term_id;
+			if ( ! $categoryPriceModel->getCategoryPriceDataByCategoryIDs( $category->term_id ) ) {
+				$IDs[] = (int) $category->term_id;
 			}
 		}
 
@@ -96,7 +96,7 @@ class Pricing {
 		$query = new \WP_Query(
 			array(
 				'fields'         => 'ids',
-				'category__in'   => $ids,
+				'category__in'   => $IDs,
 				'cat'            => $categoryID,
 				'post_status'    => $postStatus,
 				'post_type'      => $config->get( 'content.enabled_post_types' ),
@@ -170,8 +170,8 @@ class Pricing {
 	/**
 	 * Apply a given category default price to a given post.
 	 *
-	 * @param int  $postID
-	 * @param int  $categoryID
+	 * @param int $postID
+	 * @param int $categoryID
 	 * @param bool $strict - checks, if the given category_id is assigned to the post_id
 	 *
 	 * @return bool
@@ -208,7 +208,7 @@ class Pricing {
 		$cacheKey           = 'laterpay_post_price_' . $postID;
 
 		// checks if the price is in cache and returns it
-		$price = wp_cache_get( $cacheKey, 'laterpay' );
+		$price = wp_cache_get( $cacheKey );
 
 		if ( $price ) {
 			return (float) $price;
@@ -413,7 +413,7 @@ class Pricing {
 	 * Calculate transitional price between start price and end price based on linear equation.
 	 *
 	 * @param array $postPrice postmeta see 'laterpay_post_prices'
-	 * @param int   $daysSincePublication
+	 * @param int $daysSincePublication
 	 *
 	 * @return float
 	 */
@@ -443,8 +443,7 @@ class Pricing {
 		}
 
 		$postPriceType = array_key_exists( 'type', $postPrice ) ? $postPrice['type'] : '';
-
-		$revenueModel = '';
+		$revenueModel  = '';
 
 		// set a price type (global default price or individual price), if the returned post price type is invalid
 		switch ( $postPriceType ) {
@@ -495,7 +494,7 @@ class Pricing {
 	 * Validates and - if required - corrects the given combination of price and revenue model.
 	 *
 	 * @param string $revenueModel
-	 * @param float  $price
+	 * @param float $price
 	 *
 	 * @return string
 	 */
@@ -520,7 +519,7 @@ class Pricing {
 	/**
 	 * Return data for dynamic prices. Can be values already set or defaults.
 	 *
-	 * @param \WP_Post   $post
+	 * @param \WP_Post $post
 	 * @param float|null $price
 	 *
 	 * @return array
@@ -717,15 +716,15 @@ class Pricing {
 	 * @return void
 	 */
 	public static function resetPostPublicationDate( \WP_Post $post ) {
-		$actualDate       = date( 'Y-m-d H:i:s' );
-		$actualDateGMT    = gmdate( 'Y-m-d H:i:s' );
-		$post_update_data = array(
+		$actualDate     = date( 'Y-m-d H:i:s' );
+		$actualDateGMT  = gmdate( 'Y-m-d H:i:s' );
+		$postUpdateData = array(
 			'ID'            => $post->ID,
 			'post_date'     => $actualDate,
 			'post_date_gmt' => $actualDateGMT,
 		);
 
-		wp_update_post( $post_update_data );
+		wp_update_post( $postUpdateData );
 	}
 
 	/**
@@ -902,6 +901,4 @@ class Pricing {
 
 		return __( 'Pay Later', 'laterpay' );
 	}
-
-
 }

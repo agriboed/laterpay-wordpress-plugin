@@ -2,6 +2,8 @@
 
 namespace LaterPay\Helper;
 
+use LaterPay\Core\Request;
+
 /**
  * LaterPay post helper.
  *
@@ -40,63 +42,67 @@ class Post {
 	/**
 	 * Return all content ids for selected post
 	 *
-	 * @param $post_id
+	 * @param $postID
 	 *
 	 * @return array
 	 */
-	public static function getContentIDs( $post_id ) {
-		$time_passes_list   = TimePass::getTimePassesListByPostID( $post_id );
-		$time_passes        = TimePass::getTokenizedTimePassIDs( $time_passes_list );
-		$subscriptions_list = Subscription::getSubscriptionsListByPostID( $post_id );
-		$subscriptions      = Subscription::getTokenizedIDs( $subscriptions_list );
+	public static function getContentIDs( $postID ) {
+		$timePassesList    = TimePass::getTimePassesListByPostID( $postID );
+		$timePasses        = TimePass::getTokenizedTimePassIDs( $timePassesList );
+		$subscriptionsList = Subscription::getSubscriptionsListByPostID( $postID );
+		$subscriptions     = Subscription::getTokenizedIDs( $subscriptionsList );
 
-		return array_merge( array_merge( array( $post_id ), $time_passes, $subscriptions ) );
+		return array_merge( array_merge( array( $postID ), $timePasses, $subscriptions ) );
 	}
 
 	/**
 	 * Check, if user has access to a post.
 	 *
 	 * @param \WP_Post $post
-	 * @param bool $is_attachment
-	 * @param null $main_post_id
+	 * @param null|int $parentPostID
 	 *
 	 * @return boolean success
 	 */
-	public static function hasAccessToPost( \WP_Post $post, $is_attachment = false, $main_post_id = null ) {
-		$has_access = false;
+	public static function hasAccessToPost( \WP_Post $post, $parentPostID = null ) {
+		$hasAccess    = false;
+		$isAttachment = is_attachment( $post );
+		$parentPostID = $parentPostID !== null ? $parentPostID : $post->post_parent;
 
 		if ( apply_filters( 'laterpay_access_check_enabled', true ) ) {
+			$timePassesList    = TimePass::getTimePassesListByPostID( $post->ID, null, true );
+			$subscriptionsList = Subscription::getSubscriptionsListByPostID( $post->ID, null, true );
 
-			// check, if parent post has access with time passes
-			$parent_post      = $is_attachment ? $main_post_id : $post->ID;
-			$time_passes_list = TimePass::getTimePassesListByPostID( $parent_post );
-			$time_passes      = TimePass::getTokenizedTimePassIDs( $time_passes_list );
+			// if is attachment than we should check parent post
+			if ( $isAttachment && $parentPostID ) {
+				$timePassesList    = array_merge( $timePassesList, TimePass::getTimePassesListByPostID( $parentPostID, null, true ) );
+				$subscriptionsList = array_merge( $subscriptionsList, Subscription::getSubscriptionsListByPostID( $parentPostID, null, true ) );
+			}
 
-			foreach ( $time_passes as $time_pass ) {
-				if ( array_key_exists( $time_pass, self::$access ) && self::$access[ $time_pass ] ) {
-					$has_access = true;
+			$timePasses = TimePass::getTokenizedTimePassIDs( $timePassesList );
+
+			foreach ( $timePasses as $timePass ) {
+				if ( array_key_exists( $timePass, self::$access ) && self::$access[ $timePass ] ) {
+					$hasAccess = true;
 				}
 			}
 
-			// check, if parent post has access with subscriptions
-			$subscriptions_list = Subscription::getSubscriptionsListByPostID( $parent_post );
-			$subscriptions      = Subscription::getTokenizedIDs( $subscriptions_list );
+			$subscriptions = Subscription::getTokenizedIDs( $subscriptionsList );
 
 			foreach ( $subscriptions as $subscription ) {
 				if ( array_key_exists( $subscription, self::$access ) && self::$access[ $subscription ] ) {
-					$has_access = true;
+					$hasAccess = true;
 				}
 			}
 
 			// check access for the particular post
-			if ( ! $has_access ) {
-				if ( array_key_exists( $post->ID, self::$access ) ) {
-					$has_access = (bool) self::$access[ $post->ID ];
+			if ( ! $hasAccess ) {
+				if ( array_key_exists( $post->ID, self::$access ) && ! $isAttachment ) {
+					$hasAccess = (bool) self::$access[ $post->ID ];
 				} elseif ( Pricing::getPostPrice( $post->ID ) > 0 ) {
 					$result = API::getAccess(
 						array_merge(
-							array( $post->ID ),
-							$time_passes, $subscriptions
+							array( $post->ID, $parentPostID ),
+							$timePasses, $subscriptions
 						)
 					);
 
@@ -106,15 +112,16 @@ class Post {
 							array( 'result' => $result )
 						);
 					} else {
-						foreach ( $result['articles'] as $article_key => $article_access ) {
-							$access                       = (bool) $article_access['access'];
-							self::$access[ $article_key ] = $access;
+						foreach ( $result['articles'] as $key => $access ) {
+							$access               = (bool) $access['access'];
+							self::$access[ $key ] = $access;
+
 							if ( $access ) {
-								$has_access = true;
+								$hasAccess = true;
 							}
 						}
 
-						if ( $has_access ) {
+						if ( $hasAccess ) {
 							laterpay_get_logger()->info(
 								__METHOD__ . ' - post has access.',
 								array( 'result' => $result )
@@ -125,34 +132,55 @@ class Post {
 			}
 		}
 
-		return apply_filters( 'laterpay_post_access', $has_access );
+		return apply_filters( 'laterpay_post_access', $hasAccess );
 	}
 
 	/**
 	 * Get the LaterPay purchase link for a post.
 	 *
-	 * @param int $post_id
-	 * @param int $current_post_id optional for attachments
+	 * @param int $postID
+	 * @param int|null $parentPostID optional for attachments
 	 *
 	 * @return string url || empty string, if something went wrong
 	 */
-	public static function getLaterpayPurchaseLink( $post_id, $current_post_id = null ) {
-		$post = get_post( $post_id );
+	public static function getLaterpayPurchaseLink( $postID, $parentPostID = null ) {
+		$post = get_post( $postID );
+
 		if ( $post === null ) {
 			return '';
 		}
 
 		$config = laterpay_get_plugin_config();
 
-		$currency      = $config->get( 'currency.code' );
-		$price         = Pricing::getPostPrice( $post->ID );
-		$revenue_model = Pricing::getPostRevenueModel( $post->ID );
+		$currency     = $config->get( 'currency.code' );
+		$price        = Pricing::getPostPrice( $post->ID );
+		$revenueModel = Pricing::getPostRevenueModel( $post->ID );
+
+		// data to register purchase after redirect from LaterPay
+		$urlParams = array(
+			'post_id' => $post->ID,
+			'buy'     => 'true',
+		);
+
+		if ( $post->post_type === 'attachment' ) {
+			$urlParams['post_id']           = $parentPostID;
+			$urlParams['download_attached'] = $post->ID;
+		}
+
+		$parsedLink = explode( '?', Request::server( 'REQUEST_URI' ) );
+
+		$backURL = get_permalink( $post->ID ) . '?' . build_query( $urlParams );
+
+		// if params exists in uri
+		if ( ! empty( $parsedLink[1] ) ) {
+			$backURL .= '&' . $parsedLink[1];
+		}
 
 		// parameters for LaterPay purchase form
 		$params = array(
 			'article_id'    => $post->ID,
 			'pricing'       => $currency . ( $price * 100 ),
-			'url'           => get_permalink( $post_id ),
+			'url'           => $backURL,
 			'title'         => $post->post_title,
 			'require_login' => (int) get_option( 'laterpay_require_login', 0 ),
 		);
@@ -161,7 +189,7 @@ class Post {
 			__METHOD__, $params
 		);
 
-		if ( $revenue_model === 'sis' ) {
+		if ( $revenueModel === 'sis' ) {
 			// Single Sale purchase
 			return API::getBuyURL( $params );
 		}
@@ -171,54 +199,19 @@ class Post {
 	}
 
 	/**
-	 * Prepare the purchase button.
-	 *
-	 * @wp-hook laterpay_purchase_button
-	 *
-	 * @param \WP_Post $post
-	 * @param null|int $current_post_id optional for attachments
-	 *
-	 * @return array
-	 */
-	public static function thePurchaseButtonArgs( \WP_Post $post, $current_post_id = null ) {
-		$config = laterpay_get_plugin_config();
-
-		// render purchase button for administrator always in preview mode, too prevent accidental purchase by admin.
-		$preview_mode = User::previewPostAsVisitor( $post );
-		if ( current_user_can( 'administrator' ) ) {
-			$preview_mode = true;
-		}
-
-		$view_args = array(
-			'post_id'                 => $post->ID,
-			'link'                    => static::getLaterpayPurchaseLink( $post->ID, $current_post_id ),
-			'currency'                => $config->get( 'currency.code' ),
-			'price'                   => Pricing::getPostPrice( $post->ID ),
-			'preview_post_as_visitor' => $preview_mode,
-		);
-
-		laterpay_get_logger()->info(
-			__METHOD__,
-			$view_args
-		);
-
-		return $view_args;
-	}
-
-	/**
 	 * Add teaser to the post or update it.
 	 *
 	 * @param \WP_Post $post
 	 * @param null $teaser teaser data
-	 * @param bool $need_update
+	 * @param bool $needUpdate
 	 *
 	 * @return string $new_meta_value teaser content
 	 */
-	public static function addTeaserToThePost( \WP_Post $post, $teaser = null, $need_update = true ) {
+	public static function addTeaserToThePost( \WP_Post $post, $teaser = null, $needUpdate = true ) {
 		if ( $teaser ) {
-			$new_meta_value = $teaser;
+			$newMetaValue = $teaser;
 		} else {
-			$new_meta_value = Strings::truncate(
+			$newMetaValue = Strings::truncate(
 				preg_replace( '/\s+/', ' ', strip_shortcodes( $post->post_content ) ),
 				get_option( 'laterpay_teaser_content_word_count' ),
 				array(
@@ -228,62 +221,62 @@ class Post {
 			);
 		}
 
-		if ( $need_update ) {
-			update_post_meta( $post->ID, 'laterpay_post_teaser', $new_meta_value );
+		if ( $needUpdate ) {
+			update_post_meta( $post->ID, 'laterpay_post_teaser', $newMetaValue );
 		}
 
-		return $new_meta_value;
+		return $newMetaValue;
 	}
 
 	/**
 	 * Process more tag.
 	 *
-	 * @param $teaser_content
-	 * @param $post_id
-	 * @param null|string $more_link_text
-	 * @param bool|false $strip_teaser
+	 * @param $teaserContent
+	 * @param $postID
+	 * @param null|string $moreLinkText
+	 * @param bool|false $stripTeaser
 	 *
 	 * @return string $output
 	 */
-	public static function getTheContent( $teaser_content, $post_id, $more_link_text = null, $strip_teaser = false ) {
+	public static function getTheContent( $teaserContent, $postID, $moreLinkText = null, $stripTeaser = false ) {
 		global $more;
 
-		if ( null === $more_link_text ) {
-			$more_link_text = __( '(more&hellip;)' );
+		if ( null === $moreLinkText ) {
+			$moreLinkText = __( '(more&hellip;)' );
 		}
 
-		$output          = '';
-		$original_teaser = $teaser_content;
-		$has_teaser      = false;
+		$output         = '';
+		$originalTeaser = $teaserContent;
+		$hasTeaser      = false;
 
-		if ( preg_match( '/<!--more(.*?)?-->/', $teaser_content, $matches ) ) {
-			$teaser_content = explode( $matches[0], $teaser_content, 2 );
-			if ( ! empty( $matches[1] ) && ! empty( $more_link_text ) ) {
-				$more_link_text = wp_strip_all_tags( wp_kses_no_null( trim( $matches[1] ) ) );
+		if ( preg_match( '/<!--more(.*?)?-->/', $teaserContent, $matches ) ) {
+			$teaserContent = explode( $matches[0], $teaserContent, 2 );
+			if ( ! empty( $matches[1] ) && ! empty( $moreLinkText ) ) {
+				$moreLinkText = wp_strip_all_tags( wp_kses_no_null( trim( $matches[1] ) ) );
 			}
-			$has_teaser = true;
+			$hasTeaser = true;
 		} else {
-			$teaser_content = array( $teaser_content );
+			$teaserContent = array( $teaserContent );
 		}
 
-		if ( false !== strpos( $original_teaser, '<!--noteaser-->' ) ) {
-			$strip_teaser = true;
+		if ( false !== strpos( $originalTeaser, '<!--noteaser-->' ) ) {
+			$stripTeaser = true;
 		}
 
-		$teaser = $teaser_content[0];
+		$teaser = $teaserContent[0];
 
-		if ( $more && $strip_teaser && $has_teaser ) {
+		if ( $more && $stripTeaser && $hasTeaser ) {
 			$teaser = '';
 		}
 
 		$output .= $teaser;
 
-		if ( count( $teaser_content ) > 1 ) {
+		if ( count( $teaserContent ) > 1 ) {
 			if ( $more ) {
-				$output .= '<span id="more-' . esc_attr( $post_id ) . '"></span>' . wp_kses_post( $teaser_content[1] );
+				$output .= '<span id="more-' . esc_attr( $postID ) . '"></span>' . wp_kses_post( $teaserContent[1] );
 			} else {
-				if ( ! empty( $more_link_text ) ) {
-					$output .= '<a href="' . get_permalink() . '#more-' . esc_attr( $post_id ) . '" class="more-link">' . wp_kses_post( $more_link_text ) . '</a>';
+				if ( ! empty( $moreLinkText ) ) {
+					$output .= '<a href="' . get_permalink() . '#more-' . esc_attr( $postID ) . '" class="more-link">' . wp_kses_post( $moreLinkText ) . '</a>';
 				}
 				$output = force_balance_tags( $output );
 			}
