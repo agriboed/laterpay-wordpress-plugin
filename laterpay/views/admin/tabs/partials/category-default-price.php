@@ -259,3 +259,4 @@ if ( ! defined( 'ABSPATH' ) ) {
             </table>
         </div>
     </form>
+</div>

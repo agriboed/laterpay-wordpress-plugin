@@ -4,14 +4,18 @@ namespace LaterPay\Module;
 
 use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Helper\API;
-use LaterPay\Core\Event;
+use LaterPay\Helper\Attachment;
+use LaterPay\Helper\TimePass;
 use LaterPay\Helper\View;
 use LaterPay\Helper\User;
 use LaterPay\Helper\Post;
 use LaterPay\Core\Request;
+use LaterPay\Core\Event;
+use LaterPay\Core\Interfaces\EventInterface;
 use LaterPay\Helper\Cache;
 use LaterPay\Helper\Config;
 use LaterPay\Helper\Pricing;
+use LaterPay\Helper\Voucher;
 use LaterPayClient\Auth\Signing;
 use LaterPay\Core\Event\SubscriberInterface;
 
@@ -44,6 +48,7 @@ class Purchase extends ControllerAbstract {
 	public static function getSubscribedEvents() {
 		return array(
 			'laterpay_loaded'                      => array(
+				array( 'buyPost', 10 ),
 				array( 'setToken', 5 ),
 			),
 			'laterpay_purchase_button'             => array(
@@ -89,13 +94,13 @@ class Purchase extends ControllerAbstract {
 	/**
 	 * Renders LaterPay purchase button
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 *
 	 * @throws \InvalidArgumentException
 	 */
-	public function onPurchaseButton( Event $event ) {
+	public function onPurchaseButton( EventInterface $event ) {
 		if ( $event->hasArgument( 'post' ) ) {
 			$post = $event->getArgument( 'post' );
 		} else {
@@ -154,28 +159,29 @@ class Purchase extends ControllerAbstract {
 	/**
 	 * Renders LaterPay explanatory overlay
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function onExplanatoryOverlay( Event $event ) {
+	public function onExplanatoryOverlay( EventInterface $event ) {
 		$post   = $event->getArgument( 'post' );
 		$teaser = $event->getArgument( 'teaser' );
 
 		// get overlay content
-		$revenue_model         = Pricing::getPostRevenueModel( $post->ID );
-		$overlay_content_event = new Event( array( $revenue_model ) );
-		$overlay_content_event->setEchoOutput( false );
+		$revenueModel        = Pricing::getPostRevenueModel( $post->ID );
+		$overlayContentEvent = new Event( array( $revenueModel ) );
+		$overlayContentEvent->setEchoOutput( false );
 		laterpay_event_dispatcher()->dispatch(
 			'laterpay_explanatory_overlay_content',
-			$overlay_content_event
+			$overlayContentEvent
 		);
 
-		$view_args = array(
+		$args = array(
 			'teaser' => $teaser,
-			'data'   => (array) $overlay_content_event->getResult(),
+			'data'   => (array) $overlayContentEvent->getResult(),
 		);
 
-		$html = $this->getTextView( 'front/partials/widget/explanatory-overlay', array( 'overlay' => $view_args ) );
+		$html = $this->getTextView( 'front/partials/widget/explanatory-overlay', array( '_' => $args ) );
 
 		$event->setResult( $html );
 	}
@@ -183,32 +189,33 @@ class Purchase extends ControllerAbstract {
 	/**
 	 * Renders LaterPay purchase overlay
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function onPurchaseOverlay( Event $event ) {
+	public function onPurchaseOverlay( EventInterface $event ) {
 		$post = $event->getArgument( 'post' );
 
 		// get overlay content
-		$overlay_content_event = new Event();
-		$overlay_content_event->setEchoOutput( false );
-		$overlay_content_event->setArguments( $event->getArguments() );
+		$overlayContentEvent = new Event();
+		$overlayContentEvent->setEchoOutput( false );
+		$overlayContentEvent->setArguments( $event->getArguments() );
 		laterpay_event_dispatcher()->dispatch(
 			'laterpay_purchase_overlay_content',
-			$overlay_content_event
+			$overlayContentEvent
 		);
 
-		$back_url      = get_permalink( $post->ID );
+		$backURL       = get_permalink( $post->ID );
 		$content_ids   = Post::getContentIDs( $post->ID );
 		$revenue_model = Pricing::getPostRevenueModel( $post->ID );
 
 		switch ( $revenue_model ) {
 			case 'sis':
-				$submit_text = __( 'Buy Now', 'laterpay' );
+				$submitText = __( 'Buy Now', 'laterpay' );
 				break;
 			case 'ppu':
 			default:
-				$submit_text = __( 'Buy Now, Pay Later', 'laterpay' );
+				$submitText = __( 'Buy Now, Pay Later', 'laterpay' );
 				break;
 		}
 
@@ -217,12 +224,12 @@ class Purchase extends ControllerAbstract {
 			'currency'          => $this->config->get( 'currency.code' ),
 			'teaser'            => $event->getArgument( 'teaser' ),
 			'overlay_content'   => $event->getArgument( 'overlay_content' ),
-			'data'              => (array) $overlay_content_event->getResult(),
+			'data'              => (array) $overlayContentEvent->getResult(),
 			'footer'            => \LaterPay\Helper\Appearance::getCurrentOptions( 'show_footer' ),
 			'icons'             => $this->config->getSection( 'payment.icons' ),
 			'notification_text' => __( 'I already bought this', 'laterpay' ),
-			'identify_url'      => API::getIdentifyURL( $back_url, $content_ids ),
-			'submit_text'       => $submit_text,
+			'identify_url'      => API::getIdentifyURL( $backURL, $content_ids ),
+			'submit_text'       => $submitText,
 			'is_preview'        => (int) $event->getArgument( 'is_preview' ),
 		);
 
@@ -234,10 +241,11 @@ class Purchase extends ControllerAbstract {
 	/**
 	 * Renders LaterPay purchase link
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
+	 *
 	 * @return void
 	 */
-	public function onPurchaseLink( Event $event ) {
+	public function onPurchaseLink( EventInterface $event ) {
 		if ( $event->hasArgument( 'post' ) ) {
 			$post = $event->getArgument( 'post' );
 		} else {
@@ -245,72 +253,74 @@ class Purchase extends ControllerAbstract {
 		}
 
 		// get pricing data
-		$currency      = $this->config->get( 'currency.code' );
-		$price         = Pricing::getPostPrice( $post->ID );
-		$revenue_model = Pricing::getPostRevenueModel( $post->ID );
+		$currency       = $this->config->get( 'currency.code' );
+		$price          = Pricing::getPostPrice( $post->ID );
+		$priceFormatted = View::formatNumber( $price );
+		$revenueModel   = Pricing::getPostRevenueModel( $post->ID );
 
 		// get purchase link
 		$link = Post::getLaterpayPurchaseLink( $post->ID );
 
-		if ( 'sis' === $revenue_model ) :
-			$link_text = sprintf(
+		if ( 'sis' === $revenueModel ) :
+			$linkText = sprintf(
 				__(
 					'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small>',
 					'laterpay'
 				),
-				View::formatNumber( $price ),
+				$priceFormatted,
 				$currency
 			);
 		else :
-			$link_text = sprintf(
+			$linkText = sprintf(
 				__(
 					'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small> and pay later',
 					'laterpay'
 				),
-				View::formatNumber( $price ),
+				$priceFormatted,
 				$currency
 			);
 		endif;
 
-		$view_args = array_merge(
+		$args = array_merge(
 			array(
 				'post_id'       => $post->ID,
 				'currency'      => $currency,
 				'price'         => $price,
-				'revenue_model' => $revenue_model,
+				'revenue_model' => $revenueModel,
 				'link'          => $link,
-				'link_text'     => $link_text,
+				'link_text'     => $linkText,
 			),
 			$event->getArguments()
 		);
 
-		$html = $this->getTextView( 'front/partials/widget/purchase-link', array( 'laterpay' => $view_args ) );
+		$html = $this->getTextView( 'front/partials/widget/purchase-link', array( '_' => $args ) );
 
 		$event->setResult( $html )
-			  ->setArguments( $view_args );
+			  ->setArguments( $args );
 	}
 
 	/**
 	 * Collect content of benefits overlay.
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function onExplanatoryOverlayContent( Event $event ) {
-		list( $revenue_model ) = $event->getArguments() + array( 'sis' );
+	public function onExplanatoryOverlayContent( EventInterface $event ) {
+		list( $revenueModel ) = $event->getArguments() + array( 'sis' );
+
 		// determine overlay title to show
-		if ( $revenue_model === 'sis' ) {
-			$overlay_title = __( 'Read Now', 'laterpay' );
+		if ( $revenueModel === 'sis' ) {
+			$overlayTitle = __( 'Read Now', 'laterpay' );
 		} else {
-			$overlay_title = __( 'Read Now, Pay Later', 'laterpay' );
+			$overlayTitle = __( 'Read Now, Pay Later', 'laterpay' );
 		}
 
 		// get currency settings
 		$currency = Config::getCurrencyConfig();
 
-		if ( $revenue_model === 'sis' ) {
-			$overlay_benefits = array(
+		if ( $revenueModel === 'sis' ) {
+			$overlayBenefits = array(
 				array(
 					'title' => __( 'Buy Now', 'laterpay' ),
 					'text'  => __(
@@ -329,7 +339,7 @@ class Purchase extends ControllerAbstract {
 				),
 			);
 		} else {
-			$overlay_benefits = array(
+			$overlayBenefits = array(
 				array(
 					'title' => __( 'Buy Now', 'laterpay' ),
 					'text'  => __(
@@ -359,30 +369,30 @@ class Purchase extends ControllerAbstract {
 			);
 		}
 
-		$action_event = new Event();
-		$action_event->setEchoOutput( false );
+		$actionEvent = new Event();
+		$actionEvent->setEchoOutput( false );
 		laterpay_event_dispatcher()->dispatch(
 			'laterpay_purchase_button',
-			$action_event
+			$actionEvent
 		);
 
-		$overlay_content = array(
-			'title'    => $overlay_title,
-			'benefits' => $overlay_benefits,
-			'action'   => (string) $action_event->getResult(),
+		$overlayContent = array(
+			'title'    => $overlayTitle,
+			'benefits' => $overlayBenefits,
+			'action'   => (string) $actionEvent->getResult(),
 		);
 
-		$event->setResult( $overlay_content );
+		$event->setResult( $overlayContent );
 	}
 
 	/**
 	 * Get article data
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function onPurchaseOverlayContent( Event $event ) {
+	public function onPurchaseOverlayContent( EventInterface $event ) {
 		$data = $event->getResult();
 		$post = $event->getArgument( 'post' );
 
@@ -405,12 +415,12 @@ class Purchase extends ControllerAbstract {
 	 *
 	 * @wp-hook laterpay_check_user_access
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function checkUserAccess( Event $event ) {
-		list( $has_access, $post_id ) = $event->getArguments() + array(
+	public function checkUserAccess( EventInterface $event ) {
+		list( $hasAccess, $post_id ) = $event->getArguments() + array(
 			'',
 			'',
 		);
@@ -425,18 +435,18 @@ class Purchase extends ControllerAbstract {
 		}
 
 		if ( $post === null ) {
-			$event->setResult( (bool) $has_access );
+			$event->setResult( (bool) $hasAccess );
 
 			return;
 		}
 
-		$user_has_unlimited_access = User::can(
+		$userHasUnlimitedAccess = User::can(
 			'laterpay_has_full_access_to_content',
 			$post
 		);
 
 		// user has unlimited access
-		if ( $user_has_unlimited_access ) {
+		if ( $userHasUnlimitedAccess ) {
 			$event->setResult( true );
 
 			return;
@@ -453,11 +463,11 @@ class Purchase extends ControllerAbstract {
 	/**
 	 * Stops bubbling if content is not purchasable
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function isPurchasable( Event $event ) {
+	public function isPurchasable( EventInterface $event ) {
 		if ( $event->hasArgument( 'post' ) ) {
 			$post = $event->getArgument( 'post' );
 		} else {
@@ -466,6 +476,101 @@ class Purchase extends ControllerAbstract {
 
 		if ( ! Pricing::isPurchasable( $post->ID ) ) {
 			$event->stopPropagation();
+		}
+	}
+
+	/**
+	 * Save purchase in purchase history.
+	 *
+	 * @wp-hook template_redirect
+	 *
+	 * @return void
+	 * @throws \InvalidArgumentException
+	 */
+	public function buyPost() {
+		$buy    = Request::get( 'buy' );
+		$passID = Request::get( 'pass_id' );
+
+		// return, if the request was not a redirect after a purchase
+		if ( null === $buy ) {
+			return;
+		}
+
+		$parts = parse_url( Request::server( 'REQUEST_URI' ) );
+		parse_str( $parts['query'], $params );
+
+		if ( Signing::verify( Request::get( 'hmac' ), API::getApiKey(), $params, get_permalink(), \LaterPayClient\Http\Request::GET ) ) {
+
+			API::setToken( Request::get( 'lptoken' ) );
+			Cache::delete( Request::get( 'lptoken' ) );
+
+			if ( $passID ) {
+				$voucher = Request::get( 'voucher' );
+				$passID  = TimePass::getUntokenizedTimePassID( $passID );
+				// process vouchers
+				if ( ! Voucher::checkVoucherCode( $voucher ) ) {
+					if ( ! Voucher::checkVoucherCode( $voucher, true ) ) {
+						// save the pre-generated gift code as valid voucher code now that the purchase is complete
+						$giftCards             = Voucher::getTimePassVouchers( $passID, true );
+						$giftCards[ $voucher ] = array(
+							'price' => 0,
+							'title' => null,
+						);
+						Voucher::savePassVouchers( $passID, $giftCards, true );
+
+						// set cookie to store information that gift card was purchased
+						setcookie(
+							'laterpay_purchased_gift_card',
+							$voucher . '|' . $passID,
+							time() + 30,
+							'/'
+						);
+					} else {
+						// update gift code statistics
+						Voucher::updateVoucherStatistic( $passID, $voucher, true );
+					}
+				} else {
+					// update voucher statistics
+					Voucher::updateVoucherStatistic( $passID, $voucher );
+				}
+			} else {
+				$downloadAttached = Request::get( 'download_attached' );
+
+				// prepare attachment URL for download
+				if ( null !== $downloadAttached ) {
+					$post          = get_post( $downloadAttached );
+					$attachmentURL = Attachment::getEncryptedURL(
+						$downloadAttached,
+						$post
+					);
+
+					// set cookie to notify post that we need to start attachment download
+					setcookie(
+						'laterpay_download_attached',
+						$attachmentURL,
+						time() + 60,
+						'/'
+					);
+				}
+			}
+			unset(
+				$params['post_id'],
+				$params['pass_id'],
+				$params['buy'],
+				$params['lptoken'],
+				$params['ts'],
+				$params['hmac']
+			);
+
+			$redirectURL = get_permalink( Request::get( 'post_id' ) );
+
+			if ( ! empty( $params ) ) {
+				$redirectURL .= '?' . build_query( $params );
+			}
+
+			wp_safe_redirect( $redirectURL );
+			// exit script after redirect was set
+			exit;
 		}
 	}
 
@@ -503,36 +608,36 @@ class Purchase extends ControllerAbstract {
 	 *
 	 * @wp-hook the_content
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function modifyPostContent( Event $event ) {
+	public function modifyPostContent( EventInterface $event ) {
 		$content = $event->getResult();
 
 		// button position
-		$positioned_manually = (bool) get_option( 'laterpay_purchase_button_positioned_manually' );
+		$positionedManually = (bool) get_option( 'laterpay_purchase_button_positioned_manually' );
 
 		// add the purchase button as very first element of the content, if it is not positioned manually
-		if ( $positioned_manually === false && get_option( 'laterpay_teaser_mode' ) !== '2' ) {
-			$button_event = new Event();
-			$button_event->setEchoOutput( false );
+		if ( $positionedManually === false && get_option( 'laterpay_teaser_mode' ) !== '2' ) {
+			$buttonEvent = new Event();
+			$buttonEvent->setEchoOutput( false );
 			laterpay_event_dispatcher()->dispatch(
 				'laterpay_purchase_button',
-				$button_event
+				$buttonEvent
 			);
-			$content = $button_event->getResult() . $content;
+			$content = $buttonEvent->getResult() . $content;
 		}
 
 		$event->setResult( $content );
 	}
 
 	/**
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function purchaseButtonPosition( Event $event ) {
+	public function purchaseButtonPosition( EventInterface $event ) {
 		$html = $event->getResult();
 		// add the purchase button as very first element of the content, if it is not positioned manually
 		if ( (bool) get_option( 'laterpay_purchase_button_positioned_manually' ) === false ) {
@@ -546,19 +651,20 @@ class Purchase extends ControllerAbstract {
 	 * Stops event bubbling if the current post was already purchased and
 	 * current user is not an admin
 	 *
-	 * @param Event $event
+	 * @param EventInterface $event
 	 *
 	 * @return void
 	 */
-	public function onViewPurchasedPostAsVisitor( Event $event ) {
+	public function onViewPurchasedPostAsVisitor( EventInterface $event ) {
 		if ( $event->hasArgument( 'post' ) ) {
 			$post = $event->getArgument( 'post' );
 		} else {
 			$post = get_post();
 		}
 
-		$preview_post_as_visitor = User::previewPostAsVisitor( $post );
-		if ( ! $preview_post_as_visitor && $post instanceof \WP_Post && Post::hasAccessToPost( $post ) ) {
+		$previewPostAsVisitor = User::previewPostAsVisitor( $post );
+
+		if ( ! $previewPostAsVisitor && $post instanceof \WP_Post && Post::hasAccessToPost( $post ) ) {
 			$event->stopPropagation();
 		}
 	}

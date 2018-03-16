@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <form id="lp_js_advancedForm">
 
                 <input type="hidden" name="form" value="advanced">
-                <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['nonce'] ); ?>">
+                <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['nonce'] ); ?>">
                 <input type="hidden" name="action" value="laterpay_advanced">
 
                 <fieldset class="lp_fieldset">
@@ -185,7 +185,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                     </label>
                                 </td>
                                 <td>
-									<?php echo esc_html( $post_type['label'] ); ?>
+									<?php esc_html_e( $post_type['label'] ); ?>
                                 </td>
                             </tr>
 						<?php endforeach; ?>
@@ -485,26 +485,17 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <td style="width: 30%">
                                 <select class="lp_input lp_input--minimum" name="api_fallback_behavior">
                                     <option
-										<?php
-										if ( $_['api_fallback_behavior'] === 0 ) :
-											?>
-                                            selected<?php endif; ?>
+										<?php echo ( $_['api_fallback_behavior'] === 0 ) ? 'selected' : ''; ?>
                                             value="0">
 										<?php esc_html_e( 'Do nothing', 'laterpay' ); ?>
                                     </option>
                                     <option
-										<?php
-										if ( $_['api_fallback_behavior'] === 1 ) :
-											?>
-                                            selected<?php endif; ?>
+										<?php echo ( $_['api_fallback_behavior'] === 1 ) ? 'selected' : ''; ?>
                                             value="1">
 										<?php esc_html_e( 'Give full access', 'laterpay' ); ?>
                                     </option>
                                     <option
-										<?php
-										if ( $_['api_fallback_behavior'] === 2 ) :
-											?>
-                                            selected<?php endif; ?>
+										<?php echo ( $_['api_fallback_behavior'] === 2 ) ? 'selected' : ''; ?>
                                             value="2">
 										<?php esc_html_e( 'Hide premium content', 'laterpay' ); ?>
                                     </option>
@@ -535,11 +526,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                                            class="lp_toggle__input"
                                            data-confirm="<?php esc_attr_e( 'Only choose this option, if you have a LaterPay Pro merchant account. Otherwise, selling content with LaterPay might not work anymore.If you have questions about LaterPay Pro, please contact sales@laterpay.net. Are you sure that you want to choose this option?', 'laterpay' ); ?>"
                                            name="pro_merchant"
-                                           value="1"
-										<?php
-										if ( $_['pro_merchant'] ) :
-											?>
-                                            checked<?php endif; ?>>
+										<?php echo $_['pro_merchant'] ? 'checked' : ''; ?>
+                                           value="1">
                                     <span class="lp_toggle__text" data-on="" data-off=""></span>
                                     <span class="lp_toggle__handle"></span>
                                 </label>
@@ -553,11 +541,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
                 <button type="submit"
                         class="lp_button--default lp_mt- lp_mb-">
-					<?php echo esc_html( __( 'Save', 'laterpay' ) ); ?>
+					<?php esc_html_e( 'Save', 'laterpay' ); ?>
                 </button>
                 <button type="reset"
                         class="lp_button--cancel lp_pd-">
-					<?php echo esc_html( __( 'Cancel', 'laterpay' ) ); ?>
+					<?php esc_html_e( 'Cancel', 'laterpay' ); ?>
                 </button>
             </form>
         </div>

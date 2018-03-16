@@ -37,9 +37,6 @@ class TimePasses extends ControllerAbstract {
 			'laterpay_time_pass_render'            => array(
 				array( 'renderTimePass' ),
 			),
-			'laterpay_loaded'                      => array(
-				array( 'buyTimePass', 10 ),
-			),
 			'laterpay_shortcode_time_passes'       => array(
 				array( 'laterpay_on_plugin_is_working', 200 ),
 				array( 'renderTimePassesWidget' ),
@@ -282,66 +279,6 @@ class TimePasses extends ControllerAbstract {
 		}
 
 		return $time_passes_with_access;
-	}
-
-	/**
-	 * Save time pass info after purchase.
-	 *
-	 * @wp-hook template_redirect
-	 *
-	 * @return void
-	 * @throws \InvalidArgumentException
-	 */
-	public function buyTimePass() {
-		$request_method = null !== Request::server( 'REQUEST_METHOD' ) ? sanitize_text_field( Request::server( 'REQUEST_METHOD' ) ) : '';
-		$pass_id        = Request::get( 'pass_id' );
-		$link           = Request::get( 'link' );
-
-		if ( null === $pass_id || null === $link ) {
-			return;
-		}
-
-		if ( Signing::verify( Request::get( 'hmac' ), API::getAPIKey(), Request::get(), get_permalink(), $request_method ) ) {
-			// check token
-			$lptoken = Request::get( 'lptoken' );
-			if ( null !== $lptoken ) {
-				API::setToken( $lptoken );
-			}
-
-			$voucher = Request::get( 'voucher' );
-			$pass_id = TimePass::getUntokenizedTimePassID( $pass_id );
-
-			// process vouchers
-			if ( ! Voucher::checkVoucherCode( $voucher ) ) {
-				if ( ! Voucher::checkVoucherCode( $voucher, true ) ) {
-					// save the pre-generated gift code as valid voucher code now that the purchase is complete
-					$gift_cards             = Voucher::getTimePassVouchers( $pass_id, true );
-					$gift_cards[ $voucher ] = array(
-						'price' => 0,
-						'title' => null,
-					);
-					Voucher::savePassVouchers( $pass_id, $gift_cards, true );
-
-					// set cookie to store information that gift card was purchased
-					setcookie(
-						'laterpay_purchased_gift_card',
-						$voucher . '|' . $pass_id,
-						time() + 30,
-						'/'
-					);
-				} else {
-					// update gift code statistics
-					Voucher::updateVoucherStatistic( $pass_id, $voucher, true );
-				}
-			} else {
-				// update voucher statistics
-				Voucher::updateVoucherStatistic( $pass_id, $voucher );
-			}
-
-			wp_safe_redirect( $link );
-			// exit script after redirect was set
-			exit;
-		}
 	}
 
 	/**
