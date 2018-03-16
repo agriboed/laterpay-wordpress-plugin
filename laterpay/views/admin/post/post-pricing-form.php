@@ -40,19 +40,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php esc_html_e( 'Pay Now', 'laterpay' ); ?>
             </label>
         </div><!--
-	 -->
-        <div class="lp_layout__item lp_7/16">
-
+	 --><div class="lp_layout__item lp_7/16">
             <input type="text"
                    id="lp_js_postPriceInput"
                    class="lp_post-price-input lp_input lp_ml-"
                    name="post-price"
                    value="<?php esc_attr_e( $_['price_formatted'] ); ?>"
 				<?php echo ! $_['has_individual_price'] ? 'disabled' : ''; ?>
-                   placeholder="<?php esc_attr_e( '0.00', 'laterpay' ); ?>">
-        </div><!--
-	 -->
-        <div class="lp_layout__item lp_3/16">
+                   placeholder="<?php esc_attr_e( '0.00', 'laterpay' ); ?>"></div><!--
+        --><div class="lp_layout__item lp_3/16">
             <div class="lp_currency"><?php esc_html_e( $_['currency']['code'] ); ?></div>
         </div>
     </div>
