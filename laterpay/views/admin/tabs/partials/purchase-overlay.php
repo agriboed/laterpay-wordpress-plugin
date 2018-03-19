@@ -1,6 +1,5 @@
 <?php
 if ( ! defined('ABSPATH')) {
-    // prevent direct access to this file
     exit;
 }
 ?>
@@ -30,7 +29,7 @@ if ( ! defined('ABSPATH')) {
                         </div>
                         <div class="lp_purchase-overlay-option__cost">
                             <div class="lp_purchase-overlay-option__price">0.19</div>
-                            <div class="lp_purchase-overlay-option__currency"><?php esc_html_e($_['currency']); ?></div>
+                            <div class="lp_purchase-overlay-option__currency"><?php echo esc_html($_['currency']); ?></div>
                         </div>
                     </div>
                     <div class="lp_purchase-overlay-option">
@@ -52,7 +51,7 @@ if ( ! defined('ABSPATH')) {
                         </div>
                         <div class="lp_purchase-overlay-option__cost">
                             <div class="lp_purchase-overlay-option__price">1.49</div>
-                            <div class="lp_purchase-overlay-option__currency"><?php esc_html_e($_['currency']); ?></div>
+                            <div class="lp_purchase-overlay-option__currency"><?php echo esc_html($_['currency']); ?></div>
                         </div>
                     </div>
                     <div class="lp_purchase-overlay-option">
@@ -74,7 +73,7 @@ if ( ! defined('ABSPATH')) {
                         </div>
                         <div class="lp_purchase-overlay-option__cost">
                             <div class="lp_purchase-overlay-option__price">149.49</div>
-                            <div class="lp_purchase-overlay-option__currency"><?php esc_html_e($_['currency']); ?></div>
+                            <div class="lp_purchase-overlay-option__currency"><?php echo esc_html($_['currency']); ?></div>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,5 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-	// prevent direct access to this file
 	exit;
 }
 ?>
@@ -13,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <form id="lp_js_advancedForm">
 
                 <input type="hidden" name="form" value="advanced">
-                <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['nonce'] ); ?>">
+                <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['nonce'] ); ?>">
                 <input type="hidden" name="action" value="laterpay_advanced">
 
                 <fieldset class="lp_fieldset">
@@ -32,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                        class="lp_input lp_input--minimum"
                                        id="main_color"
                                        required
-                                       name="main_color" value="<?php esc_attr_e( $_['main_color'] ); ?>">
+                                       name="main_color" value="<?php echo esc_attr( $_['main_color'] ); ?>">
                             </td>
                             <td>
 								<?php
@@ -46,7 +45,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                        class="lp_input  lp_input--minimum"
                                        id="hover_color"
                                        required
-                                       name="hover_color" value="<?php esc_attr_e( $_['hover_color'] ); ?>">
+                                       name="hover_color" value="<?php echo esc_attr( $_['hover_color'] ); ?>">
                             </td>
                             <td>
 								<?php
@@ -103,7 +102,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                        class="lp_input lp_input--minimum"
                                        id="debugger_addresses"
                                        name="debugger_addresses"
-                                       value="<?php esc_attr_e( $_['debugger_addresses'] ); ?>">
+                                       value="<?php echo esc_attr( $_['debugger_addresses'] ); ?>">
                                 <label for="debugger_addresses"
                                        placeholder="<?php esc_attr_e( 'LaterPay Debugger Address', 'laterpay' ); ?>">
                                 </label>
@@ -185,7 +184,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                     </label>
                                 </td>
                                 <td>
-									<?php esc_html_e( $post_type['label'] ); ?>
+									<?php echo esc_html( $post_type['label'] ); ?>
                                 </td>
                             </tr>
 						<?php endforeach; ?>
@@ -269,9 +268,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                                        id="maximum_redemptions_per_gift_code"
                                        required
                                        name="maximum_redemptions_per_gift_code"
-                                       value="<?php esc_attr_e( $_['maximum_redemptions_per_gift_code'] ); ?>">
+                                       value="<?php echo esc_attr( $_['maximum_redemptions_per_gift_code'] ); ?>">
                                 <label for="maximum_redemptions_per_gift_code"
-                                       placeholder="<?php esc_attr_e( 'Times Redeemable', 'laterpay' ); ?>">
+                                       placeholder="<?php echo esc_attr( 'Times Redeemable', 'laterpay' ); ?>">
                                 </label>
                             </td>
                         </tr>
@@ -307,7 +306,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                        min="0"
                                        step="1"
                                        name="teaser_content_word_count"
-                                       value="<?php esc_attr_e( $_['teaser_content_word_count'] ); ?>">
+                                       value="<?php echo esc_attr( $_['teaser_content_word_count'] ); ?>">
                                 <label for="teaser_content_word_count"
                                        placeholder="<?php esc_attr_e( 'Teaser Content Word Count	', 'laterpay' ); ?>">
                                 </label>
@@ -347,7 +346,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                        min="0"
                                        max="100"
                                        name="preview_excerpt_percentage_of_content"
-                                       value="<?php esc_attr_e( $_['preview_excerpt_percentage_of_content'] ); ?>">
+                                       value="<?php echo esc_attr( $_['preview_excerpt_percentage_of_content'] ); ?>">
                                 <label for="preview_excerpt_percentage_of_content"
                                        placeholder="<?php esc_attr_e( 'Teaser Content Word Count', 'laterpay' ); ?>">
                                 </label>
@@ -365,7 +364,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                        required
                                        min="0"
                                        name="preview_excerpt_word_count_min"
-                                       value="<?php esc_attr_e( $_['preview_excerpt_word_count_min'] ); ?>">
+                                       value="<?php echo esc_attr( $_['preview_excerpt_word_count_min'] ); ?>">
                                 <label for="preview_excerpt_word_count_min"
                                        placeholder="<?php esc_attr_e( 'Minimum Number of Words', 'laterpay' ); ?>">
                                 </label>
@@ -382,7 +381,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                        required
                                        min="0"
                                        name="preview_excerpt_word_count_max"
-                                       value="<?php esc_attr_e( $_['preview_excerpt_word_count_max'] ); ?>">
+                                       value="<?php echo esc_attr( $_['preview_excerpt_word_count_max'] ); ?>">
                                 <label for="preview_excerpt_word_count_max"
                                        placeholder="<?php esc_attr_e( 'Maximum Number of Words', 'laterpay' ); ?>">
                                 </label>
@@ -462,7 +461,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 												<?php echo $category['checked'] ? 'checked' : ''; ?>
                                                    value="<?php echo esc_attr( $category['term_id'] ); ?>">
 
-											<?php esc_html_e( $category['name'] ); ?>
+											<?php echo esc_html( $category['name'] ); ?>
                                         </label>
 									<?php endforeach; ?>
                                 </td>

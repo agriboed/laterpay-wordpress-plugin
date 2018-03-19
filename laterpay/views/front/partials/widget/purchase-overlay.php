@@ -17,7 +17,7 @@ $input_id     = 1;
 		<div class="lp_purchase-overlay__wrapper">
 			<div class="lp_purchase-overlay__form">
 				<section class="lp_purchase-overlay__header">
-					<?php esc_html_e( $_['title'] ); ?>
+					<?php echo esc_html( $_['title'] ); ?>
 				</section>
 				<section class="lp_purchase-overlay__body">
 					<div class="lp_purchase-overlay__settings">
@@ -25,13 +25,13 @@ $input_id     = 1;
 						<div class="lp_purchase-overlay-option <?php echo ( empty( $_['data']['subscriptions'] ) && empty( $_['data']['timepasses'] )) ? ' lp_purchase-overlay-option-single' : '';?>" data-revenue="<?php esc_attr_e($_['data']['article']['revenue']); ?>">
                             <div class="lp_purchase-overlay-option__button">
 
-								<input id="lp_purchaseOverlayOptionInput<?php esc_attr_e($input_id); ?>"
+								<input id="lp_purchaseOverlayOptionInput<?php echo esc_attr($input_id); ?>"
                                        type="radio"
 									   class="lp_purchase-overlay-option__input"
                                        value="<?php echo esc_url( $_['data']['article']['url'] ); ?>"
 									   name="lp_purchase-overlay-option" checked>
 
-								<label for="lp_purchaseOverlayOptionInput<?php esc_attr_e( $input_id++); ?>"
+								<label for="lp_purchaseOverlayOptionInput<?php echo esc_attr( $input_id++); ?>"
                                        class="lp_purchase-overlay-option__label"></label>
 							</div>
 
@@ -40,45 +40,45 @@ $input_id     = 1;
 									<?php esc_html_e( 'This article', 'laterpay' ); ?>
 								</div>
 								<div class="lp_purchase-overlay-option__description">
-									<?php esc_html_e( $_['data']['article']['title'] ); ?>
+									<?php echo esc_html( $_['data']['article']['title'] ); ?>
 								</div>
 							</div>
 							<div class="lp_purchase-overlay-option__cost">
 								<div class="lp_purchase-overlay-option__price">
-									<?php esc_html_e($_['data']['article']['price'] ); ?>
+									<?php echo esc_html($_['data']['article']['price'] ); ?>
 								</div>
 								<div class="lp_purchase-overlay-option__currency">
-									<?php esc_html_e( $_['currency'] ); ?>
+									<?php echo esc_html( $_['currency'] ); ?>
 								</div>
 							</div>
 						</div>
 						<?php endif; ?>
 						<?php if ( isset( $_['data']['timepasses'] ) ) : ?>
 							<?php foreach ( $_['data']['timepasses'] as $timepass ) : ?>
-								<div data-pass-id="<?php esc_attr_e( $timepass['id'] ); ?>" data-revenue="<?php esc_attr_e($timepass['revenue']); ?>" class="lp_purchase-overlay-option lp_js_timePass">
+								<div data-pass-id="<?php echo esc_attr( $timepass['id'] ); ?>" data-revenue="<?php echo esc_attr($timepass['revenue']); ?>" class="lp_purchase-overlay-option lp_js_timePass">
 									<div class="lp_purchase-overlay-option__button">
-										<input id="lp_purchaseOverlayOptionInput<?php esc_attr_e($input_id); ?>"
+										<input id="lp_purchaseOverlayOptionInput<?php echo esc_attr($input_id); ?>"
                                                type="radio"
 											   class="lp_purchase-overlay-option__input"
                                                value="<?php echo esc_url( $timepass['url'] ); ?>"
 											   name="lp_purchase-overlay-option">
-										<label for="lp_purchaseOverlayOptionInput<?php esc_attr_e($input_id++); ?>"
+										<label for="lp_purchaseOverlayOptionInput<?php echo esc_attr($input_id++); ?>"
                                                class="lp_purchase-overlay-option__label"></label>
 									</div>
 									<div class="lp_purchase-overlay-option__name">
 										<div class="lp_purchase-overlay-option__title">
-											<?php esc_html_e( $timepass['title'] ); ?>
+											<?php echo esc_html( $timepass['title'] ); ?>
 										</div>
 										<div class="lp_purchase-overlay-option__description">
-											<?php esc_html_e( $timepass['description'] ); ?>
+											<?php echo esc_html( $timepass['description'] ); ?>
 										</div>
 									</div>
 									<div class="lp_purchase-overlay-option__cost">
 										<div class="lp_purchase-overlay-option__price lp_js_timePassPrice">
-											<?php esc_html_e( $timepass['price'] ); ?>
+											<?php echo esc_html( $timepass['price'] ); ?>
 										</div>
 										<div class="lp_purchase-overlay-option__currency">
-											<?php esc_html_e( $_['currency'] ); ?>
+											<?php echo esc_html( $_['currency'] ); ?>
 										</div>
 									</div>
 								</div>
@@ -86,30 +86,30 @@ $input_id     = 1;
 						<?php endif; ?>
 						<?php if ( isset( $_['data']['subscriptions'] ) ) : ?>
 							<?php foreach ( $_['data']['subscriptions'] as $subscription ) : ?>
-								<div class="lp_purchase-overlay-option" data-revenue="<?php esc_attr_e($subscription['revenue']); ?>">
+								<div class="lp_purchase-overlay-option" data-revenue="<?php echo esc_attr($subscription['revenue']); ?>">
 									<div class="lp_purchase-overlay-option__button">
-										<input id="lp_purchaseOverlayOptionInput<?php esc_attr_e($input_id); ?>"
+										<input id="lp_purchaseOverlayOptionInput<?php echo esc_attr($input_id); ?>"
                                                type="radio"
 											   class="lp_purchase-overlay-option__input"
                                                value="<?php echo esc_url( $subscription['url'] ); ?>"
                                                name="lp_purchase-overlay-option">
-										<label for="lp_purchaseOverlayOptionInput<?php esc_attr_e($input_id++); ?>"
+										<label for="lp_purchaseOverlayOptionInput<?php echo esc_attr($input_id++); ?>"
                                                class="lp_purchase-overlay-option__label"></label>
 									</div>
 									<div class="lp_purchase-overlay-option__name">
 										<div class="lp_purchase-overlay-option__title">
-											<?php esc_html_e( $subscription['title'] ); ?>
+											<?php echo esc_html( $subscription['title'] ); ?>
 										</div>
 										<div class="lp_purchase-overlay-option__description">
-											<?php esc_html_e( $subscription['description'] ); ?>
+											<?php echo esc_html( $subscription['description'] ); ?>
 										</div>
 									</div>
 									<div class="lp_purchase-overlay-option__cost">
 										<div class="lp_purchase-overlay-option__price">
-											<?php esc_html_e( $subscription['price'] ); ?>
+											<?php echo esc_html( $subscription['price'] ); ?>
 										</div>
 										<div class="lp_purchase-overlay-option__currency">
-											<?php esc_html_e( $_['currency'] ); ?>
+											<?php echo esc_html( $_['currency'] ); ?>
 										</div>
 									</div>
 								</div>
@@ -129,10 +129,10 @@ $input_id     = 1;
 						<div>
 							<a class="lp_js_overlayPurchase lp_purchase-overlay__submit"
                                data-purchase-action="buy"
-							   data-preview-post-as-visitor="<?php esc_attr_e( $_['is_preview'] ); ?>"
+                               data-preview-post-as-visitor="<?php echo esc_attr( $_['is_preview'] ); ?>"
                                href="#"><span data-icon="b"></span>
                                 <span data-buy-label="true"
-                                      class="lp_purchase-overlay__submit-text"><?php esc_html_e( $_['submit_text'] ); ?></span>
+                                      class="lp_purchase-overlay__submit-text"><?php echo esc_html( $_['submit_text'] ); ?></span>
 								<span data-voucher-label="true" class="lp_hidden"><?php esc_html_e( 'Redeem Voucher Code', 'laterpay' ); ?>
                                 </span>
                             </a>
@@ -153,7 +153,7 @@ $input_id     = 1;
                     <ul class="lp_purchase-overlay-payments-list">
 						<?php foreach ( $_['icons'] as $icon ) : ?>
 							<li class="lp_purchase-overlay-payments-item">
-								<i class="lp_purchase-overlay-icon lp_purchase-overlay-icon-<?php esc_html_e( $icon ); ?>"></i>
+								<i class="lp_purchase-overlay-icon lp_purchase-overlay-icon-<?php echo esc_html( $icon ); ?>"></i>
 							</li>
 						<?php endforeach; ?>
 					</ul>

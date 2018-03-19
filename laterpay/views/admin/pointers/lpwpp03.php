@@ -1,6 +1,5 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-	// prevent direct access to this file
 	exit;
 }
 $pointer_content  = '<h3>' . __( 'Add Teaser Content', 'laterpay' ) . '</h3>';
@@ -18,7 +17,7 @@ $pointer_content .= '<p>' . __( 'You´ll give your users a better impression of 
 					},
 					close: function () {
 						jQuery.post(ajaxurl, {
-							pointer: '<?php esc_attr_e( $_['pointer'] ); ?>',
+							pointer: '<?php echo esc_attr( $_['pointer'] ); ?>',
 							action: 'dismiss-wp-pointer'
 						});
 					}

@@ -1,6 +1,5 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-	// prevent direct access to this file
 	exit;
 }
 ?>
@@ -39,7 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <input type="hidden" name="action" value="laterpay_account">
                         <input type="hidden" id="lp_js_hasInvalidSandboxCredentials" name="invalid_credentials"
                                value="0">
-                        <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+                        <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
                         <label class="lp_toggle__label lp_toggle__label-pass">
                             <input type="checkbox"
                                    id="lp_js_toggleVisibilityInTestMode"
@@ -73,13 +72,13 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <form id="laterpay_sandbox_merchant_id" method="post">
                                 <input type="hidden" name="form" value="laterpay_sandbox_merchant_id">
                                 <input type="hidden" name="action" value="laterpay_account">
-                                <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+                                <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
                                 <input type="text"
                                        id="lp_js_sandboxMerchantId"
                                        class="lp_input lp_js_validateMerchantId lp_api-credentials__input"
                                        name="laterpay_sandbox_merchant_id"
-                                       value="<?php esc_attr_e( $_['sandbox_merchant_id'] ); ?>"
+                                       value="<?php echo esc_attr( $_['sandbox_merchant_id'] ); ?>"
                                        maxlength="22"
                                        required>
                                 <label for="laterpay_sandbox_merchant_id"
@@ -93,13 +92,13 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <form id="laterpay_sandbox_api_key" method="post">
                                 <input type="hidden" name="form" value="laterpay_sandbox_api_key">
                                 <input type="hidden" name="action" value="laterpay_account">
-                                <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+                                <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
                                 <input type="text"
                                        id="lp_js_sandboxApiKey"
                                        class="lp_input lp_js_validateApiKey lp_api-credentials__input"
                                        name="laterpay_sandbox_api_key"
-                                       value="<?php esc_attr_e( $_['sandbox_api_key'] ); ?>"
+                                       value="<?php echo esc_attr( $_['sandbox_api_key'] ); ?>"
                                        maxlength="32"
                                        required>
                                 <label for="laterpay_sandbox_api_key"
@@ -153,13 +152,13 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <form id="laterpay_live_api_key" method="post">
                                 <input type="hidden" name="form" value="laterpay_live_api_key">
                                 <input type="hidden" name="action" value="laterpay_account">
-                                <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+                                <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
                                 <input type="text"
                                        id="lp_js_liveApiKey"
                                        class="lp_input lp_js_validateApiKey lp_api-credentials__input"
                                        name="laterpay_live_api_key"
-                                       value="<?php esc_attr_e( $_['live_api_key'] ); ?>"
+                                       value="<?php echo esc_attr( $_['live_api_key'] ); ?>"
                                        maxlength="32"
                                        required>
 
@@ -172,8 +171,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <li class="lp_api-credentials__list-item">
                             <a href="#"
 								<?php echo $_['has_live_credentials'] ? ' style="display:none"' : ''; ?>
-                               data-href-eu="<?php esc_attr_e( $_['credentials_url_eu'] ); ?>"
-                               data-href-us="<?php esc_attr_e( $_['credentials_url_us'] ); ?>"
+                               data-href-eu="<?php echo esc_url( $_['credentials_url_eu'] ); ?>"
+                               data-href-us="<?php echo esc_url( $_['credentials_url_us'] ); ?>"
                                id="lp_js_showMerchantContracts"
                                class="button button-primary"
                                target="_blank">
@@ -210,7 +209,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <form id="laterpay_region" method="post">
                     <input type="hidden" name="form" value="laterpay_region_change">
                     <input type="hidden" name="action" value="laterpay_account">
-                    <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+                    <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
                     <select id="lp_js_apiRegionSection" name="laterpay_region" class="lp_input">
                         <option

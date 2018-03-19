@@ -1,9 +1,10 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-	// prevent direct access to this file
 	exit;
 }
 ?>
+<div>
 <?php foreach ( $_['subscriptions'] as $subscription ) : ?>
 	<?php echo $subscription['content']; ?>
 <?php endforeach;?>
+</div>

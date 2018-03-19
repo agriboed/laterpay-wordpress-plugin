@@ -17,25 +17,25 @@ if ( ! defined( 'ABSPATH' ) ) {
             <input type="hidden" name="form" value="price_category_form">
             <input type="hidden" name="action" value="laterpay_pricing">
             <input type="hidden" name="revenue_model" class="lp_js_categoryRevenueModel"
-                   value="<?php esc_attr_e( $category->revenue_model ); ?>">
-            <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+                   value="<?php echo esc_attr( $category->revenue_model ); ?>">
+            <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
             <div class="lp_js_categoryDefaultPriceShowElements lp_greybox lp_mb- lp_price-panel">
 				<?php esc_html_e( 'Every post in', 'laterpay' ); ?>
                 <span class="lp_js_categoryDefaultPriceCategoryTitle lp_inline-block">
-									<?php esc_html_e( $category->category_name ); ?>
+									<?php echo esc_html( $category->category_name ); ?>
 								</span>
 				<?php esc_html_e( 'costs', 'laterpay' ); ?>
                 <span class="lp_js_categoryDefaultPriceDisplay lp_category-price"
-                      data-price="<?php esc_attr_e( $category->category_price ); ?>">
-									<?php esc_html_e( $category->category_price_formatted ); ?>
+                      data-price="<?php echo esc_attr( $category->category_price ); ?>">
+									<?php echo esc_html( $category->category_price_formatted ); ?>
 								</span>
                 <span class="lp_js_currency lp_currency">
-									<?php esc_html_e( $_['currency']['code'] ); ?>
+									<?php echo esc_html( $_['currency']['code'] ); ?>
 								</span>
                 <span class="lp_js_revenueModelLabelDisplay lp_badge"
-                      data-revenue="<?php esc_attr_e( $category->revenue_model ); ?>">
-									<?php esc_html_e( $category->revenue_model_label ); ?>
+                      data-revenue="<?php echo esc_attr( $category->revenue_model ); ?>">
+									<?php echo esc_html( $category->revenue_model_label ); ?>
 								</span>
                 <div class="lp_price-panel__buttons">
                     <a href="#"
@@ -62,8 +62,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                         </th>
                         <td>
                             <select name="category_id" class="lp_js_selectCategory select2-input" style="width:100%">
-                                <option value="<?php esc_attr_e( $category->category_id ); ?>">
-									<?php esc_attr_e( $category->category_name ); ?>
+                                <option value="<?php echo esc_attr( $category->category_id ); ?>">
+									<?php echo esc_attr( $category->category_name ); ?>
                                 </option>
                             </select>
                         </td>
@@ -76,11 +76,11 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <input type="text"
                                    name="price"
                                    class="lp_js_priceInput lp_js_categoryDefaultPriceInput lp_input lp_number-input"
-                                   value="<?php esc_attr_e( $category->category_price_formatted ); ?>"
-                                   placeholder="<?php esc_attr_e( $_['price_placeholder'] ); ?>">
+                                   value="<?php echo esc_attr( $category->category_price_formatted ); ?>"
+                                   placeholder="<?php echo esc_attr( $_['price_placeholder'] ); ?>">
 
                             <span class="lp_js_currency lp_currency">
-                              <?php esc_html_e( $_['currency']['code'] ); ?>
+                              <?php echo esc_html( $_['currency']['code'] ); ?>
                             </span>
                         </td>
                     </tr>
@@ -95,7 +95,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<?php echo $category->ppu_disabled ? ' lp_is-disabled' : ''; ?>">
                                     <input
                                             type="radio"
-                                            name="laterpay_category_price_revenue_model_<?php esc_attr_e( $category->category_id ); ?>"
+                                            name="laterpay_category_price_revenue_model_<?php echo esc_attr( $category->category_id ); ?>"
                                             class="lp_js_revenueModelInput"
 										<?php echo $category->ppu_selected ? 'checked' : ''; ?>
                                             value="ppu">
@@ -106,7 +106,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<?php echo $category->sis_disabled ? ' lp_is-disabled' : ''; ?>">
                                     <input
                                             type="radio"
-                                            name="laterpay_category_price_revenue_model_<?php esc_attr_e( $category->category_id ); ?>"
+                                            name="laterpay_category_price_revenue_model_<?php echo esc_attr( $category->category_id ); ?>"
                                             class="lp_js_revenueModelInput"
 										<?php echo $category->sis_selected ? 'checked' : ''; ?>
                                             value="sis">
@@ -154,7 +154,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           style="display:none;">
         <input type="hidden" name="form" value="price_category_form">
         <input type="hidden" name="action" value="laterpay_pricing">
-        <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+        <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
         <div class="lp_js_categoryDefaultPriceShowElements lp_greybox lp_mb-" style="display:none;">
 			<?php esc_html_e( 'Every post in', 'laterpay' ); ?>
@@ -202,8 +202,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <input type="text"
                                name="price"
                                class="lp_js_priceInput lp_js_categoryDefaultPriceInput lp_input lp_number-input"
-                               value="<?php esc_attr_e( $_['price_default'] ); ?>"
-                               placeholder="<?php esc_attr_e( $_['price_placeholder'] ); ?>">
+                               value="<?php echo esc_attr( $_['price_default'] ); ?>"
+                               placeholder="<?php echo esc_attr( $_['price_placeholder'] ); ?>">
                         <span class="lp_js_currency lp_currency">
                         <?php esc_html_e( $_['currency']['code'] ); ?>
                     </span>

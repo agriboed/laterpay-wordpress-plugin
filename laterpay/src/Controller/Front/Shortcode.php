@@ -132,7 +132,7 @@ class Shortcode extends ControllerAbstract {
 				'error' => $error,
 			);
 
-			$event->setResult( $this->getTextView( 'front/partials/shortcode/error', array( 'laterpay' => $args ) ) );
+			$event->setResult( $this->getTextView( 'front/partials/shortcode/error', array( '_' => $args ) ) );
 
 			return;
 		}

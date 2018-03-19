@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php foreach ( $_['tabs'] as $tab ) : ?>
             <li class="lp_navigation-tabs__item <?php echo $tab['current'] ? ' lp_is-current' : ''; ?>">
                 <a href="<?php echo esc_url( $tab['url'] ); ?>" class="lp_navigation-tabs__link">
-					<?php esc_html_e( $tab['title'] ); ?>
+					<?php echo esc_html( $tab['title'] ); ?>
                 </a>
             </li>
 		<?php endforeach; ?>

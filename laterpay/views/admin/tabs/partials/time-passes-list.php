@@ -12,12 +12,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <?php foreach ( $_['time_passes'] as $pass ) : ?>
     <div class="lp_js_timePassWrapper lp_time-passes__item lp_clearfix"
-         data-pass-id="<?php esc_attr_e( $pass['pass_id'] ); ?>">
+         data-pass-id="<?php echo esc_attr( $pass['pass_id'] ); ?>">
 
         <div class="lp_time-pass__id-wrapper">
 			<?php esc_html_e( 'Pass', 'laterpay' ); ?>
             <span class="lp_js_timePassId lp_time-pass__id">
-				<?php esc_html_e( $pass['pass_id'] ); ?>
+				<?php echo esc_html( $pass['pass_id'] ); ?>
 			</span>
         </div>
         <div class="lp_js_timePassPreview lp_left">
@@ -40,18 +40,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<?php foreach ( $pass['vouchers'] as $code => $voucher ) : ?>
                 <div class="lp_js_voucher lp_voucher">
 					<?php if ( $voucher['title'] ) : ?>
-                        <span class="lp_voucher__title"><b> <?php esc_html_e( $voucher['title'] ); ?></b></span>
+                        <span class="lp_voucher__title"><b> <?php echo esc_html( $voucher['title'] ); ?></b></span>
 					<?php endif; ?>
                     <div>
 							<span class="lp_voucher__code">
-								<?php esc_html_e( $code ); ?>
+								<?php echo esc_html( $code ); ?>
 							</span>
                         <span class="lp_voucher__code-infos">
 							<?php esc_html_e( 'reduces the price to', 'laterpay' ); ?>
-							<?php esc_html_e( $voucher['price'] . ' ' . $_['currency']['code'] ); ?>.
+							<?php echo esc_html( $voucher['price'] . ' ' . $_['currency']['code'] ); ?>.
                                 <br>
 									<span class="lp_js_voucherTimesRedeemed">
-									<?php esc_html_e( $voucher['statistic'] ); ?>
+									<?php echo esc_html( $voucher['statistic'] ); ?>
 									</span>
 
 							<?php esc_html_e( 'times redeemed.', 'laterpay' ); ?>
@@ -80,7 +80,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <input type="hidden" name="form" value="time_pass_form_save">
             <input type="hidden" name="action" value="laterpay_pricing">
             <input type="hidden" name="pass_id" value="0" id="lp_js_timePassEditorHiddenPassId">
-            <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+            <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
             <table class="lp_time-pass-editor__column lp_1">
                 <tr>
@@ -92,8 +92,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<?php foreach ( $_['duration'] as $duration ): ?>
                                 <option
 									<?php echo $duration['default'] ? 'selected' : ''; ?>
-                                        value="<?php esc_attr_e( $duration['id'] ); ?>">
-									<?php esc_html_e( $duration['name'] ); ?>
+                                        value="<?php echo esc_attr( $duration['id'] ); ?>">
+									<?php echo esc_html( $duration['name'] ); ?>
                                 </option>
 							<?php endforeach; ?>
                         </select>
@@ -102,8 +102,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<?php foreach ( $_['period'] as $period ): ?>
                                 <option
 									<?php echo $period['default'] ? 'selected' : ''; ?>
-                                        value="<?php esc_attr_e( $period['id'] ); ?>">
-									<?php esc_html_e( $period['name'] ); ?>
+                                        value="<?php echo esc_attr( $period['id'] ); ?>">
+									<?php echo esc_html( $period['name'] ); ?>
                                 </option>
 							<?php endforeach; ?>
                         </select>
@@ -120,8 +120,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<?php foreach ( $_['access'] as $access ): ?>
                                 <option
 									<?php echo $access['default'] ? 'selected' : ''; ?>
-                                        value="<?php esc_attr_e( $access['id'] ); ?>">
-									<?php esc_html_e( $access['name'] ); ?>
+                                        value="<?php echo esc_attr( $access['id'] ); ?>">
+									<?php echo esc_html( $access['name'] ); ?>
                                 </option>
 							<?php endforeach; ?>
                         </select>
@@ -145,7 +145,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <input type="text"
                                class="lp_js_timePassPriceInput lp_input lp_number-input"
                                name="price"
-                               value="<?php esc_attr_e( $_['price_formatted'] ); ?>"
+                               value="<?php echo esc_attr( $_['price_formatted'] ); ?>"
                                maxlength="6">
 
 						<?php esc_html_e( $_['currency']['code'] ); ?>
@@ -192,7 +192,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <input type="text"
                                name="title"
                                class="lp_js_timePassTitleInput lp_input lp_1"
-                               value="<?php esc_attr_e( $_['title'] ); ?>">
+                               value="<?php echo esc_attr( $_['title'] ); ?>">
                     </td>
                 </tr>
                 <tr>
@@ -214,10 +214,10 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <input type="text"
                        name="voucher_price_temp"
                        class="lp_js_voucherPriceInput lp_input lp_number-input"
-                       value="<?php esc_attr_e( $_['price_formatted'] ); ?>"
+                       value="<?php echo esc_attr( $_['price_formatted'] ); ?>"
                        maxlength="6">
                 <span>
-                    <?php esc_html_e( $_['currency']['code'] ); ?>
+                    <?php echo esc_html( $_['currency']['code'] ); ?>
                 </span>
                 <a href="#" class="lp_js_generateVoucherCode lp_edit-link lp_add-link" data-icon="c">
 					<?php esc_html_e( 'Generate voucher code', 'laterpay' ); ?>

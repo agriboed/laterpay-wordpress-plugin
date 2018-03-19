@@ -3,13 +3,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<div class="lp_js_premium-file-box lp_premium-file-box lp_is-<?php esc_attr_e( $_['content_type'] ); ?>"
+<div class="lp_js_premium-file-box lp_premium-file-box lp_is-<?php echo esc_attr( $_['content_type'] ); ?>"
 	<?php if ( ! empty( $_['image_path'] ) ): ?>
-        style="background-image:url('<?php esc_attr_e( $_['image_path'] ); ?>')"
+        style="background-image:url('<?php echo esc_attr( $_['image_path'] ); ?>')"
 	<?php endif; ?>
-     data-post-id="<?php esc_attr_e( $_['post_id'] ); ?>"
-     data-content-type="<?php esc_attr_e( $_['content_type'] ); ?>"
-     data-page-url="<?php esc_attr_e( $_['page_url'] ); ?>">
+     data-post-id="<?php echo esc_attr( $_['post_id'] ); ?>"
+     data-content-type="<?php echo esc_attr( $_['content_type'] ); ?>"
+     data-page-url="<?php echo esc_url( $_['page_url'] ); ?>">
 
     <div class="lp_premium-file-box__details">
         <h3 class="lp_premium-file-box__title">

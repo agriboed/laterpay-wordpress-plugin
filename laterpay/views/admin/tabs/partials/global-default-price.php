@@ -11,20 +11,20 @@ if ( ! defined( 'ABSPATH' ) ) {
     <input type="hidden" name="form" value="global_price_form">
     <input type="hidden" name="action" value="laterpay_pricing">
     <input type="hidden" name="revenue_model" class="lp_js_globalRevenueModel"
-           value="<?php esc_attr_e( $_['revenue_model'] ); ?>" disabled>
-    <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+           value="<?php echo esc_attr( $_['revenue_model'] ); ?>" disabled>
+    <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
     <div id="lp_js_globalDefaultPriceShowElements" class="lp_greybox lp_price-panel">
 		<?php esc_html_e( 'Every post costs', 'laterpay' ); ?>
         <span id="lp_js_globalDefaultPriceDisplay" class="lp_price-settings__value-text"
-              data-price="<?php esc_attr_e( $_['price'] ); ?>">
-							<?php esc_html_e( $_['price_formatted'] ); ?>
+              data-price="<?php echo esc_attr( $_['price'] ); ?>">
+							<?php echo esc_html( $_['price_formatted'] ); ?>
 						</span>
         <span class="lp_js_currency lp_currency">
-							<?php esc_html_e( $_['currency']['code'] ); ?>
+							<?php echo esc_html( $_['currency']['code'] ); ?>
 						</span>
         <span id="lp_js_globalDefaultPriceRevenueModelDisplay" class="lp_badge"
-              data-revenue="<?php esc_attr_e( $_['revenue_model'] ); ?>">
+              data-revenue="<?php echo esc_attr( $_['revenue_model'] ); ?>">
 							<?php esc_html_e( $_['revenue_model_label'], 'laterpay' ); ?>
 						</span>
         <div class="lp_price-panel__buttons">
@@ -52,10 +52,10 @@ if ( ! defined( 'ABSPATH' ) ) {
                            id="lp_js_globalDefaultPriceInput"
                            class="lp_js_priceInput lp_input lp_number-input"
                            name="laterpay_global_price"
-                           value="<?php esc_attr_e( $_['price'] ); ?>"
-                           placeholder="<?php esc_attr_e( $_['price_placeholder'] ); ?>">
+                           value="<?php echo esc_attr( $_['price'] ); ?>"
+                           placeholder="<?php echo esc_attr( $_['price_placeholder'] ); ?>">
                     <span class="lp_js_currency lp_currency">
-                        <?php esc_html_e( $_['currency']['code'] ); ?>
+                        <?php echo esc_html( $_['currency']['code'] ); ?>
                     </span>
                 </td>
             </tr>

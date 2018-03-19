@@ -82,7 +82,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseHeaderColor lp_input"
                                                        name="header_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['header_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['header_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -93,7 +93,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseHeaderBackgroundColor lp_input"
                                                        name="header_background_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['header_bg_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['header_bg_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -104,7 +104,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="text"
                                                        class="lp_js_overlayOptions lp_js_purchaseHeaderTitle lp_input"
                                                        name="header_title"
-                                                       value="<?php esc_attr_e( $_['overlay']['header_title'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['header_title'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -124,7 +124,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseBackgroundColor lp_input"
                                                        name="background_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['main_bg_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['main_bg_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -135,7 +135,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseMainTextColor lp_input"
                                                        name="main_text_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['main_text_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['main_text_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -146,7 +146,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseDescriptionTextColor lp_input"
                                                        name="description_text_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['description_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['description_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -157,7 +157,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseButtonBackgroundColor lp_input"
                                                        name="button_background_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['button_bg_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['button_bg_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -168,7 +168,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseButtonTextColor lp_input"
                                                        name="button_text_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['button_text_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['button_text_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -179,7 +179,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseLinkMainColor lp_input"
                                                        name="link_main_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['link_main_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['link_main_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -190,7 +190,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseLinkHoverColor lp_input"
                                                        name="link_hover_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['link_hover_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['link_hover_color'] ); ?>">
                                             </td>
                                         </tr>
                                         <tr>
@@ -222,7 +222,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                                 <input type="color"
                                                        class="lp_js_overlayOptions lp_js_purchaseFooterBackgroundColor lp_input"
                                                        name="footer_background_color"
-                                                       value="<?php esc_attr_e( $_['overlay']['footer_bg_color'] ); ?>">
+                                                       value="<?php echo esc_attr( $_['overlay']['footer_bg_color'] ); ?>">
                                             </td>
                                         </tr>
                                         </tbody>
@@ -271,7 +271,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <form method="post" class="lp_js_showHintOnTrue lp_mb++">
                     <input type="hidden" name="form" value="purchase_button_position">
                     <input type="hidden" name="action" value="laterpay_appearance">
-                    <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+                    <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
                     <div class="lp_button-group--large">
                         <label class="lp_js_buttonGroupButton lp_button-group__button
@@ -327,7 +327,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <form method="post" class="lp_js_showHintOnTrue lp_mb++">
                     <input type="hidden" name="form" value="time_passes_position">
                     <input type="hidden" name="action" value="laterpay_appearance">
-                    <input type="hidden" name="_wpnonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+                    <input type="hidden" name="_wpnonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">
 
                     <div class="lp_button-group--large">
                         <label class="lp_js_buttonGroupButton lp_button-group__button

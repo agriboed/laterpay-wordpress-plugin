@@ -1,6 +1,5 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-	// prevent direct access to this file
 	exit;
 }
 $pointer_content  = '<h3>' . __( 'Set a Price for this Post', 'laterpay' ) . '</h3>';
@@ -18,7 +17,7 @@ $pointer_content .= '<p>' . __( 'Set an <strong>individual price</strong> for th
 					},
 					close: function () {
 						jQuery.post(ajaxurl, {
-							pointer: '<?php esc_attr_e( $_['pointer'] ); ?>',
+							pointer: '<?php echo esc_attr( $_['pointer'] ); ?>',
 							action: 'dismiss-wp-pointer'
 						});
 					}

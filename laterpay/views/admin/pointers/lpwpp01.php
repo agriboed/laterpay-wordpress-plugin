@@ -1,6 +1,5 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-	// prevent direct access to this file
 	exit;
 }
 $pointer_content  = '<h3>' . __( 'Welcome to LaterPay', 'laterpay' ) . '</h3>';
@@ -18,7 +17,7 @@ $pointer_content .= '<p>' . __( 'Set the most appropriate settings for you.', 'l
 					},
 					close: function () {
 						jQuery.post(ajaxurl, {
-							pointer: '<?php esc_attr_e( $_['pointer'] ); ?>',
+							pointer: '<?php echo esc_attr( $_['pointer'] ); ?>',
 							action: 'dismiss-wp-pointer'
 						});
 					}

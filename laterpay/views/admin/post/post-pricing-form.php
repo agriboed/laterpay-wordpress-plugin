@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <script>
     var lpVars = window.lpVars || {};
-    lpVars.postId = <?php esc_attr_e( $_['post_id'] ); ?>;
+    lpVars.postId = <?php echo esc_attr( $_['post_id'] ); ?>;
     lpVars.limits = <?php echo wp_json_encode( $_['price_ranges'] ); ?>;
 </script>
 
@@ -45,11 +45,11 @@ if ( ! defined( 'ABSPATH' ) ) {
                    id="lp_js_postPriceInput"
                    class="lp_post-price-input lp_input lp_ml-"
                    name="post-price"
-                   value="<?php esc_attr_e( $_['price_formatted'] ); ?>"
+                   value="<?php echo esc_attr( $_['price_formatted'] ); ?>"
 				<?php echo ! $_['has_individual_price'] ? 'disabled' : ''; ?>
                    placeholder="<?php esc_attr_e( '0.00', 'laterpay' ); ?>"></div><!--
         --><div class="lp_layout__item lp_3/16">
-            <div class="lp_currency"><?php esc_html_e( $_['currency']['code'] ); ?></div>
+            <div class="lp_currency"><?php echo esc_html( $_['currency']['code'] ); ?></div>
         </div>
     </div>
 
@@ -57,7 +57,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             type="hidden"
             name="post_price_type"
             id="lp_js_postPriceTypeInput"
-            value="<?php esc_attr_e( $_['post_price_type'] ); ?>">
+            value="<?php echo esc_attr( $_['post_price_type'] ); ?>">
 </div>
 
 <div id="lp_js_priceType" class="lp_price-type
@@ -92,8 +92,8 @@ if ( ! defined( 'ABSPATH' ) ) {
             <a href="#"
                id="lp_js_useGlobalDefaultPrice"
                class="lp_js_priceTypeButton lp_price-type__link"
-               data-price="<?php esc_attr_e( $_['global_default_price_formatted'] ); ?>"
-               data-revenue-model="<?php esc_attr_e( $_['global_default_price_revenue_model'] ); ?>">
+               data-price="<?php echo esc_attr( $_['global_default_price_formatted'] ); ?>"
+               data-revenue-model="<?php echo esc_attr( $_['global_default_price_revenue_model'] ); ?>">
 				<?php echo wp_kses_post( __( 'Global <br> Default Price', 'laterpay' ) ); ?>
             </a>
 
@@ -123,19 +123,19 @@ if ( ! defined( 'ABSPATH' ) ) {
                     type="hidden"
                     name="post_default_category"
                     id="lp_js_postDefaultCategoryInput"
-                    value="<?php esc_attr_e( $_['post_default_category'] ); ?>">
+                    value="<?php echo esc_attr( $_['post_default_category'] ); ?>">
 
             <ul class="lp_js_priceTypeDetailsCategoryDefaultPriceList lp_price-type-categorized__list">
 				<?php foreach ( $_['category_prices'] as $category ) : ?>
-                    <li data-category="<?php esc_attr_e( $category['category_id'] ); ?>"
+                    <li data-category="<?php echo esc_attr( $category['category_id'] ); ?>"
                         class="lp_js_priceTypeDetailsCategoryDefaultPriceItem lp_price-type-categorized__item
 						<?php echo $category['selected'] ? ' lp_is-selectedCategory' : ''; ?>">
 
                         <a href="#"
-                           data-price="<?php esc_attr_e( $category['category_price'] ); ?>"
-                           data-revenue-model="<?php esc_attr_e( $category['revenue_model'] ); ?>">
-                            <span><?php esc_html_e( $category['category_price'] ); ?><?php esc_html_e( $_['currency']['code'] ); ?></span>
-							<?php esc_html_e( $category['category_name'] ); ?>
+                           data-price="<?php echo esc_attr( $category['category_price'] ); ?>"
+                           data-revenue-model="<?php echo esc_attr( $category['revenue_model'] ); ?>">
+                            <span><?php echo esc_html( $category['category_price'] ); ?><?php echo esc_html( $_['currency']['code'] ); ?></span>
+							<?php echo esc_html( $category['category_name'] ); ?>
                         </a>
                     </li>
 				<?php endforeach; ?>
@@ -174,4 +174,4 @@ if ( ! defined( 'ABSPATH' ) ) {
        data-icon="c"><?php esc_html_e( 'Add dynamic pricing', 'laterpay' ); ?></a>
 <?php endif; ?>
 
-<input type="hidden" name="laterpay_pricing_post_content_box_nonce" value="<?php esc_attr_e( $_['_wpnonce'] ); ?>">
+<input type="hidden" name="laterpay_pricing_post_content_box_nonce" value="<?php echo esc_attr( $_['_wpnonce'] ); ?>">

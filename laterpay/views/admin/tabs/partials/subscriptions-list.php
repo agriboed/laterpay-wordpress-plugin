@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<?php esc_html_e( 'Sub', 'laterpay' ); ?>
 
             <span class="lp_js_subscriptionId lp_subscription__id">
-                <?php esc_html_e( $subscription['id'] ); ?>
+                <?php echo esc_html( $subscription['id'] ); ?>
             </span>
         </div>
         <div class="lp_js_subscriptionPreview lp_left">
@@ -110,8 +110,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<?php foreach ( $_['duration'] as $duration ): ?>
                                 <option
 									<?php if ( $duration['default'] ): ?>selected<?php endif; ?>
-                                    value="<?php esc_attr_e( $duration['id'] ); ?>">
-									<?php esc_html_e( $duration['name'] ); ?>
+                                    value="<?php echo esc_attr( $duration['id'] ); ?>">
+									<?php echo esc_html( $duration['name'] ); ?>
                                 </option>
 							<?php endforeach; ?>
                         </select>
@@ -119,8 +119,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<?php foreach ( $_['period'] as $period ): ?>
                                 <option
 									<?php if ( $period['default'] ): ?>selected<?php endif; ?>
-                                    value="<?php esc_attr_e( $period['id'] ); ?>">
-									<?php esc_html_e( $period['name'] ); ?>
+                                    value="<?php echo esc_attr( $period['id'] ); ?>">
+									<?php echo esc_html( $period['name'] ); ?>
                                 </option>
 							<?php endforeach; ?>
                         </select>
@@ -134,7 +134,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <input type="text"
                                name="title"
                                class="lp_js_subscriptionTitleInput lp_input lp_1"
-                               value="<?php esc_attr_e( $_['title'] ); ?>">
+                               value="<?php echo esc_attr( $_['title'] ); ?>">
                     </td>
                 </tr>
                 <tr>

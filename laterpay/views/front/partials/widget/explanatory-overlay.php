@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <div class="lp_benefits">
             <header class="lp_benefits__header">
                 <h2 class="lp_benefits__title">
-					<?php esc_html_e( $_['data']['title'] ); ?>
+					<?php echo esc_html( $_['data']['title'] ); ?>
                 </h2>
             </header>
             <ul class="lp_benefits__list">
