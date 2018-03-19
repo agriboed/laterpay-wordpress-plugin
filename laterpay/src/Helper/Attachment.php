@@ -34,14 +34,12 @@ class Attachment {
 	}
 
 	/**
-	 *
 	 * @param EventInterface $event
+	 *
+	 * @return void
 	 */
 	public static function getAttachmentSource( EventInterface $event ) {
 		$attachmentID = Request::get( 'attachment_id' );       // post(attachment) id
-		$lptoken      = Request::get( 'lptoken' );             // optional, to update token
-		$hmac         = Request::get( 'hmac' );                // required, token to validate request
-		$ts           = Request::get( 'ts' );                  // required, timestamp
 		$parentPostID = Request::get( 'post_id' );             // if attachment placed in other post
 
 		$response = new Response();
@@ -75,7 +73,14 @@ class Attachment {
 
 			$filetype = wp_check_filetype( $file );
 			$fsize    = filesize( $file );
-			$data     = file_get_contents( $file );
+
+			// Check that we have Wordpress VIP functions
+			if ( function_exists( 'wpcom_vip_file_get_contents' ) ) {
+				$data = wpcom_vip_file_get_contents( $file );
+			} else {
+				$data = file_get_contents( $file );
+			}
+
 			$filename = basename( $file );
 
 			$response

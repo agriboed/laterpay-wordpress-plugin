@@ -467,7 +467,7 @@ class TimePass {
 			return '';
 		}
 
-		if ( null !== $data ) {
+		if ( null === $data ) {
 			$data = array();
 		}
 
@@ -480,7 +480,7 @@ class TimePass {
 		// prepare URL
 		$urlParams = array(
 			'pass_id' => self::getTokenizedTimePassID( $timePassID ),
-			'buy'     => true,
+			'buy'     => 'true',
 		);
 
 		if ( empty( $data['link'] ) ) {
@@ -500,9 +500,9 @@ class TimePass {
 
 		// parameters for LaterPay purchase form
 		$params = array(
-			'article_id'    => $isCodePurchase ? '[#' . $data['voucher'] . ']' : self::getTokenizedTimePassID( $timePassID ),
+			'article_id'    => $isCodePurchase ? '[#' . $data['voucher'] . ']' : static::getTokenizedTimePassID( $timePassID ),
 			'pricing'       => $currency . ( $price * 100 ),
-			'expiry'        => '+' . self::getTimePassExpiryTime( $timePass ),
+			'expiry'        => '+' . static::getTimePassExpiryTime( $timePass ),
 			'url'           => $backURL,
 			'title'         => $isCodePurchase ? $timePass['title'] . ', Code: ' . $data['voucher'] : $timePass['title'],
 			'require_login' => (int) get_option( 'laterpay_require_login', 0 ),

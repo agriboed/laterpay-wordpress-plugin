@@ -69,13 +69,13 @@ class Post {
 		$parentPostID = $parentPostID !== null ? $parentPostID : $post->post_parent;
 
 		if ( apply_filters( 'laterpay_access_check_enabled', true ) ) {
-			$timePassesList    = TimePass::getTimePassesListByPostID( $post->ID, null, true );
-			$subscriptionsList = Subscription::getSubscriptionsListByPostID( $post->ID, null, true );
+			$timePassesList    = TimePass::getTimePassesListByPostID( $post->ID );
+			$subscriptionsList = Subscription::getSubscriptionsListByPostID( $post->ID);
 
 			// if is attachment than we should check parent post
 			if ( $isAttachment && $parentPostID ) {
-				$timePassesList    = array_merge( $timePassesList, TimePass::getTimePassesListByPostID( $parentPostID, null, true ) );
-				$subscriptionsList = array_merge( $subscriptionsList, Subscription::getSubscriptionsListByPostID( $parentPostID, null, true ) );
+				$timePassesList    = array_merge( $timePassesList, TimePass::getTimePassesListByPostID( $parentPostID ) );
+				$subscriptionsList = array_merge( $subscriptionsList, Subscription::getSubscriptionsListByPostID( $parentPostID ) );
 			}
 
 			$timePasses = TimePass::getTokenizedTimePassIDs( $timePassesList );

@@ -16,7 +16,7 @@ use LaterPay\Helper\Cache;
 use LaterPay\Helper\Config;
 use LaterPay\Helper\Pricing;
 use LaterPay\Helper\Voucher;
-use LaterPayClient\Auth\Signing;
+use LaterPay\Core\Client\Auth\Signing;
 use LaterPay\Core\Event\SubscriberInterface;
 
 /**
@@ -153,7 +153,7 @@ class Purchase extends ControllerAbstract {
 		$html = $this->getTextView( 'front/partials/widget/purchase-button', array( '_' => $args ) );
 
 		$event->setResult( $html )
-			  ->setArguments( $args );
+		      ->setArguments( $args );
 	}
 
 	/**
@@ -296,7 +296,7 @@ class Purchase extends ControllerAbstract {
 		$html = $this->getTextView( 'front/partials/widget/purchase-link', array( '_' => $args ) );
 
 		$event->setResult( $html )
-			  ->setArguments( $args );
+		      ->setArguments( $args );
 	}
 
 	/**
@@ -496,10 +496,10 @@ class Purchase extends ControllerAbstract {
 			return;
 		}
 
-		$parts = parse_url( Request::server( 'REQUEST_URI' ) );
-		parse_str( $parts['query'], $params );
+		$parts = explode( '?', Request::server( 'REQUEST_URI' ) );
+		parse_str( isset( $parts[1] ) ? $parts[1] : '', $params );
 
-		if ( Signing::verify( Request::get( 'hmac' ), API::getApiKey(), $params, get_permalink(), \LaterPayClient\Http\Request::GET ) ) {
+		if ( Signing::verify( Request::get( 'hmac' ), API::getApiKey(), $params, get_permalink(), 'GET' ) ) {
 
 			API::setToken( Request::get( 'lptoken' ) );
 			Cache::delete( Request::get( 'lptoken' ) );
@@ -517,14 +517,6 @@ class Purchase extends ControllerAbstract {
 							'title' => null,
 						);
 						Voucher::savePassVouchers( $passID, $giftCards, true );
-
-						// set cookie to store information that gift card was purchased
-						setcookie(
-							'laterpay_purchased_gift_card',
-							$voucher . '|' . $passID,
-							time() + 30,
-							'/'
-						);
 					} else {
 						// update gift code statistics
 						Voucher::updateVoucherStatistic( $passID, $voucher, true );

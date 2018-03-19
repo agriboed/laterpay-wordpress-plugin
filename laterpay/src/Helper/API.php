@@ -2,7 +2,7 @@
 
 namespace LaterPay\Helper;
 
-use LaterPayClient\Client;
+use LaterPay\Core\Client\Client;
 
 /**
  * LaterPay API helper.

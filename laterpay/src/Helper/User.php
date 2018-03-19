@@ -239,6 +239,11 @@ class User {
 
 		$user = wp_get_current_user();
 
+		// Check that we have Wordpress VIP functions
+		if ( function_exists( 'update_user_attribute' ) ) {
+			return update_user_attribute( $user->ID, $key, $value );
+		}
+
 		return update_user_meta(
 			$user->ID,
 			$key,
@@ -258,6 +263,11 @@ class User {
 		}
 
 		$user = wp_get_current_user();
+
+		// Check that we have Wordpress VIP functions
+		if ( function_exists( 'get_user_attribute' ) ) {
+			return get_user_attribute( $user->ID, $key );
+		}
 
 		return get_user_meta(
 			$user->ID,

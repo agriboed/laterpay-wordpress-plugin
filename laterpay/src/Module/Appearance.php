@@ -104,7 +104,7 @@ class Appearance extends ControllerAbstract {
 	 */
 	public function onVisibleTestMode( EventInterface $event ) {
 		$isInVisibleTestMode = get_option( 'laterpay_is_in_visible_test_mode' )
-		                       && ! $this->config->get( 'is_in_live_mode' );
+							   && ! $this->config->get( 'is_in_live_mode' );
 
 		$event->setArgument( 'is_in_visible_test_mode', $isInVisibleTestMode );
 	}
