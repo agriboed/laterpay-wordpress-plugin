@@ -973,9 +973,12 @@
                     // update pass access in pass preview
                     $($entity.preview.access, $wrapper).text(text);
                 } else if ($input.hasClass($entity.classes.priceClass)) {
+                    var currency = $('<small class="lp_purchase-link__currency">').text(lpVars.currency.code);
+
                     // update pass price in pass preview
                     $('.lp_js_purchaseLink', $wrapper)
-                        .html(text + '<small class="lp_purchase-link__currency">' + lpVars.currency.code + '</small>');
+                        .html(text).append(currency);
+
                     $($entity.preview.price).text(text + ' ' + lpVars.currency.code);
                 } else if ($input.hasClass($entity.classes.titleClass)) {
                     // update pass title in pass preview
@@ -1249,16 +1252,16 @@
                     price           = voucherData.price + ' ' + lpVars.currency.code,
                     voucher         = $('<div class="lp_js_voucher lp_voucher">').data('code', code)
                         .append($('<span class="lp_voucher__title">')
-                        .append($('<b>').text(title))
-                        .append($('<div>')
-                            .append($('<span class="lp_voucher__code">').text(code))
-                            .append($('<span class="lp_voucher__code-infos">')
-                                .text(lpVars.i18n.voucherText + ' ' + price)
-                                .append('<br>')
-                                .append($('<span class="lp_js_voucherTimesRedeemed">')
-                                    .text(timesRedeemed))
-                                .append(' '+ lpVars.i18n.timesRedeemed)
-                            )));
+                            .append($('<b>').text(title))
+                            .append($('<div>')
+                                .append($('<span class="lp_voucher__code">').text(code))
+                                .append($('<span class="lp_voucher__code-infos">')
+                                    .text(lpVars.i18n.voucherText + ' ' + price)
+                                    .append('<br>')
+                                    .append($('<span class="lp_js_voucherTimesRedeemed">')
+                                        .text(timesRedeemed))
+                                    .append(' '+ lpVars.i18n.timesRedeemed)
+                                )));
 
                 $timePass.find($o.voucherList).append(voucher);
             },

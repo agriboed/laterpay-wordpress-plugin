@@ -36,7 +36,7 @@
                 .bind('change', () => {
                     this.toggleProMerchant();
                 });
-        };
+        }
 
         saveForm() {
             $.post(
@@ -83,7 +83,7 @@
                     $(category).closest('label').fadeIn();
                 });
             }
-        };
+        }
 
         prepareUnlimitedAccess() {
             this.$o.unlimitedAccessNone.each((i, el) => {
@@ -92,7 +92,7 @@
             this.$o.unlimitedAccessAll.each((i, el) => {
                 this.toggleUnlimitedAccessAll(el);
             });
-        };
+        }
 
         toggleProMerchant() {
             let message = this.$o.proMerchant.data('confirm');

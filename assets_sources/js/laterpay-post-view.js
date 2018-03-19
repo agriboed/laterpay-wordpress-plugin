@@ -27,11 +27,6 @@
                 voucherCodeWrapper              : '#lp_js_voucherCodeWrapper',
                 voucherCodeInput                : '.lp_js_voucherCodeInput',
                 voucherRedeemButton             : '.lp_js_voucherRedeemButton',
-                giftCardRedeemButton            : '.lp_js_giftCardRedeemButton',
-                giftCardCodeInput               : '.lp_js_giftCardCodeInput',
-                giftCardWrapper                 : '#lp_js_giftCardWrapper',
-                giftCardActionsPlaceholder      : '.lp_js_giftCardActionsPlaceholder',
-                giftsWrapper                    : $('.lp_js_giftsWrapper'),
 
                 // subscriptions
                 subscription                    : '.lp_js_subscription',
@@ -70,16 +65,11 @@
             // Messages templates
 
             timePassFeedbackMessage = function (msg) {
-                return '<div id="lp_js_voucherCodeFeedbackMessage" class="lp_voucher__feedback-message" ' +
-                            'style="display:none;">' +
-                           msg +
-                       '</div>';
+                return $('<div id="lp_js_voucherCodeFeedbackMessage" class="lp_voucher__feedback-message" style="display:none;">').text(msg);
             },
 
             purchaseOverlayFeedbackMessage = function (msg) {
-                return '<div id="lp_js_voucherCodeFeedbackMessage" class="lp_purchase-overlay__voucher-error">' +
-                           msg +
-                       '</div>';
+                return $('<div id="lp_js_voucherCodeFeedbackMessage" class="lp_purchase-overlay__voucher-error">').text(msg);
             },
 
             // DOM cache
@@ -253,18 +243,6 @@
                         );
                     })
                     .on('click', function(e) {e.preventDefault();});
-
-                $($o.giftCardRedeemButton)
-                    .on('mousedown', function() {
-                        redeemVoucherCode(
-                            $(this).parent(),
-                            timePassFeedbackMessage,
-                            $o.giftCardCodeInput,
-                            'time-pass',
-                            true
-                        );
-                    })
-                    .on('click', function(e) {e.preventDefault();});
             },
 
             redeemVoucherCode = function($wrapper, feedbackMessageTpl, input, type, is_gift) {
@@ -396,47 +374,6 @@
                             $o.postRatingPlaceholder.html(ratingSummary);
                         }
                     }
-                );
-            },
-
-            loadGiftCards = function() {
-                var ids     = [],
-                    cards   = $o.giftsWrapper;
-
-                // get all pass ids from wrappers
-                $.each(cards, function(i) {
-                    ids.push($(cards[i]).data('id'));
-                });
-
-                $.get(
-                    lpVars.ajaxUrl,
-                    {
-                        action  : 'laterpay_get_gift_card_actions',
-                        pass_id : ids,
-                        link    : window.location.href
-                    },
-                    function(r) {
-                        if (r.data) {
-                            $.each(r.data, function(i) {
-                                var gift    = r.data[i],
-                                    $elem   = $($o.giftCardActionsPlaceholder + '_' + gift.id);
-
-                                $elem.html(gift.html);
-
-                                // add 'buy another gift card' after gift card
-                                if (gift.buy_more) {
-                                    // $elem.parent().after(gift.buy_more);
-                                    $(gift.buy_more)
-                                        .appendTo($elem.parent())
-                                        .attr('href', window.location.href);
-                                }
-                            });
-
-                            // remove gift code cookie if present
-                            delete_cookie('laterpay_purchased_gift_card');
-                        }
-                    },
-                    'json'
                 );
             },
 
@@ -590,10 +527,6 @@
 
                 if ($o.postRatingPlaceholder.length === 1) {
                     loadRatingSummary();
-                }
-
-                if ($o.giftsWrapper.length >= 1) {
-                    loadGiftCards();
                 }
 
                 if ($($o.premiumBox).length >= 1) {
