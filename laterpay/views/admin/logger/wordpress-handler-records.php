@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <a href="#" class="lp_debugger__close-link lp_right" data-icon="l"></a>
         <div class="lp_debugger-header__text lp_right">
 			<?php echo esc_html( sprintf( __( '%s Memory Usage', 'laterpay' ),
-				number_format( $laterpay_records['memory_peak'],
+				number_format( $_['memory_peak'],
 					1 ) . ' MB' ) ); ?>
         </div>
         <div data-icon="a" class="lp_debugger-header__title">
@@ -19,10 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
         <li class="lp_js_debuggerTabItem lp_is-selected lp_debugger-tabs__item">
             <a href="#" class="lp_debugger-tabs__link">
 				<?php echo wp_kses_post( sprintf( __( 'Messages<span class="lp_badge">%s</span>',
-					'laterpay' ), count( $laterpay_records['records'] ) ) ); ?>
+					'laterpay' ), count( $_['records'] ) ) ); ?>
             </a>
         </li>
-		<?php foreach ( $laterpay_records['tabs'] as $tab ): ?>
+		<?php foreach ( $_['tabs'] as $tab ): ?>
 			<?php if ( empty( $tab['content'] ) ) {
 				continue;
 			}
@@ -38,10 +38,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     <ul class="lp_debugger-content-list">
         <li class="lp_js_debuggerContent lp_debugger-content-list__item">
             <ul class="lp_debugger-content-list">
-				<?php echo $laterpay_records['formatted_records']; ?>
+				<?php echo $_['formatted_records']; ?>
             </ul>
         </li>
-		<?php foreach ( $laterpay_records['tabs'] as $tab ): ?>
+		<?php foreach ( $_['tabs'] as $tab ): ?>
 			<?php if ( empty( $tab['content'] ) ) {
 				continue;
 			}
