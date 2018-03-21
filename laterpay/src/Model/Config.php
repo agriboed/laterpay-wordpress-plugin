@@ -159,7 +159,7 @@ class Config implements ConfigInterface
         // set section
         $this->section = $section;
 
-        // return filtered array
+        // return filtered
         return array_filter($this->properties, array($this, 'filter'), ARRAY_FILTER_USE_KEY);
     }
 

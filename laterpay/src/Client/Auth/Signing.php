@@ -99,10 +99,10 @@ class Signing
         // this is tricky - either we have (a, b), (a, c) or we have (a, (b, c))
         foreach ($params as $name => $value) {
             if (is_array($value)) {
-                // this is ( a, ( b, c))
+                // this is ( a, ( b, c ))
                 $out[$name] = $value;
             } else {
-                // this is ( a, b), (a, c)
+                // this is ( a, b ), ( a, c)
                 if (! in_array($name, $out, true)) {
                     $out[$name] = array();
                 }

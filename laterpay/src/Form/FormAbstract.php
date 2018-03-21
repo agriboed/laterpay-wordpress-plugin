@@ -117,7 +117,7 @@ abstract class FormAbstract
         $data = array();
         // validators
         $data['validators'] = isset($options['validators']) ? $options['validators'] : array();
-        // filters (sanitize)
+        // filters ( sanitize)
         $data['filters'] = isset($options['filters']) ? $options['filters'] : array();
         // default value
         $data['value'] = isset($options['default_value']) ? $options['default_value'] : null;
@@ -449,9 +449,9 @@ abstract class FormAbstract
             // check string length
             case 'strlen':
                 if ($validatorParams && is_array($validatorParams)) {
-                    foreach ($validatorParams as $extra_validator => $validator_data) {
+                    foreach ($validatorParams as $extraValidator => $validatorData) {
                         // recursively call extra validator
-                        $isValid = $this->validateValue(strlen($value), $extra_validator, $validator_data);
+                        $isValid = $this->validateValue(strlen($value), $extraValidator, $validatorData);
                         // break loop if something not valid
                         if (! $isValid) {
                             break;
@@ -463,11 +463,11 @@ abstract class FormAbstract
             // check array values
             case 'array_check':
                 if ($validatorParams && is_array($validatorParams)) {
-                    foreach ($validatorParams as $extra_validator => $validator_data) {
+                    foreach ($validatorParams as $extraValidator => $validatorData) {
                         if (is_array($value)) {
                             foreach ($value as $v) {
                                 // recursively call extra validator
-                                $isValid = $this->validateValue($v, $extra_validator, $validator_data);
+                                $isValid = $this->validateValue($v, $extraValidator, $validatorData);
                                 if (! $isValid) {
                                     break;
                                 }
@@ -528,13 +528,13 @@ abstract class FormAbstract
                                  ))) {
                             // loop for dependencies conditions and check if all of them is valid
                             foreach ($dependency['conditions'] as $vkey => $vparams) {
-                                $extra_validator = is_int($vkey) ? $vparams : $vkey;
-                                $validator_data  = is_int($vkey) ? null : $vparams;
+                                $extraValidator = is_int($vkey) ? $vparams : $vkey;
+                                $validatorData  = is_int($vkey) ? null : $vparams;
                                 // recursively call extra validator
                                 $isValid = $this->validateValue(
                                     $this->getFieldValue($dependency['field']),
-                                    $extra_validator,
-                                    $validator_data
+                                    $extraValidator,
+                                    $validatorData
                                 );
                                 // break loop if something not valid
                                 if (! $isValid) {

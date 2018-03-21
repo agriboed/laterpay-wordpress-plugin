@@ -2,15 +2,53 @@
 <ruleset name="LaterPay">
     <description>A custom set of rules to check for a LaterPay WordPress plugin based on PSR2</description>
 
-    <rule ref="Internal.Tokenizer.Exception">
-        <severity>0</severity>
-    </rule>
+    <file>laterpay/src</file>
+    <arg name="extensions" value="php"/>
+
+    <config name="installed_paths" value="laterpay/vendor/automattic/vipwpcs,laterpay/vendor/wp-coding-standards/wpcs"/>
 
     <rule ref="PSR2">
-        <exclude-pattern>laterpay/laterpay.php</exclude-pattern>
-        <exclude-pattern>laterpay/views/*</exclude-pattern>
-        <exclude-pattern>laterpay/vendor/*</exclude-pattern>
-        <exclude-pattern>*.js</exclude-pattern>
-        <exclude-pattern>*.css</exclude-pattern>
     </rule>
+
+    <rule ref="WordPressVIPMinimum">
+    </rule>
+
+    <rule ref="WordPress.XSS.EscapeOutput">
+        <exclude-pattern>Event/Dispatcher.php</exclude-pattern>
+        <exclude-pattern>Core/View.php</exclude-pattern>
+        <exclude-pattern>Core/Response.php</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPressVIPMinimum.Files.IncludingFile">
+        <exclude-pattern>Core/View.php</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPress.VIP.SuperGlobalInputUsage.AccessDetected">
+        <exclude-pattern>Client/Client.php</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPressVIPMinimum.VIP.RestrictedFunctions">
+        <exclude-pattern>Client/Client.php</exclude-pattern>
+        <exclude-pattern>Client/Http/Transport.php</exclude-pattern>
+        <exclude-pattern>Helper/User.php</exclude-pattern>
+        <exclude-pattern>Helper/Attachment.php</exclude-pattern>
+        <exclude-pattern>Module/Purchase.php</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPress.VIP.RestrictedVariables.cache_constraints___COOKIE">
+        <exclude-pattern>Client/Client.php</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPress.VIP.PostsPerPage">
+        <exclude-pattern>Helper/Pricing.php</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPress.VIP.SlowDBQuery">
+        <exclude-pattern>Helper/Pricing.php</exclude-pattern>
+    </rule>
+
+    <rule ref="WordPress.WP.AlternativeFunctions">
+        <exclude-pattern>Helper/Attachment.php</exclude-pattern>
+    </rule>
+
 </ruleset>
