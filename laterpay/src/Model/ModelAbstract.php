@@ -7,19 +7,20 @@ namespace LaterPay\Model;
  *
  * @package LaterPay\Model
  */
-abstract class ModelAbstract {
+abstract class ModelAbstract
+{
+    /**
+     * @var \wpdb
+     */
+    protected $db;
 
-	/**
-	 * @var \wpdb
-	 */
-	protected $db;
+    /**
+     * ModelAbstract constructor.
+     */
+    public function __construct()
+    {
+        global $wpdb;
 
-	/**
-	 * ModelAbstract constructor.
-	 */
-	public function __construct() {
-		global $wpdb;
-
-		$this->db = $wpdb;
-	}
+        $this->db = $wpdb;
+    }
 }

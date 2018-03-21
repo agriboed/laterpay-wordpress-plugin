@@ -9,12 +9,12 @@ namespace LaterPay\Core\Logger\Processor;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-interface ProcessorInterface {
-
-	/**
-	 * @param  array $record
-	 *
-	 * @return array $record
-	 */
-	public function process( array $record);
+interface ProcessorInterface
+{
+    /**
+     * @param  array $record
+     *
+     * @return array $record
+     */
+    public function process(array $record);
 }

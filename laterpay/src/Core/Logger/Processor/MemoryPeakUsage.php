@@ -9,24 +9,25 @@ namespace LaterPay\Core\Logger\Processor;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class MemoryPeakUsage extends Memory implements ProcessorInterface {
+class MemoryPeakUsage extends Memory implements ProcessorInterface
+{
+    /**
+     * Record processor
+     *
+     * @param array record data
+     *
+     * @return array processed record
+     */
+    public function process(array $record)
+    {
+        $bytes     = memory_get_peak_usage($this->realUsage);
+        $formatted = $this->formatBytes($bytes);
 
-	/**
-	 * Record processor
-	 *
-	 * @param array record data
-	 *
-	 * @return array processed record
-	 */
-	public function process( array $record ) {
-		$bytes     = memory_get_peak_usage( $this->realUsage );
-		$formatted = $this->formatBytes( $bytes );
+        $record['extra'] = array_merge(
+            $record['extra'],
+            array('memory_peak_usage' => $formatted)
+        );
 
-		$record['extra'] = array_merge(
-			$record['extra'],
-			array( 'memory_peak_usage' => $formatted )
-		);
-
-		return $record;
-	}
+        return $record;
+    }
 }

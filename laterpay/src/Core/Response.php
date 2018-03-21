@@ -9,126 +9,133 @@ namespace LaterPay\Core;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Response {
+class Response
+{
+    /**
+     * @var array
+     */
+    protected $headers;
 
-	/**
-	 * @var array
-	 */
-	protected $headers;
+    /**
+     * @var string
+     */
+    protected $body;
 
-	/**
-	 * @var string
-	 */
-	protected $body;
+    /**
+     * @var int
+     */
+    protected $responseCode = 200;
 
-	/**
-	 * @var int
-	 */
-	protected $responseCode = 200;
+    /**
+     * Normalize header name.
+     *
+     * Normalizes a header name to X-Capitalized-Names.
+     *
+     * @param string $name
+     *
+     * @return string
+     */
+    protected function normalizeHeader($name)
+    {
+        $filtered = str_replace(array('-', '_'), ' ', (string)$name);
+        $filtered = ucwords(strtolower($filtered));
+        $filtered = str_replace(' ', '-', $filtered);
 
-	/**
-	 * Normalize header name.
-	 *
-	 * Normalizes a header name to X-Capitalized-Names.
-	 *
-	 * @param string $name
-	 *
-	 * @return string
-	 */
-	protected function normalizeHeader( $name ) {
-		$filtered = str_replace( array( '-', '_' ), ' ', (string) $name );
-		$filtered = ucwords( strtolower( $filtered ) );
-		$filtered = str_replace( ' ', '-', $filtered );
+        return $filtered;
+    }
 
-		return $filtered;
-	}
+    /**
+     * Set a header.
+     *
+     * Replaces any headers already defined with that $name, if $replace is true.
+     *
+     * @param  string $name
+     * @param  string $value
+     *
+     * @return Response
+     */
+    public function setHeader($name, $value)
+    {
+        $name  = $this->normalizeHeader($name);
+        $value = (string)$value;
 
-	/**
-	 * Set a header.
-	 *
-	 * Replaces any headers already defined with that $name, if $replace is true.
-	 *
-	 * @param  string $name
-	 * @param  string $value
-	 *
-	 * @return Response
-	 */
-	public function setHeader( $name, $value ) {
-		$name  = $this->normalizeHeader( $name );
-		$value = (string) $value;
+        $this->headers[$name] = $value;
 
-		$this->headers[ $name ] = $value;
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * Send all headers. Sends all specified headers.
+     *
+     * @return Response
+     */
+    public function sendHeaders()
+    {
+        if (headers_sent()) {
+            return $this;
+        }
 
-	/**
-	 * Send all headers. Sends all specified headers.
-	 *
-	 * @return Response
-	 */
-	public function sendHeaders() {
-		if ( headers_sent() ) {
-			return $this;
-		}
+        header('HTTP/1.1 ' . $this->responseCode);
 
-		header( 'HTTP/1.1 ' . $this->responseCode );
+        foreach ($this->headers as $key => $value) {
+            header($key . ': ' . $value);
+        }
 
-		foreach ( $this->headers as $key => $value ) {
-			header( $key . ': ' . $value );
-		}
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * Set HTTP response code to use with headers.
+     *
+     * @param int $code
+     *
+     * @return Response
+     */
+    public function setHTTPCode($code)
+    {
+        if (! is_int($code) || (100 > $code) || (599 < $code)) {
+            return $this;
+        }
 
-	/**
-	 * Set HTTP response code to use with headers.
-	 *
-	 * @param int $code
-	 *
-	 * @return Response
-	 */
-	public function setHTTPCode( $code ) {
-		if ( ! is_int( $code ) || ( 100 > $code ) || ( 599 < $code ) ) {
-			return $this;
-		}
+        $this->responseCode = $code;
 
-		$this->responseCode = $code;
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * @param $body
+     *
+     * @return $this
+     */
+    public function setBody($body)
+    {
+        $this->body = $body;
 
-	/**
-	 * @param $body
-	 *
-	 * @return $this
-	 */
-	public function setBody( $body ) {
-		$this->body = $body;
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * Echo the body segments.
+     *
+     * @return void
+     */
+    public function outputBody()
+    {
+        if (is_array($this->body)) {
+            $this->body = implode('', $this->body);
+        }
 
-	/**
-	 * Echo the body segments.
-	 *
-	 * @return void
-	 */
-	public function outputBody() {
-		if ( is_array( $this->body ) ) {
-			$this->body = implode( '', $this->body );
-		}
+        echo $this->body;
+    }
 
-		echo $this->body;
-	}
-
-	/**
-	 * Send the response with headers and body.
-	 *
-	 * @return void
-	 */
-	public function sendResponse() {
-		$this->sendHeaders();
-		$this->outputBody();
-	}
+    /**
+     * Send the response with headers and body.
+     *
+     * @return void
+     */
+    public function sendResponse()
+    {
+        $this->sendHeaders();
+        $this->outputBody();
+    }
 }
