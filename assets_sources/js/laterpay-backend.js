@@ -64,4 +64,19 @@ jQuery.fn.clearMessage = function () {
     });
 };
 
+// throttle the execution of a function by a given delay
+jQuery.fn.debounce = function (fn, delay) {
+    let timer;
+    return function () {
+        let context = this,
+            args    = arguments;
+
+        clearTimeout(timer);
+
+        timer = setTimeout(function() {
+            fn.apply(context, args);
+        }, delay);
+    };
+};
+
 jQuery.noConflict();

@@ -211,7 +211,7 @@
 
                 // validate price and revenue model when entering a price
                 // (function is only triggered 800ms after the keyup)
-                $o.body.on('keyup', $o.priceInput, debounce(function() {
+                $o.body.on('keyup', $o.priceInput, $().debounce(function() {
                         validatePrice($(this).parents('form'));
                     }, 800)
                 );
@@ -341,7 +341,7 @@
 
                 // set price
                 $o.timepass.editor
-                    .on('keyup', $o.timepass.fields.price, debounce(function() {
+                    .on('keyup', $o.timepass.fields.price, $().debounce(function() {
                             validatePrice($(this).parents('form'), false, $(this));
                             updateEntityPreview('timepass', $(this).parents($o.timepass.wrapper), $(this));
                         }, 800)
@@ -377,7 +377,7 @@
 
                 // set voucher price
                 $o.timepass.editor
-                    .on('keyup', $o.voucherPriceInput, debounce(function() {
+                    .on('keyup', $o.voucherPriceInput, $().debounce(function() {
                             validatePrice($(this).parents('form'), true, $(this));
                         }, 800)
                     );
@@ -447,7 +447,7 @@
 
                 // set price
                 $o.subscription.editor
-                    .on('keyup', $o.subscription.fields.price, debounce(function() {
+                    .on('keyup', $o.subscription.fields.price, $().debounce(function() {
                             validatePrice($(this).parents('form'), true, $(this), true);
                             updateEntityPreview('subscription', $(this).parents($o.subscription.wrapper), $(this));
                         }, 1000)
@@ -1300,21 +1300,6 @@
 
                 // re-enable button after Ajax request
                 $o.purchaseModeInput.prop('disabled', false);
-            },
-
-            // throttle the execution of a function by a given delay
-            debounce = function(fn, delay) {
-                var timer;
-                return function () {
-                    var context = this,
-                        args    = arguments;
-
-                    clearTimeout(timer);
-
-                    timer = setTimeout(function() {
-                        fn.apply(context, args);
-                    }, delay);
-                };
             },
 
             initializePage = function() {
