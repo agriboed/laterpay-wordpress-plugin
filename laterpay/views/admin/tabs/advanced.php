@@ -431,7 +431,9 @@ if ( ! defined('ABSPATH')) {
                             <td style="width: 10%">
                                 <?php esc_html_e('None', 'laterpay'); ?>
                             </td>
-                            <td style="width: 10%"><?php esc_html_e('All categories', 'laterpay'); ?></td>
+                            <td style="width: 10%">
+                                <?php esc_html_e('All categories', 'laterpay'); ?>
+                            </td>
                             <td>
                                 <?php esc_html_e('Unlimited Access to Categories', 'laterpay'); ?>
                             </td>
@@ -443,7 +445,7 @@ if ( ! defined('ABSPATH')) {
                                     <?php echo esc_html($role['name']); ?>
                                 </td>
                                 <td>
-                                    <label class="lp_toggle__label">
+                                    <label class="lp_toggle__label ">
                                         <input type="checkbox" class="lp_toggle__input lp_access-none"
                                                name="unlimited_access[<?php echo esc_attr($role['id']); ?>][]"
                                             <?php echo $role['none'] ? 'checked' : ''; ?>
@@ -466,7 +468,7 @@ if ( ! defined('ABSPATH')) {
                                 </td>
                                 <td>
                                     <?php foreach ($role['categories'] as $category) : ?>
-                                        <label style="display: none">
+                                        <label style="display: none" class="lp_unlimited-access__label">
                                             <input type="checkbox"
                                                    name="unlimited_access[<?php echo esc_attr($role['id']); ?>][]"
                                                    class="lp_category-access-input"

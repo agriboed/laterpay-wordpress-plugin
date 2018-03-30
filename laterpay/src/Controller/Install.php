@@ -126,9 +126,9 @@ meet the minimum requirement of %1$s version %2$s or higher. You are running %3$
      */
     public function installUpdates()
     {
-        $current_version = get_option('laterpay_plugin_version');
+        $currentVersion = get_option('laterpay_plugin_version');
 
-        if (version_compare($current_version, $this->config->get('version'), '!=')) {
+        if (version_compare($currentVersion, $this->config->get('version'), '!=')) {
             $this->doInstallation();
         }
     }
@@ -143,8 +143,8 @@ meet the minimum requirement of %1$s version %2$s or higher. You are running %3$
     {
         global $wpdb;
 
-        $current_version = get_option('laterpay_plugin_version');
-        if (version_compare($current_version, '0.9.8', '<')) {
+        $currentVersion = get_option('laterpay_plugin_version');
+        if (version_compare($currentVersion, '0.9.8', '<')) {
             return;
         }
 
@@ -154,25 +154,25 @@ meet the minimum requirement of %1$s version %2$s or higher. You are running %3$
         $columns = $db->get_results('SHOW COLUMNS FROM ' . $table . ';');
 
         // before version 0.9.8 we had no 'revenue_model' column
-        $is_up_to_date = false;
+        $isUpToDate = false;
         $modified      = false;
         foreach ($columns as $column) {
             if ($column->Field === 'revenue_model') {
                 $modified      = stripos($column->Type, 'enum') !== false;
-                $is_up_to_date = true;
+                $isUpToDate = true;
             }
         }
 
         $this->logger->info(
             __METHOD__,
             array(
-                'current_version' => $current_version,
-                'is_up_to_date'   => $is_up_to_date,
+                'current_version' => $currentVersion,
+                'is_up_to_date'   => $isUpToDate,
             )
         );
 
         // if the table needs an update, add the 'revenue_model' column and set the current values to 'ppu'
-        if (! $is_up_to_date) {
+        if (! $isUpToDate) {
             $db->query('ALTER TABLE ' . $table . " ADD revenue_model CHAR( 3 ) NOT NULL DEFAULT  'ppu';");
         }
 
@@ -546,7 +546,6 @@ meet the minimum requirement of %1$s version %2$s or higher. You are running %3$
      */
     public function removeOldApiSettings()
     {
-
         delete_option('laterpay_sandbox_backend_api_url');
         delete_option('laterpay_sandbox_dialog_api_url');
         delete_option('laterpay_live_backend_api_url');
