@@ -15,7 +15,7 @@ class Config
      * @var array
      */
     protected static $regionalSettings = array(
-        'eu' => array(
+        'eu'           => array(
             'api'      => array(
                 'sandbox_merchant_id' => '984df2b86250447793241a',
                 'sandbox_api_key'     => '57791c777baa4cea94c4ec074184e06d',
@@ -52,8 +52,14 @@ class Config
                     'paypal',
                 ),
             ),
+            'donation'     => array(
+                'amount' => array()
+            ),
+            'contribution' => array(
+                'amount' => array(),
+            ),
         ),
-        'us' => array(
+        'us'           => array(
             'api'      => array(
                 'sandbox_merchant_id' => 'xswcBCpR6Vk6jTPw8si7KN',
                 'sandbox_api_key'     => '22627fa7cbce45d394a8718fd9727731',
@@ -91,8 +97,53 @@ class Config
                     'discovercard',
                 ),
             ),
+            'donation'     => array(
+                'amount' => array(
+                    array(
+                        'price'         => 0.50,
+                        'revenue_model' => 'ppu',
+                    ),
+                    array(
+                        'price'         => 5.00,
+                        'revenue_model' => 'ppu',
+                    ),
+                    array(
+                        'price'         => 10.00,
+                        'revenue_model' => 'sis',
+                    ),
+                ),
+            ),
+            'contribution' => array(
+                'amount' => array(
+                    array(
+                        'price'         => 0.50,
+                        'revenue_model' => 'ppu',
+                    ),
+                    array(
+                        'price'         => 5.00,
+                        'revenue_model' => 'ppu',
+                    ),
+                    array(
+                        'price'         => 10.00,
+                        'revenue_model' => 'sis',
+                    ),
+                ),
+            ),
         ),
     );
+
+    /**
+     * @param $section
+     *
+     * @return mixed
+     */
+    public static function getSettingsSection($section)
+    {
+        // get region settings
+        $region = get_option('laterpay_region', 'eu');
+
+        return isset(static::$regionalSettings[$region][$section]) ? static::$regionalSettings[$region][$section] : null;
+    }
 
     /**
      * Get regional settings
@@ -108,10 +159,12 @@ class Config
          *
          * @var $region string
          */
-        if (! isset(static::$regionalSettings[$region])) {
+        if ( ! isset(static::$regionalSettings[$region])) {
             update_option('laterpay_region', 'eu');
             $region = 'eu';
         }
+
+        static::$regionalSettings[$region]['region'] = $region;
 
         return static::buildSettingsList(static::$regionalSettings[$region]);
     }

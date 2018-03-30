@@ -6,6 +6,7 @@ use LaterPay\Core\Request;
 use LaterPay\Core\Event\EventInterface;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\InvalidIncomingData;
+use LaterPay\Form\ContributionAmount;
 use LaterPay\Helper\TimePass;
 use LaterPay\Helper\View;
 use LaterPay\Helper\Config;
@@ -15,6 +16,7 @@ use LaterPay\Model\CategoryPrice;
 use LaterPay\Form\Pass;
 use LaterPay\Form\GlobalPrice;
 use LaterPay\Form\PriceCategory;
+use LaterPay\Model\Contribution;
 
 /**
  * LaterPay pricing tab controller.
@@ -107,6 +109,14 @@ class Pricing extends TabAbstract
             $this->config->get('version'),
             true
         );
+
+        wp_register_script(
+            'laterpay-backend-contribution',
+            $this->config->get('js_url') . 'laterpay-backend-contribution.js',
+            array('jquery', 'laterpay-backend', 'laterpay-zendesk'),
+            $this->config->get('version'),
+            true
+        );
     }
 
     /**
@@ -118,7 +128,6 @@ class Pricing extends TabAbstract
     {
         wp_enqueue_style('laterpay-select2');
         wp_enqueue_style('laterpay-backend');
-        wp_enqueue_script('laterpay-backend-pricing');
 
         // translations
         $i18n = array(
@@ -132,6 +141,7 @@ class Pricing extends TabAbstract
             'toCategoryDefaultPrice'    => __('to category default price of', 'laterpay'),
             'updatePrices'              => __('Update Prices', 'laterpay'),
             'delete'                    => __('Delete', 'laterpay'),
+            'confirmDelete'             => __('Are you sure?', 'laterpay'),
             // time pass editor
             'confirmDeleteTimepass'     => __('Are you sure?', 'laterpay'),
             'confirmDeleteSubscription' => __(
@@ -178,6 +188,17 @@ class Pricing extends TabAbstract
             )
         );
 
+        wp_localize_script(
+            'laterpay-backend-contribution',
+            'lpVars',
+            array(
+                'locale'           => get_locale(),
+                'i18n'             => $i18n,
+                'currency'         => wp_json_encode(Config::getCurrencyConfig()),
+                'l10n_print_after' => 'lpVars.currency = JSON.parse(lpVars.currency);',
+            )
+        );
+
         return $this;
     }
 
@@ -185,15 +206,21 @@ class Pricing extends TabAbstract
      * Method pass data to the template and renders it in admin area.
      *
      * @return void
-     *
-     * @throws \LogicException
-     * @throws \LaterPay\Core\Exception
      */
     public function renderTab()
     {
+        $businessModel = get_option('laterpay_business_model', 'paid');
+
+        if ($businessModel === 'contribution') {
+            $this->renderContributionAmount();
+
+            return;
+        }
+
+        wp_enqueue_script('laterpay-backend-pricing');
+
         $args = array(
             'currency'                         => Config::getCurrencyConfig(),
-            'plugin_is_in_live_mode'           => $this->config->get('is_in_live_mode'),
             'only_time_pass_purchases_allowed' => get_option('laterpay_only_time_pass_purchases_allowed'),
             'header'                           => $this->renderHeader(),
             'global_default_price'             => $this->renderGlobalDefaultPrice(),
@@ -238,6 +265,48 @@ class Pricing extends TabAbstract
         $args = array_merge($defaults, $args);
 
         return $this->getTextView('admin/tabs/partials/global-default-price', array('_' => $args));
+    }
+
+    /**
+     * Renders Global Contribution Price form.
+     *
+     * @param array $args
+     *
+     * @return void
+     */
+    protected function renderContributionAmount(array $args = array())
+    {
+        wp_enqueue_script('laterpay-backend-contribution');
+
+        $amounts  = Contribution::getAmounts();
+        $currency = Config::getCurrencyConfig();
+
+        foreach ($amounts as $key => $value) {
+            $value['price_formatted']     = View::formatNumber($value['price']);
+            $value['ppu_checked']         = $value['revenue_model'] === 'ppu'
+                                            || ( ! $value['revenue_model'] && $value['price'] < $currency['ppu_max']);
+            $value['ppu_selected']        = $value['revenue_model'] === 'ppu' || ! $value['revenue_model'];
+            $value['ppu_disabled']        = $value['price'] > $currency['ppu_max'];
+            $value['sis_checked']         = $value['revenue_model'] === 'sis';
+            $value['sis_disabled']        = $value['price'] < $currency['sis_min'];
+            $value['revenue_model_label'] = \LaterPay\Helper\Pricing::getRevenueLabel($value['revenue_model']);
+
+            $amounts[$key] = $value;
+        }
+
+        $defaults = array(
+            'header'            => $this->renderHeader(),
+            '_wpnonce'          => wp_create_nonce('laterpay_form'),
+            'currency'          => $currency,
+            'amounts'           => $amounts,
+            'price_placeholder' => View::formatNumber(0),
+        );
+
+        $args = array_merge($defaults, $args);
+
+        $this
+            ->loadAssets()
+            ->render('admin/tabs/partials/contribution-amount', array('_' => $args));
     }
 
     /**
@@ -480,6 +549,10 @@ class Pricing extends TabAbstract
                 $this->updateGlobalDefaultPrice($event);
                 break;
 
+            case 'contribution_amount':
+                $this->updateContributionAmount($event);
+                break;
+
             case 'price_category_form':
                 $this->setCategoryDefaultPrice($event);
                 break;
@@ -489,12 +562,12 @@ class Pricing extends TabAbstract
                 break;
 
             case 'laterpay_get_category_prices':
-                $category_ids = Request::post('category_ids');
+                $categoryIds = Request::post('category_ids');
 
-                if (null === $category_ids || ! is_array($category_ids)) {
-                    $category_ids = array();
+                if (null === $categoryIds || ! is_array($categoryIds)) {
+                    $categoryIds = array();
                 }
-                $categories = array_map('sanitize_text_field', $category_ids);
+                $categories = array_map('sanitize_text_field', $categoryIds);
                 $event->setResult(
                     array(
                         'success' => true,
@@ -534,7 +607,7 @@ class Pricing extends TabAbstract
                 $category_price_model = new CategoryPrice();
                 $args                 = array();
 
-                if (! empty($term)) {
+                if ( ! empty($term)) {
                     $args['name__like'] = sanitize_text_field($term);
                 }
 
@@ -554,7 +627,7 @@ class Pricing extends TabAbstract
                     'hide_empty' => false,
                 );
 
-                if (! empty($term)) {
+                if ( ! empty($term)) {
                     $args['name__like'] = sanitize_text_field($term);
                 }
 
@@ -589,9 +662,9 @@ class Pricing extends TabAbstract
      */
     protected function updateGlobalDefaultPrice(EventInterface $event)
     {
-        $global_price_form = new GlobalPrice();
+        $globalPriceForm = new GlobalPrice();
 
-        if (! $global_price_form->isValid(Request::post())) {
+        if ( ! $globalPriceForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success'       => false,
@@ -600,20 +673,20 @@ class Pricing extends TabAbstract
                     'message'       => __('An error occurred. Incorrect data provided.', 'laterpay'),
                 )
             );
-            throw new FormValidation(get_class($global_price_form), $global_price_form->getErrors());
+            throw new FormValidation(get_class($globalPriceForm), $globalPriceForm->getErrors());
         }
 
-        $delocalized_global_price   = $global_price_form->getFieldValue('laterpay_global_price');
-        $global_price_revenue_model = $global_price_form->getFieldValue('laterpay_global_price_revenue_model');
-        $localized_global_price     = View::formatNumber($delocalized_global_price);
+        $delocalizedGlobalPrice  = $globalPriceForm->getFieldValue('laterpay_global_price');
+        $globalPriceRevenueModel = $globalPriceForm->getFieldValue('laterpay_global_price_revenue_model');
+        $localizedGlobalPrice    = View::formatNumber($delocalizedGlobalPrice);
 
-        update_option('laterpay_global_price', $delocalized_global_price);
-        update_option('laterpay_global_price_revenue_model', $global_price_revenue_model);
+        update_option('laterpay_global_price', $delocalizedGlobalPrice);
+        update_option('laterpay_global_price_revenue_model', $globalPriceRevenueModel);
 
         if (get_option('laterpay_global_price')) {
             $message = sprintf(
                 __('The global default price for all posts is %1$s %2$s now.', 'laterpay'),
-                $localized_global_price,
+                $localizedGlobalPrice,
                 $this->config->get('currency.code')
             );
         } else {
@@ -623,11 +696,90 @@ class Pricing extends TabAbstract
         $event->setResult(
             array(
                 'success'             => true,
-                'price'               => number_format($delocalized_global_price, 2, '.', ''),
-                'localized_price'     => $localized_global_price,
-                'revenue_model'       => $global_price_revenue_model,
-                'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($global_price_revenue_model),
+                'price'               => number_format($delocalizedGlobalPrice, 2, '.', ''),
+                'localized_price'     => $localizedGlobalPrice,
+                'revenue_model'       => $globalPriceRevenueModel,
+                'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($globalPriceRevenueModel),
                 'message'             => $message,
+            )
+        );
+    }
+
+    /**
+     * Update global contribution amounts.
+     *
+     * @param EventInterface $event
+     *
+     * @return void
+     * @throws FormValidation
+     * @throws InvalidIncomingData
+     */
+    protected function updateContributionAmount(EventInterface $event)
+    {
+        $contributionAmountForm = new ContributionAmount;
+
+        if ( ! $contributionAmountForm->isValid(Request::post())) {
+            $event->setResult(
+                array(
+                    'success' => false,
+                    'message' => __('An error occurred. Incorrect data provided.', 'laterpay'),
+                )
+            );
+            throw new FormValidation(get_class($contributionAmountForm), $contributionAmountForm->getErrors());
+        }
+
+        $id           = $contributionAmountForm->getFieldValue('id');
+        $price        = $contributionAmountForm->getFieldValue('price');
+        $revenueModel = $contributionAmountForm->getFieldValue('revenue_model');
+        $operation    = $contributionAmountForm->getFieldValue('operation');
+
+        if ($operation === 'delete' && Contribution::deleteAmount($id)) {
+            $event->setResult(
+                array(
+                    'success' => true,
+                    'message' => __('Contribution amount deleted.', 'laterpay'),
+                )
+            );
+
+            return;
+        }
+
+        if ($operation === 'update' && Contribution::updateAmount($id, $price, $revenueModel)) {
+            $event->setResult(
+                array(
+                    'success'             => true,
+                    'price'               => number_format($price, 2, '.', ''),
+                    'localized_price'     => View::formatNumber($price),
+                    'revenue_model'       => $revenueModel,
+                    'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($revenueModel),
+                    'message'             => __('Contribution amount saved.', 'laterpay'),
+                )
+            );
+
+            return;
+        }
+
+        if ($operation === 'add') {
+            $amount = Contribution::addAmount($price, $revenueModel);
+            $event->setResult(
+                array(
+                    'success'             => true,
+                    'id'                  => $amount['id'],
+                    'price'               => number_format($amount['price'], 2, '.', ''),
+                    'localized_price'     => View::formatNumber($amount['price']),
+                    'revenue_model'       => $amount['revenue_model'],
+                    'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($amount['revenue_model']),
+                    'message'             => __('Contribution amount added.', 'laterpay'),
+                )
+            );
+
+            return;
+        }
+
+        $event->setResult(
+            array(
+                'success' => false,
+                'message' => __('An error occurred. Please try again.', 'laterpay'),
             )
         );
     }
@@ -646,7 +798,7 @@ class Pricing extends TabAbstract
     {
         $priceCategoryForm = new PriceCategory();
 
-        if (! $priceCategoryForm->isValid(Request::post())) {
+        if ( ! $priceCategoryForm->isValid(Request::post())) {
             $errors = $priceCategoryForm->getErrors();
             $event->setResult(
                 array(
@@ -737,7 +889,7 @@ class Pricing extends TabAbstract
             )
         );
 
-        if (! $priceCategoryForm->isValid(Request::post())) {
+        if ( ! $priceCategoryForm->isValid(Request::post())) {
             throw new FormValidation(
                 get_class($priceCategoryForm),
                 $priceCategoryForm->getErrors()
@@ -750,7 +902,7 @@ class Pricing extends TabAbstract
         $categoryPriceModel = new CategoryPrice();
         $success            = $categoryPriceModel->deletePriceByCategoryID($categoryID);
 
-        if (! $success) {
+        if ( ! $success) {
             return;
         }
 
@@ -759,7 +911,7 @@ class Pricing extends TabAbstract
         foreach ($postIDs as $postID) {
             // check, if the post has LaterPay pricing data
             $postPrice = get_post_meta($postID, 'laterpay_post_prices', true);
-            if (! is_array($postPrice)) {
+            if ( ! is_array($postPrice)) {
                 continue;
             }
 
@@ -822,7 +974,7 @@ class Pricing extends TabAbstract
             )
         );
 
-        if (! $timePassForm->isValid()) {
+        if ( ! $timePassForm->isValid()) {
             throw new FormValidation(get_class($timePassForm), $timePassForm->getErrors());
         }
 
@@ -833,7 +985,7 @@ class Pricing extends TabAbstract
         );
 
         // check and set revenue model
-        if (! isset($data['revenue_model'])) {
+        if ( ! isset($data['revenue_model'])) {
             $data['revenue_model'] = 'ppu';
         }
 
@@ -947,7 +1099,7 @@ class Pricing extends TabAbstract
             )
         );
 
-        if (! $subscriptionForm->isValid()) {
+        if ( ! $subscriptionForm->isValid()) {
             throw new FormValidation(
                 get_class($subscriptionForm),
                 $subscriptionForm->getErrors()
@@ -1020,7 +1172,7 @@ class Pricing extends TabAbstract
         $timePassesArray = array(0 => TimePass::getDefaultOptions());
 
         foreach ($timePassesList as $timePass) {
-            if (! empty($timePass['access_category'])) {
+            if ( ! empty($timePass['access_category'])) {
                 $timePass['category_name'] = get_the_category_by_ID($timePass['access_category']);
             }
             $timePassesArray[$timePass['pass_id']] = $timePass;
@@ -1041,7 +1193,7 @@ class Pricing extends TabAbstract
         $subscriptionsArray = array(0 => Subscription::getDefaultOptions());
 
         foreach ($subscriptionsList as $subscription) {
-            if (! empty($subscription['access_category'])) {
+            if ( ! empty($subscription['access_category'])) {
                 $subscription['category_name'] = get_the_category_by_ID($subscription['access_category']);
             }
             $subscriptionsArray[$subscription['id']] = $subscription;
