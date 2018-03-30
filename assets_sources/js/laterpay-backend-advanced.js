@@ -1,6 +1,6 @@
 (function ($) {
 
-    class Advanced {
+    class LaterPayAdvanced {
         constructor() {
             this.$o = {
                 form: $('#lp_js_advancedForm'),
@@ -154,5 +154,5 @@
         }
     }
 
-    new Advanced();
+    new LaterPayAdvanced();
 })(jQuery);
