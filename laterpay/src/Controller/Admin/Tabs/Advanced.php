@@ -114,6 +114,8 @@ class Advanced extends TabAbstract
             'api_enabled_on_homepage'               => get_option('laterpay_api_enabled_on_homepage'),
             'api_fallback_behavior'                 => absint(get_option('laterpay_api_fallback_behavior')),
             'pro_merchant'                          => get_option('laterpay_pro_merchant'),
+            'business_model'                        => get_option('laterpay_business_model'),
+            'show_business_model'                   => get_option('laterpay_region') !== 'eu',
         );
 
         $this
@@ -179,6 +181,7 @@ class Advanced extends TabAbstract
         update_option('laterpay_api_enabled_on_homepage', $advancedForm->getFieldValue('api_enabled_on_homepage'));
         update_option('laterpay_api_fallback_behavior', $advancedForm->getFieldValue('api_fallback_behavior'));
         update_option('laterpay_pro_merchant', $advancedForm->getFieldValue('pro_merchant'));
+        update_option('laterpay_business_model', $advancedForm->getFieldValue('business_model'));
 
         $event->setResult(
             array(
@@ -327,5 +330,33 @@ class Advanced extends TabAbstract
         }
 
         return $valid;
+    }
+
+    /**
+     * Get LaterPay Business Model options array.
+     *
+     * @return array
+     */
+    public static function getBusinessModels()
+    {
+        return array(
+            array(
+                'value'       => 'paid',
+                'text'        => __( 'Paid-for content', 'laterpay' ),
+                'default'     => true,
+            ),
+            array(
+                'value'       => 'contributions',
+                'text'        => __( 'Accept Contributions', 'laterpay' ),
+                'description' => '',
+                'default'     => false,
+            ),
+            array(
+                'value'       => 'donations',
+                'text'        => __( 'Accept Donations', 'laterpay' ),
+                'description' => '',
+                'default'     => false,
+            ),
+        );
     }
 }

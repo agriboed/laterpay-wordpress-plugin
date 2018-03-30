@@ -8,11 +8,14 @@
                 unlimitedAccessNone: $('.lp_access-none'),
                 unlimitedAccessAll: $('.lp_access-all'),
                 unlimitedAccessInput: $('.lp_category-access-input'),
-                proMerchant: $('#lp_js_proMerchant')
+                proMerchant: $('#lp_js_proMerchant'),
+                businessModel: $('#lp_js_businessModel'),
+                businessModelPrevious: $('#lp_js_businessModel').val()
             };
 
-            this.bindEvents();
-            this.prepareUnlimitedAccess();
+            this
+                .bindEvents()
+                .prepareUnlimitedAccess();
         }
 
         bindEvents() {
@@ -36,13 +39,20 @@
                 .bind('change', () => {
                     this.toggleProMerchant();
                 });
+
+            this.$o.businessModel
+                .bind('change', () => {
+                    this.toggleBusinessModel();
+                });
+
+            return this;
         }
 
         saveForm() {
             $.post(
                 ajaxurl,
                 this.$o.form.serializeArray(),
-                function (data) {
+                (data) => {
                     this.$o.navigation.showMessage(data);
                 },
                 'json'
@@ -50,9 +60,9 @@
         }
 
         toggleUnlimitedAccessNone(e) {
-            let el = $(e);
-            let categories = el.closest('tr').find(this.$o.unlimitedAccessInput);
-            let all = el.closest('tr').find(this.$o.unlimitedAccessAll);
+            let el = $(e),
+                categories = el.closest('tr').find(this.$o.unlimitedAccessInput),
+                all = el.closest('tr').find(this.$o.unlimitedAccessAll);
 
             if (el.attr('checked') === 'checked') {
                 all.removeAttr('checked');
@@ -68,9 +78,9 @@
         }
 
         toggleUnlimitedAccessAll(e) {
-            let el = $(e);
-            let categories = el.closest('tr').find(this.$o.unlimitedAccessInput);
-            let none = el.closest('tr').find(this.$o.unlimitedAccessNone);
+            let el = $(e),
+                categories = el.closest('tr').find(this.$o.unlimitedAccessInput),
+                none = el.closest('tr').find(this.$o.unlimitedAccessNone);
 
             if (el.attr('checked') === 'checked') {
                 none.removeAttr('checked');
@@ -99,7 +109,48 @@
 
             if (this.$o.proMerchant.attr('checked') && false === confirm(message)) {
                 this.$o.proMerchant.removeAttr('checked');
+
+                return;
             }
+
+            // reset business model to paid if it is pro account
+            this.$o.businessModel.val('paid');
+            this.$o.businessModelPrevious = 'paid';
+        }
+
+        checkCurrentBusinessModel() {
+            // disable pro feature if non paid business model
+            if (this.$o.businessModel.val() !== 'paid') {
+                this.$o.proMerchant
+                    .attr('disabled', 'disabled')
+                    .removeAttr('checked');
+            } else {
+                // reset business model to paid
+                this.$o.proMerchant
+                    .removeAttr('disabled');
+            }
+        }
+
+        toggleBusinessModel() {
+            let selectedValue = this.$o.businessModel.val(),
+                message = this.$o.businessModel.find(':selected').data('confirm');
+
+            // do nothing for "paid" model
+            if (selectedValue === 'paid') {
+                this.$o.businessModelPrevious = selectedValue;
+                this.checkCurrentBusinessModel();
+                return;
+            }
+
+            // If option contains data-confirm attribute then show confirm box with that text.
+            if (message && true === confirm(message)) {
+                this.checkCurrentBusinessModel();
+                this.$o.businessModelPrevious = selectedValue;
+                return;
+            }
+
+            // or reset select to previous value
+            this.$o.businessModel.val(this.$o.businessModelPrevious);
         }
     }
 

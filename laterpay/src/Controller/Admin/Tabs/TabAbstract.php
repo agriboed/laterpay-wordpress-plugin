@@ -27,24 +27,27 @@ abstract class TabAbstract extends ControllerAbstract
 
     /**
      * @return array
-     * @throws \LaterPay\Core\Exception
      */
     protected function getTabs()
     {
         $tabs = array();
 
-        if (! current_user_can('activate_plugins')) {
+        if ( ! current_user_can('activate_plugins')) {
             return $tabs;
         }
 
-        foreach (static::$tabs as $tab) {
-            $instance = Bootstrap::get($tab);
+        try {
+            foreach (static::$tabs as $tab) {
+                $instance = Bootstrap::get($tab);
 
-            if (! method_exists($tab, 'info')) {
-                continue;
+                if ( ! method_exists($tab, 'info')) {
+                    continue;
+                }
+
+                $tabs[] = $instance::info();
             }
-
-            $tabs[] = $instance::info();
+        } catch (\Exception $e) {
+            $this->logger->error($e);
         }
 
         return $tabs;
@@ -54,8 +57,6 @@ abstract class TabAbstract extends ControllerAbstract
      * Method renders header with navigation tabs.
      *
      * @return string
-     *
-     * @throws \LaterPay\Core\Exception
      */
     protected function renderHeader()
     {

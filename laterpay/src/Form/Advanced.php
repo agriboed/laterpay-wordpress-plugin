@@ -231,5 +231,21 @@ class Advanced extends FormAbstract
                 ),
             )
         );
+
+        $this->setField(
+            'business_model',
+            array(
+                'validators' => array(
+                    'in_array' => array(
+                        'paid',
+                        'donation',
+                        'contribution'
+                    ),
+                ),
+                'filters'    => array(
+                    'to_string',
+                ),
+            )
+        );
     }
 }

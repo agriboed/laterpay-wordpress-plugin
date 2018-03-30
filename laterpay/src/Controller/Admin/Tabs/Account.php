@@ -250,7 +250,7 @@ class Account extends TabAbstract
             return;
         }
 
-        if (! $merchantIDForm->isValid(Request::post())) {
+        if ( ! $merchantIDForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -314,7 +314,7 @@ class Account extends TabAbstract
             return;
         }
 
-        if (! $apiKeyForm->isValid(Request::post())) {
+        if ( ! $apiKeyForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -328,6 +328,7 @@ class Account extends TabAbstract
         }
 
         update_option(sprintf('laterpay_%s_api_key', $apiKeyType), $apiKey);
+
         $event->setResult(
             array(
                 'success' => true,
@@ -353,7 +354,7 @@ class Account extends TabAbstract
     {
         $pluginModeForm = new PluginMode();
 
-        if (! $pluginModeForm->isValid(Request::post())) {
+        if ( ! $pluginModeForm->isValid(Request::post())) {
             array(
                 'success' => false,
                 'message' => __('Error occurred. Incorrect data provided.', 'laterpay'),
@@ -432,7 +433,7 @@ class Account extends TabAbstract
     {
         $regionForm = new Region();
 
-        if (! $regionForm->isValid(Request::post())) {
+        if ( ! $regionForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -444,7 +445,7 @@ class Account extends TabAbstract
 
         $result = update_option('laterpay_region', $regionForm->getFieldValue('laterpay_region'));
 
-        if (! $result) {
+        if ( ! $result) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -453,6 +454,11 @@ class Account extends TabAbstract
             );
 
             return;
+        }
+
+        // reset to default business model for non US regions
+        if ($regionForm->getFieldValue('laterpay_region') === 'eu') {
+            update_option('laterpay_business_model', 'paid');
         }
 
         $event->setResult(
@@ -477,7 +483,7 @@ class Account extends TabAbstract
     {
         $pluginTestModeForm = new TestMode();
 
-        if (! $pluginTestModeForm->isValid(Request::post())) {
+        if ( ! $pluginTestModeForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
