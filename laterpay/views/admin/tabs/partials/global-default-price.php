@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php esc_html_e( 'Every post costs', 'laterpay' ); ?>
         <span id="lp_js_globalDefaultPriceDisplay" class="lp_price-settings__value-text"
               data-price="<?php echo esc_attr( $_['price'] ); ?>">
-							<?php echo esc_html( $_['price_formatted'] ); ?>
+							<?php echo esc_html( $_['localized_price'] ); ?>
 						</span>
         <span class="lp_js_currency lp_currency">
 							<?php echo esc_html( $_['currency']['code'] ); ?>
@@ -48,7 +48,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<?php esc_html_e( 'Price', 'laterpay' ); ?>
                 </th>
                 <td>
-                    <input type="text"
+                    <input type="number"
+                           min="0.01"
+                           step="0.01"
                            id="lp_js_globalDefaultPriceInput"
                            class="lp_js_priceInput lp_input lp_number-input"
                            name="laterpay_global_price"

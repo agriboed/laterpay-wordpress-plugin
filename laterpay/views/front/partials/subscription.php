@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                data-laterpay="<?php echo esc_url( $_['url'] ); ?>"
                data-preview-as-visitor="<?php echo esc_attr( $_['preview_post_as_visitor'] ); ?>">
 
-				<?php echo esc_html( $_['price_formatted'] ); ?>
+				<?php echo esc_html( $_['localized_price'] ); ?>
 
                 <small class="lp_purchase-link__currency">
 					<?php echo esc_html( $_['standard_currency'] ); ?>
@@ -71,7 +71,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </th>
                 <td class="lp_time-pass__condition-value">
 					<span class="lp_js_subscriptionPreviewPrice">
-                        <?php echo esc_html( $_['price_formatted'] . ' ' . $_['standard_currency'] ); ?>
+                        <?php echo esc_html( $_['localized_price'] . ' ' . $_['standard_currency'] ); ?>
                     </span>
                 </td>
             </tr>

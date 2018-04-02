@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                title="<?php esc_attr_e( 'Buy now with LaterPay', 'laterpay' ); ?>"
                data-icon="b"
                data-laterpay="<?php echo esc_url( $_['url'] ); ?>"
-               data-preview-as-visitor="<?php echo esc_attr( $_['preview_post_as_visitor'] ); ?>"><?php echo esc_html( $_['price_formatted'] ); ?><!--
+               data-preview-as-visitor="<?php echo esc_attr( $_['preview_post_as_visitor'] ); ?>"><?php echo esc_html( $_['localized_price'] ); ?><!--
                --><small class="lp_purchase-link__currency"><?php echo esc_html( $_['standard_currency'] ); ?></small></a>
             <a href="#" class="lp_js_flipTimePass lp_time-pass__terms">
 				<?php esc_html_e( 'Terms', 'laterpay' ); ?>
@@ -65,7 +65,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </th>
                 <td class="lp_time-pass__condition-value">
 						<span class="lp_js_timePassPreviewPrice">
-                            <?php echo esc_html( $_['price_formatted'] . ' ' . $_['standard_currency'] ); ?>
+                            <?php echo esc_html( $_['localized_price'] . ' ' . $_['standard_currency'] ); ?>
                         </span>
                 </td>
             </tr>

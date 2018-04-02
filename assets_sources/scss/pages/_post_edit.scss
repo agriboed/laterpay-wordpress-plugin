@@ -45,17 +45,18 @@
     }
 }
 
-
 // enter / display post price section
 .lp_post-price-input {
-    font-size: $fs--225;
-    height: calc(1.5em + 5px) !important;
+    font-size: 23.5px;
     padding: $fs--05 $fs--025 !important;
-    text-align: right;
+    text-align: center;
     transition-duration: 0.4s !important;
     width: 100%;
+    height: 54px !important;
+    line-height: 1;
 
     &:disabled {
+        font-size: $fs--225;
         border-color: transparent !important;
         color: darken($text, 13%) !important;
         transition-duration: 0.4s !important;

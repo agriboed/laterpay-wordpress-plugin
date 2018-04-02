@@ -52,10 +52,10 @@ select.lp_input {
 
 // special inputs ------------------------------------------------------------------------------------------------------
 // number inputs
-input[type=text].lp_number-input {
+input[type=number].lp_number-input {
   padding: 0.25em 0.35em;
   text-align: right;
-  width: 4em;
+  width: 6em;
 }
 
 input[type=text].lp_input__title {

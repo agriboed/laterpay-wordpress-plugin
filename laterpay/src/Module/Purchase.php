@@ -133,7 +133,7 @@ class Purchase extends ControllerAbstract
                 '%1$s<small class="lp_purchase-link__currency">%2$s</small>',
                 'laterpay'
             ),
-            View::formatNumber($price),
+            Pricing::localizePrice($price),
             $currency
         );
 
@@ -261,7 +261,7 @@ class Purchase extends ControllerAbstract
         // get pricing data
         $currency       = $this->config->get('currency.code');
         $price          = Pricing::getPostPrice($post->ID);
-        $priceFormatted = View::formatNumber($price);
+        $localizedPrice = Pricing::localizePrice($price);
         $revenueModel   = Pricing::getPostRevenueModel($post->ID);
 
         // get purchase link
@@ -273,7 +273,7 @@ class Purchase extends ControllerAbstract
                     'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small>',
                     'laterpay'
                 ),
-                $priceFormatted,
+                $localizedPrice,
                 $currency
             );
         else :
@@ -282,7 +282,7 @@ class Purchase extends ControllerAbstract
                     'Buy now for %1$s<small class="lp_purchase-link__currency">%2$s</small> and pay later',
                     'laterpay'
                 ),
-                $priceFormatted,
+                $localizedPrice,
                 $currency
             );
         endif;
@@ -413,7 +413,7 @@ class Purchase extends ControllerAbstract
 
         $data['article'] = array(
             'title'   => $post->post_title,
-            'price'   => View::formatNumber(Pricing::getPostPrice($post->ID)),
+            'price'   => Pricing::localizePrice(Pricing::getPostPrice($post->ID)),
             'revenue' => Pricing::getPostRevenueModel($post->ID),
             'url'     => Post::getLaterpayPurchaseLink($post->ID),
         );

@@ -43,7 +43,7 @@ class Pricing
     {
         if ($postID === null) {
             $postID = get_the_ID();
-            if (! $postID) {
+            if ( ! $postID) {
                 return false;
             }
         }
@@ -52,10 +52,10 @@ class Pricing
         $price = static::getPostPrice($postID);
 
         if ($price === 0.00 || ! in_array(
-            get_post_type($postID),
-            (array)get_option('laterpay_enabled_post_types'),
-            true
-        )) {
+                get_post_type($postID),
+                (array)get_option('laterpay_enabled_post_types'),
+                true
+            )) {
             return null;
         }
 
@@ -84,7 +84,7 @@ class Pricing
 
         foreach ($categoryChildren as $category) {
             // filter ids with category prices
-            if (! $categoryPriceModel->getCategoryPriceDataByCategoryIDs($category->term_id)) {
+            if ( ! $categoryPriceModel->getCategoryPriceDataByCategoryIDs($category->term_id)) {
                 $IDs[] = (int)$category->term_id;
             }
         }
@@ -228,7 +228,7 @@ class Pricing
         $post      = get_post($postID);
         $postPrice = get_post_meta($postID, static::META_KEY, true);
 
-        if (! is_array($postPrice)) {
+        if ( ! is_array($postPrice)) {
             $postPrice = array();
         }
 
@@ -288,7 +288,7 @@ class Pricing
 
         $postPrice = get_post_meta($postID, static::META_KEY, true);
 
-        if (! is_array($postPrice)) {
+        if ( ! is_array($postPrice)) {
             $postPrice = array();
         }
 
@@ -454,7 +454,7 @@ class Pricing
     {
         $postPrice = get_post_meta($postID, static::META_KEY, true);
 
-        if (! is_array($postPrice)) {
+        if ( ! is_array($postPrice)) {
             $postPrice = array();
         }
 
@@ -487,7 +487,7 @@ class Pricing
         }
 
         // fallback in case the revenue_model is not correct
-        if (! in_array($revenueModel, array('ppu', 'sis'), true)) {
+        if ( ! in_array($revenueModel, array('ppu', 'sis'), true)) {
             $price = (float)array_key_exists(
                 'price',
                 $postPrice
@@ -543,7 +543,7 @@ class Pricing
      */
     public static function getDynamicPrices(\WP_Post $post, $price = null)
     {
-        if (! User::can('laterpay_edit_individual_price', $post)) {
+        if ( ! User::can('laterpay_edit_individual_price', $post)) {
             return array('success' => false);
         }
 
@@ -829,19 +829,19 @@ class Pricing
                 }
             }
 
-            if (! $hasPrice) {
+            if ( ! $hasPrice) {
                 $parentID = get_category($categoryID)->parent;
                 while ($parentID) {
                     $parentData = $categoryPriceModel->getCategoryPriceDataByCategoryIDs($parentID);
 
-                    if (! $parentData) {
+                    if ( ! $parentData) {
                         $parentID = get_category($parentID)->parent;
                         continue;
                     }
 
                     $parentData = (array)$parentData[0];
 
-                    if (! in_array((int)$parentData['category_id'], $IDsUsed, true)) {
+                    if ( ! in_array((int)$parentData['category_id'], $IDsUsed, true)) {
                         $IDsUsed[] = $parentData['category_id'];
                         $return[]  = $parentData;
                     }
@@ -872,7 +872,7 @@ class Pricing
         while ($parentID) {
             $categoryPrice = $categoryPriceModel->getCategoryPriceDataByCategoryIDs($parentID);
 
-            if (! $categoryPrice) {
+            if ( ! $categoryPrice) {
                 $parentID = get_category($parentID)->parent;
                 continue;
             }
@@ -919,5 +919,52 @@ class Pricing
         }
 
         return __('Pay Later', 'laterpay');
+    }
+
+    /**
+     * Format price for front view.
+     *
+     * @param float $price
+     * @param array $args ['normalize'=> true/false, 'with_currency' => true/false']
+     *
+     * @return string
+     */
+    public static function localizePrice($price, array $args = array())
+    {
+        if (isset($args['normalize'])) {
+            $price = static::normalize($price);
+        }
+
+        $price = number_format($price, 2, '.', '');
+
+        if (isset($args['with_currency'])) {
+            $code  = Config::getCurrencyConfig();
+            $price .= ' ' . $code;
+        }
+
+        return $price;
+    }
+
+    /**
+     * Number normalization
+     *
+     * @param $number
+     *
+     * @return float
+     */
+    public static function normalize($number)
+    {
+        global $wp_locale;
+
+        $number = str_replace(
+            array(
+                $wp_locale->number_format['thousands_sep'],
+                $wp_locale->number_format['decimal_point'],
+            ),
+            array('', '.'),
+            (string)$number
+        );
+
+        return (float)$number;
     }
 }

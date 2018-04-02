@@ -131,7 +131,7 @@ class Voucher
              * @var $timePassVoucher array
              */
             foreach ($timePassVoucher as $code => $data) {
-                $vouchers[$timePassID][$code]['price'] = View::formatNumber($data['price']);
+                $vouchers[$timePassID][$code]['price'] = Pricing::localizePrice($data['price']);
             }
         }
 
@@ -184,7 +184,7 @@ class Voucher
                     $data = array(
                         'pass_id' => $passID,
                         'code'    => $voucherCode,
-                        'price'   => number_format(View::normalize($data['price']), 2),
+                        'price'   => Pricing::localizePrice($data['price'], array('normalize' => true)),
                         'title'   => $data['title'],
                     );
 

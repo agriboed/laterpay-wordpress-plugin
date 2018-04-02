@@ -36,7 +36,7 @@ if ( ! defined('ABSPATH')) {
 
                             <span class="lp_js_priceDisplay lp_price-settings__value-text"
                                   data-price="<?php echo esc_attr($amount['price']); ?>">
-                                <?php echo esc_html($amount['price_formatted']); ?>
+                                <?php echo esc_html($amount['localized_price']); ?>
                             </span>
                             <span class="lp_js_currency lp_currency">
                                 <?php echo esc_html($_['currency']['code']); ?>
@@ -67,7 +67,9 @@ if ( ! defined('ABSPATH')) {
                                         <?php esc_html_e('Price', 'laterpay'); ?>
                                     </th>
                                     <td>
-                                        <input type="text"
+                                        <input type="number"
+                                               min="0.01"
+                                               step="0.01"
                                                class="lp_js_priceInput lp_input lp_number-input"
                                                name="price"
                                                value="<?php echo esc_attr($amount['price']); ?>"
@@ -164,7 +166,9 @@ if ( ! defined('ABSPATH')) {
                                     <?php esc_html_e('Price', 'laterpay'); ?>
                                 </th>
                                 <td>
-                                    <input type="text"
+                                    <input type="number"
+                                           min="0.01"
+                                           step="0.01"
                                            class="lp_js_priceInput lp_input lp_number-input"
                                            name="price"
                                            value=""
@@ -181,24 +185,19 @@ if ( ! defined('ABSPATH')) {
                                 </th>
                                 <td>
                                     <div class="lp_js_revenueModel lp_button-group">
-                                        <label class="lp_js_revenueModelLabel lp_button-group__button lp_1/2
-                        <?php echo $amount['ppu_checked'] ? 'lp_is-selected' : ''; ?>
-                        <?php echo $amount['ppu_disabled'] ? 'lp_is-disabled' : ''; ?>">
+                                        <label class="lp_js_revenueModelLabel lp_button-group__button lp_1/2 lp_is-selected">
                                             <input type="radio"
                                                    name="revenue_model"
                                                    class="lp_js_revenueModelInput"
-                                                <?php echo $amount['ppu_checked'] ? 'checked' : ''; ?>
+                                                   checked
                                                    value="ppu">
 
                                             <?php esc_html_e('Pay&nbsp;Later', 'laterpay'); ?>
                                         </label><!--
-                        --><label class="lp_js_revenueModelLabel lp_button-group__button lp_1/2
-                                <?php echo $amount['sis_checked'] ? 'lp_is-selected' : ''; ?>
-                                <?php echo $amount['sis_disabled'] ? 'lp_is-disabled' : ''; ?>">
+                        --><label class="lp_js_revenueModelLabel lp_button-group__button lp_1/2">
                                             <input type="radio"
                                                    name="revenue_model"
                                                    class="lp_js_revenueModelInput"
-                                                <?php echo $amount['sis_checked'] ? 'checked' : ''; ?>
                                                    value="sis">
 
                                             <?php esc_html_e('Pay Now', 'laterpay'); ?>

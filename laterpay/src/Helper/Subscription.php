@@ -82,7 +82,7 @@ class Subscription
             }
 
             $details['price']       = __('for', 'laterpay') . ' ' .
-                                      View::formatNumber($subscription['price']) .
+                                      Pricing::localizePrice($subscription['price']) .
                                       ' ' . strtoupper($currency);
             $details['cancellable'] = '(cancellable anytime)';
         }

@@ -80,7 +80,7 @@ class Column extends ControllerAbstract
         switch ($columnName) {
             case 'post_price':
                 $price           = (float)Pricing::getPostPrice($postID);
-                $localized_price = View::formatNumber($price);
+                $localized_price = Pricing::localizePrice($price);
                 $currency        = $this->config->get('currency.code');
 
                 // render the price of the post, if it exists

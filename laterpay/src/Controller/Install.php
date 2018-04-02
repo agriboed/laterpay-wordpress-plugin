@@ -453,7 +453,7 @@ meet the minimum requirement of %1$s version %2$s or higher. You are running %3$
                     }
 
                     $data[$pass_id][$code] = array(
-                        'price' => number_format(View::normalize($price), 2),
+                        'price' => Pricing::localizePrice($price, array('normalize' => true)),
                         'title' => '',
                     );
                 }

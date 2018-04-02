@@ -240,7 +240,7 @@ class TimePasses extends ControllerAbstract
             $args['url'] = TimePass::getLaterpayPurchaseLink($args['pass_id']);
         }
 
-        $args['price_formatted'] = View::formatNumber($args['price']);
+        $args['localized_price'] = Pricing::localizePrice($args['price']);
         $args['period']          = TimePass::getPeriodOptions($args['period']);
 
         if ($args['duration'] > 1) {
@@ -431,19 +431,19 @@ class TimePasses extends ControllerAbstract
         // default value
         $data['timepasses'] = array();
 
-        $timepasses = TimePass::getTimePassesListByPostID(
+        $timePasses = TimePass::getTimePassesListByPostID(
             $post->ID,
             null,
             true
         );
 
-        // loop through timepasses
-        foreach ($timepasses as $timepass) {
+        // loop through timePasses
+        foreach ($timePasses as $timepass) {
             $data['timepasses'][] = array(
                 'id'          => (int)$timepass['pass_id'],
                 'title'       => $timepass['title'],
                 'description' => $timepass['description'],
-                'price'       => View::formatNumber($timepass['price']),
+                'price'       => Pricing::localizePrice($timepass['price']),
                 'url'         => TimePass::getLaterpayPurchaseLink($timepass['pass_id']),
                 'revenue'     => $timepass['revenue_model'],
             );

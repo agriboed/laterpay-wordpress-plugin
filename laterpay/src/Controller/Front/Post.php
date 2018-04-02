@@ -217,7 +217,7 @@ class Post extends ControllerAbstract
                     array(
                         'success' => true,
                         'pass_id' => $passID,
-                        'price'   => View::formatNumber($codeData['price']),
+                        'price'   => Pricing::localizePrice($codeData['price']),
                         'url'     => $url,
                     )
                 );

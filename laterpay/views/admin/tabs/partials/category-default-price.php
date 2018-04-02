@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php esc_html_e( 'costs', 'laterpay' ); ?>
                 <span class="lp_js_categoryDefaultPriceDisplay lp_category-price"
                       data-price="<?php echo esc_attr( $category->category_price ); ?>">
-									<?php echo esc_html( $category->category_price_formatted ); ?>
+									<?php echo esc_html( $category->category_localized_price ); ?>
 								</span>
                 <span class="lp_js_currency lp_currency">
 									<?php echo esc_html( $_['currency']['code'] ); ?>
@@ -73,10 +73,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<?php esc_html_e( 'Price', 'laterpay' ); ?>
                         </th>
                         <td>
-                            <input type="text"
+                            <input type="number"
+                                   min="0.01"
+                                   step="0.01"
                                    name="price"
                                    class="lp_js_priceInput lp_js_categoryDefaultPriceInput lp_input lp_number-input"
-                                   value="<?php echo esc_attr( $category->category_price_formatted ); ?>"
+                                   value="<?php echo esc_attr( $category->category_localized_price ); ?>"
                                    placeholder="<?php echo esc_attr( $_['price_placeholder'] ); ?>">
 
                             <span class="lp_js_currency lp_currency">
@@ -199,7 +201,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<?php esc_html_e( 'Price', 'laterpay' ); ?>
                     </th>
                     <td>
-                        <input type="text"
+                        <input type="number"
+                               min="0.01"
+                               step="0.01"
                                name="price"
                                class="lp_js_priceInput lp_js_categoryDefaultPriceInput lp_input lp_number-input"
                                value="<?php echo esc_attr( $_['price_default'] ); ?>"

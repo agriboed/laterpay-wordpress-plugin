@@ -5,6 +5,7 @@ namespace LaterPay\Module;
 use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event\Event;
 use LaterPay\Core\Event\SubscriberInterface;
+use LaterPay\Helper\Pricing;
 use LaterPay\Helper\View;
 use LaterPay\Helper\User;
 use LaterPay\Helper\Post;
@@ -103,7 +104,7 @@ class Subscriptions extends ControllerAbstract
             $args['url'] = Subscription::getSubscriptionPurchaseLink($args['id']);
         }
 
-        $args['price_formatted'] = View::formatNumber($args['price']);
+        $args['localized_price'] = Pricing::localizePrice($args['price']);
 
         if (absint($args['duration']) > 1) {
             $args['period'] = TimePass::getPeriodOptions($args['period'], true);
@@ -152,7 +153,7 @@ class Subscriptions extends ControllerAbstract
             $data['subscriptions'][] = array(
                 'title'       => $subscription['title'],
                 'description' => $subscription['description'],
-                'price'       => View::formatNumber($subscription['price']),
+                'price'       => Pricing::localizePrice($subscription['price']),
                 'url'         => Subscription::getSubscriptionPurchaseLink($subscription['id']),
                 'revenue'     => 'sub',
             );

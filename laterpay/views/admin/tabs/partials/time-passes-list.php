@@ -142,10 +142,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<?php esc_html_e( 'This pass costs', 'laterpay' ); ?>
                     </td>
                     <td>
-                        <input type="text"
+                        <input type="number"
+                               min="0.01"
+                               step="0.01"
                                class="lp_js_timePassPriceInput lp_input lp_number-input"
                                name="price"
-                               value="<?php echo esc_attr( $_['price_formatted'] ); ?>"
+                               value="<?php echo esc_attr( $_['localized_price'] ); ?>"
                                maxlength="6">
 
 						<?php esc_html_e( $_['currency']['code'] ); ?>
@@ -211,10 +213,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
             <div class="lp_js_voucherEditor lp_mt-">
 				<?php esc_html_e( 'Offer this time pass at a reduced price of', 'laterpay' ); ?>
-                <input type="text"
+                <input type="number"
+                       min="0.01"
+                       step="0.01"
                        name="voucher_price_temp"
                        class="lp_js_voucherPriceInput lp_input lp_number-input"
-                       value="<?php echo esc_attr( $_['price_formatted'] ); ?>"
+                       value="<?php echo esc_attr( $_['localized_price'] ); ?>"
                        maxlength="6">
                 <span>
                     <?php echo esc_html( $_['currency']['code'] ); ?>

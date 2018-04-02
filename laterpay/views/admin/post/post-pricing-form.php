@@ -41,11 +41,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             </label>
         </div><!--
 	 --><div class="lp_layout__item lp_7/16">
-            <input type="text"
+            <input type="number"
+                   min="0"
+                   step="0.01"
                    id="lp_js_postPriceInput"
-                   class="lp_post-price-input lp_input lp_ml-"
+                   class="lp_input lp_post-price-input lp_ml-"
                    name="post-price"
-                   value="<?php echo esc_attr( $_['price_formatted'] ); ?>"
+                   value="<?php echo esc_attr( $_['localized_price'] ); ?>"
 				<?php echo ! $_['has_individual_price'] ? 'disabled' : ''; ?>
                    placeholder="<?php esc_attr_e( '0.00', 'laterpay' ); ?>"></div><!--
         --><div class="lp_layout__item lp_3/16">
@@ -92,7 +94,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <a href="#"
                id="lp_js_useGlobalDefaultPrice"
                class="lp_js_priceTypeButton lp_price-type__link"
-               data-price="<?php echo esc_attr( $_['global_default_price_formatted'] ); ?>"
+               data-price="<?php echo esc_attr( $_['global_default_localized_price'] ); ?>"
                data-revenue-model="<?php echo esc_attr( $_['global_default_price_revenue_model'] ); ?>">
 				<?php echo wp_kses_post( __( 'Global <br> Default Price', 'laterpay' ) ); ?>
             </a>

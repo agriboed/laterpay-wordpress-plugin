@@ -207,7 +207,7 @@ class TimePass
             }
 
             $details['price']   = __('for', 'laterpay') . ' ' .
-                                  View::formatNumber($timePass['price']) .
+                                  Pricing::localizePrice($timePass['price']) .
                                   ' ' . strtoupper($currency);
             $details['revenue'] = '(' . strtoupper($timePass['revenue_model']) . ')';
         }

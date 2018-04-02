@@ -343,7 +343,7 @@ class Metabox extends ControllerAbstract
 
             foreach ($categoryPriceData as $key => $category) {
                 $category['selected']       = $category['category_id'] === $postDefaultCategory;
-                $category['category_price'] = View::formatNumber($category['category_price']);
+                $category['category_price'] = Pricing::localizePrice($category['category_price']);
 
                 $categoryPriceData[$key] = $category;
             }
@@ -399,12 +399,12 @@ class Metabox extends ControllerAbstract
             'sis_selected'                         => $postRevenueModel === 'sis',
             'sis_disabled'                         => $sisDisabled,
             'price'                                => $price,
-            'price_formatted'                      => View::formatNumber($price),
+            'localized_price'                      => Pricing::localizePrice($price),
             'currency'                             => $currency,
             'category_prices'                      => $categoryPriceData,
             'post_default_category'                => $postDefaultCategory,
             'global_default_price'                 => $globalDefaultPrice,
-            'global_default_price_formatted'       => View::formatNumber($globalDefaultPrice),
+            'global_default_localized_price'       => Pricing::localizePrice($globalDefaultPrice),
             'has_individual_price'                 => $postPriceType === Pricing::TYPE_INDIVIDUAL_PRICE,
             'has_individual_dynamic_price'         => $postPriceType === Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
             'global_default_price_revenue_model'   => $globalDefaultPriceRevenueModel,

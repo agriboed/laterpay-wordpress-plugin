@@ -23,7 +23,7 @@ class View
         $liveAPIkey          = get_option('laterpay_live_api_key');
         $isInVisibleTestMode = get_option('laterpay_is_in_visible_test_mode');
 
-        if (! function_exists('wp_get_current_user')) {
+        if ( ! function_exists('wp_get_current_user')) {
             include_once ABSPATH . 'wp-includes/pluggable.php';
         }
 
@@ -33,17 +33,17 @@ class View
         }
 
         // check, if plugin is not in live mode and Sandbox API key exists
-        if (! $isInLiveMode && empty($sandboxAPIKey)) {
+        if ( ! $isInLiveMode && empty($sandboxAPIKey)) {
             return false;
         }
 
         // check, if plugin is not in live mode and is in visible test mode
-        if (! $isInLiveMode && $isInVisibleTestMode) {
+        if ( ! $isInLiveMode && $isInVisibleTestMode) {
             return true;
         }
 
         // check, if plugin is not in live mode and current user has sufficient capabilities
-        if (! $isInLiveMode) {
+        if ( ! $isInLiveMode) {
             return false;
         }
 
@@ -63,58 +63,6 @@ class View
         $string = preg_replace('/\n\s*\n/', '', $string);
 
         return $string;
-    }
-
-    /**
-     * Format number based on its type.
-     *
-     * @param mixed $number
-     * @param bool $is_monetary
-     *
-     * @return string $formatted
-     */
-    public static function formatNumber($number, $is_monetary = true)
-    {
-        // convert value to float if incorrect type passed
-        $number = (float)$number;
-
-        if ($is_monetary) {
-            // format value with 2 digits
-            $formatted = number_format_i18n($number, 2);
-        } else {
-            // format count values
-            if ($number < 10000) {
-                $formatted = number_format($number);
-            } else {
-                // reduce values above 10,000 to thousands and format them with one digit
-                $formatted = number_format($number / 1000, 1) . __('k', 'laterpay'); // k -> short for kilo (thousands)
-            }
-        }
-
-        return $formatted;
-    }
-
-    /**
-     * Number normalization
-     *
-     * @param $number
-     *
-     * @return float
-     */
-    public static function normalize($number)
-    {
-        global $wp_locale;
-
-        $number = str_replace(
-            array(
-                $wp_locale->number_format['thousands_sep'],
-                $wp_locale->number_format['decimal_point'],
-            ),
-            array('', '.'),
-            (string)$number
-        );
-
-        return (float)$number;
     }
 
     /**
