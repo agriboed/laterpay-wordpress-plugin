@@ -11,7 +11,7 @@ if ( ! defined('ABSPATH')) {
         <div class="lp_layout lp_mb++">
             <div class="lp_price-section lp_layout__item lp_1/2 lp_pdr">
                 <h2>
-                    <?php esc_html_e('Global Contribution Amount', 'laterpay'); ?>
+                    <?php esc_html_e('Global Donation Amount', 'laterpay'); ?>
 
                     <a href="#" id="lp_js_add" class="button button-primary lp_heading-button" data-icon="c"
                        style="display:none;">
@@ -22,7 +22,7 @@ if ( ! defined('ABSPATH')) {
                 <?php foreach ($_['amounts'] as $amount): ?>
                     <form method="post" action="" class="lp_price-settings lp_js_amountForm">
 
-                        <input type="hidden" name="form" value="contribution_amount">
+                        <input type="hidden" name="form" value="donation_amount">
                         <input type="hidden" name="action" value="laterpay_pricing">
                         <input type="hidden" name="operation" value="update">
                         <input type="hidden" name="id" value="<?php echo esc_attr($amount['id']); ?>">
@@ -31,7 +31,7 @@ if ( ! defined('ABSPATH')) {
                         <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($_['_wpnonce']); ?>">
 
                         <div class="lp_js_amountShow lp_greybox lp_mb- lp_price-panel">
-                            <?php esc_html_e('Suggested contribution amount', 'laterpay'); ?>
+                            <?php esc_html_e('Suggested donation amount', 'laterpay'); ?>
 
                             <span class="lp_js_priceDisplay lp_price-settings__value-text"
                                   data-price="<?php echo esc_attr($amount['price']); ?>">
@@ -58,7 +58,7 @@ if ( ! defined('ABSPATH')) {
                             <table class="lp_table--form">
                                 <tr>
                                     <th colspan="2">
-                                        <?php esc_html_e('Edit Global Contribution Amount', 'laterpay'); ?>
+                                        <?php esc_html_e('Edit Global Donation Amount', 'laterpay'); ?>
                                     </th>
                                 </tr>
                                 <tr>
@@ -126,14 +126,14 @@ if ( ! defined('ABSPATH')) {
                 <form method="post"
                       id="lp_js_amountFormTemplate" action="" class="lp_js_amountForm lp_price-settings"
                       style="display: none">
-                    <input type="hidden" name="form" value="contribution_amount">
+                    <input type="hidden" name="form" value="donation_amount">
                     <input type="hidden" name="action" value="laterpay_pricing">
                     <input type="hidden" name="id" value="">
                     <input type="hidden" name="operation" value="add">
                     <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($_['_wpnonce']); ?>">
 
                     <div class="lp_js_amountShow lp_greybox lp_price-panel">
-                        <?php esc_html_e('Suggested contribution amount', 'laterpay'); ?>
+                        <?php esc_html_e('Suggested donation amount', 'laterpay'); ?>
 
                         <span class="lp_js_priceDisplay lp_price-settings__value-text" data-price="">
 						</span>
@@ -157,7 +157,7 @@ if ( ! defined('ABSPATH')) {
                         <table class="lp_table--form">
                             <tr>
                                 <th colspan="2">
-                                    <?php esc_html_e('Add Global Contribution Amount', 'laterpay'); ?>
+                                    <?php esc_html_e('Add Global Donation Amount', 'laterpay'); ?>
                                 </th>
                             </tr>
                             <tr>

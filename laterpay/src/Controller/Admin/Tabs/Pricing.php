@@ -7,6 +7,7 @@ use LaterPay\Core\Event\EventInterface;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Form\ContributionAmount;
+use LaterPay\Form\DonationAmount;
 use LaterPay\Helper\TimePass;
 use LaterPay\Helper\View;
 use LaterPay\Helper\Config;
@@ -17,6 +18,7 @@ use LaterPay\Form\Pass;
 use LaterPay\Form\GlobalPrice;
 use LaterPay\Form\PriceCategory;
 use LaterPay\Model\Contribution;
+use LaterPay\Model\Donation;
 
 /**
  * LaterPay pricing tab controller.
@@ -174,7 +176,7 @@ class Pricing extends TabAbstract
                 'locale'             => get_locale(),
                 'i18n'               => $i18n,
                 'currency'           => wp_json_encode(Config::getCurrencyConfig()),
-                'globalDefaultPrice' => View::formatNumber(get_option('laterpay_global_price')),
+                'globalDefaultPrice' => \LaterPay\Helper\Pricing::localizePrice(get_option('laterpay_global_price')),
                 'inCategoryLabel'    => __('All posts in category', 'laterpay'),
                 'time_passes_list'   => $this->getTimePassesJson($timePassesList),
                 'subscriptions_list' => $this->getSubscriptionsJson($subscriptionsList),
@@ -217,6 +219,12 @@ class Pricing extends TabAbstract
             return;
         }
 
+        if ($businessModel === 'donation') {
+            $this->renderDonationAmount();
+
+            return;
+        }
+
         wp_enqueue_script('laterpay-backend-pricing');
 
         $args = array(
@@ -251,8 +259,8 @@ class Pricing extends TabAbstract
             '_wpnonce'            => wp_create_nonce('laterpay_form'),
             'currency'            => $currency,
             'price'               => $price,
-            'price_formatted'     => View::formatNumber($price),
-            'price_placeholder'   => View::formatNumber(0),
+            'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($price),
+            'price_placeholder'   => \LaterPay\Helper\Pricing::localizePrice(0),
             'revenue_model'       => $revenueModel,
             'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($revenueModel),
             'ppu_checked'         => $revenueModel === 'ppu' || ( ! $revenueModel && $price < $currency['ppu_max']),
@@ -268,7 +276,7 @@ class Pricing extends TabAbstract
     }
 
     /**
-     * Renders Global Contribution Price form.
+     * Renders Global Contribution Amount form.
      *
      * @param array $args
      *
@@ -282,7 +290,7 @@ class Pricing extends TabAbstract
         $currency = Config::getCurrencyConfig();
 
         foreach ($amounts as $key => $value) {
-            $value['price_formatted']     = View::formatNumber($value['price']);
+            $value['localized_price']     = \LaterPay\Helper\Pricing::localizePrice($value['price']);
             $value['ppu_checked']         = $value['revenue_model'] === 'ppu'
                                             || ( ! $value['revenue_model'] && $value['price'] < $currency['ppu_max']);
             $value['ppu_selected']        = $value['revenue_model'] === 'ppu' || ! $value['revenue_model'];
@@ -299,7 +307,7 @@ class Pricing extends TabAbstract
             '_wpnonce'          => wp_create_nonce('laterpay_form'),
             'currency'          => $currency,
             'amounts'           => $amounts,
-            'price_placeholder' => View::formatNumber(0),
+            'price_placeholder' => \LaterPay\Helper\Pricing::localizePrice(0),
         );
 
         $args = array_merge($defaults, $args);
@@ -307,6 +315,48 @@ class Pricing extends TabAbstract
         $this
             ->loadAssets()
             ->render('admin/tabs/partials/contribution-amount', array('_' => $args));
+    }
+
+    /**
+     * Renders Global Donation Amount form.
+     *
+     * @param array $args
+     *
+     * @return void
+     */
+    protected function renderDonationAmount(array $args = array())
+    {
+        wp_enqueue_script('laterpay-backend-contribution');
+
+        $amounts  = Donation::getAmounts();
+        $currency = Config::getCurrencyConfig();
+
+        foreach ($amounts as $key => $value) {
+            $value['localized_price']     = \LaterPay\Helper\Pricing::localizePrice($value['price']);
+            $value['ppu_checked']         = $value['revenue_model'] === 'ppu'
+                                            || ( ! $value['revenue_model'] && $value['price'] < $currency['ppu_max']);
+            $value['ppu_selected']        = $value['revenue_model'] === 'ppu' || ! $value['revenue_model'];
+            $value['ppu_disabled']        = $value['price'] > $currency['ppu_max'];
+            $value['sis_checked']         = $value['revenue_model'] === 'sis';
+            $value['sis_disabled']        = $value['price'] < $currency['sis_min'];
+            $value['revenue_model_label'] = \LaterPay\Helper\Pricing::getRevenueLabel($value['revenue_model']);
+
+            $amounts[$key] = $value;
+        }
+
+        $defaults = array(
+            'header'            => $this->renderHeader(),
+            '_wpnonce'          => wp_create_nonce('laterpay_form'),
+            'currency'          => $currency,
+            'amounts'           => $amounts,
+            'price_placeholder' => \LaterPay\Helper\Pricing::localizePrice(0),
+        );
+
+        $args = array_merge($defaults, $args);
+
+        $this
+            ->loadAssets()
+            ->render('admin/tabs/partials/donation-amount', array('_' => $args));
     }
 
     /**
@@ -324,7 +374,7 @@ class Pricing extends TabAbstract
 
         foreach ($categoryPriceModel->getCategoriesWithDefinedPrice() as $cat) {
             $cat->revenue_model_label      = \LaterPay\Helper\Pricing::getRevenueLabel($cat->revenue_model);
-            $cat->category_price_formatted = View::formatNumber($cat->category_price);
+            $cat->category_localized_price = \LaterPay\Helper\Pricing::localizePrice($cat->category_price);
             $cat->ppu_selected             = $cat->revenue_model === 'ppu' ||
                                              ( ! $cat->revenue_model && $cat->category_price <= $currency['ppu_max']);
             $cat->ppu_disabled             = $cat->category_price > $currency['ppu_max'];
@@ -339,7 +389,7 @@ class Pricing extends TabAbstract
             '_wpnonce'          => wp_create_nonce('laterpay_form'),
             'currency'          => $currency,
             'categories'        => $categories,
-            'price_placeholder' => View::formatNumber(0),
+            'price_placeholder' => \LaterPay\Helper\Pricing::localizePrice(0),
             'price_default'     => number_format($price, 2, '.', ''),
             'ppu_checked'       => $revenueModel === 'ppu' || ( ! $revenueModel && $price < $currency['ppu_max']),
             'ppu_disabled'      => $price > $currency['ppu_max'],
@@ -395,7 +445,7 @@ class Pricing extends TabAbstract
             'access'          => TimePass::getOptions('access'),
             'revenue_model'   => TimePass::getDefaultOptions('revenue_model'),
             'price'           => $price,
-            'price_formatted' => View::formatNumber($price),
+            'localized_price' => \LaterPay\Helper\Pricing::localizePrice($price),
             'ppu_selected'    => $revenueModel === 'ppu',
             'ppu_disabled'    => $price > $currency['ppu_max'],
             'sis_selected'    => $revenueModel === 'sis',
@@ -424,7 +474,7 @@ class Pricing extends TabAbstract
 
         $args = array_merge($defaults, $args);
 
-        $args['price_formatted'] = View::formatNumber($args['price']);
+        $args['localized_price'] = \LaterPay\Helper\Pricing::localizePrice($args['price']);
         $args['period']          = TimePass::getPeriodOptions($args['period']);
 
         if (absint($args['duration']) > 1) {
@@ -471,7 +521,7 @@ class Pricing extends TabAbstract
             'access'          => TimePass::getOptions('access'),
             'revenue_model'   => TimePass::getDefaultOptions('revenue_model'),
             'price'           => $price,
-            'price_formatted' => View::formatNumber($price),
+            'localized_price' => \LaterPay\Helper\Pricing::localizePrice($price),
             'subscriptions'   => $subscriptions,
             'subscription'    => $this->renderSubscription(),
         );
@@ -499,7 +549,7 @@ class Pricing extends TabAbstract
 
         $args = array_merge($defaults, $args);
 
-        $args['price_formatted'] = View::formatNumber($args['price']);
+        $args['localized_price'] = \LaterPay\Helper\Pricing::localizePrice($args['price']);
 
         if (absint($args['duration']) > 1) {
             $args['period'] = TimePass::getPeriodOptions($args['period'], true);
@@ -553,6 +603,10 @@ class Pricing extends TabAbstract
                 $this->updateContributionAmount($event);
                 break;
 
+            case 'donation_amount':
+                $this->updateDonationAmount($event);
+                break;
+                
             case 'price_category_form':
                 $this->setCategoryDefaultPrice($event);
                 break;
@@ -678,7 +732,7 @@ class Pricing extends TabAbstract
 
         $delocalizedGlobalPrice  = $globalPriceForm->getFieldValue('laterpay_global_price');
         $globalPriceRevenueModel = $globalPriceForm->getFieldValue('laterpay_global_price_revenue_model');
-        $localizedGlobalPrice    = View::formatNumber($delocalizedGlobalPrice);
+        $localizedGlobalPrice    = \LaterPay\Helper\Pricing::localizePrice($delocalizedGlobalPrice);
 
         update_option('laterpay_global_price', $delocalizedGlobalPrice);
         update_option('laterpay_global_price_revenue_model', $globalPriceRevenueModel);
@@ -696,7 +750,7 @@ class Pricing extends TabAbstract
         $event->setResult(
             array(
                 'success'             => true,
-                'price'               => number_format($delocalizedGlobalPrice, 2, '.', ''),
+                'price'               => \LaterPay\Helper\Pricing::localizePrice($delocalizedGlobalPrice),
                 'localized_price'     => $localizedGlobalPrice,
                 'revenue_model'       => $globalPriceRevenueModel,
                 'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($globalPriceRevenueModel),
@@ -748,8 +802,8 @@ class Pricing extends TabAbstract
             $event->setResult(
                 array(
                     'success'             => true,
-                    'price'               => number_format($price, 2, '.', ''),
-                    'localized_price'     => View::formatNumber($price),
+                    'price'               => $price,
+                    'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($price),
                     'revenue_model'       => $revenueModel,
                     'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($revenueModel),
                     'message'             => __('Contribution amount saved.', 'laterpay'),
@@ -765,8 +819,8 @@ class Pricing extends TabAbstract
                 array(
                     'success'             => true,
                     'id'                  => $amount['id'],
-                    'price'               => number_format($amount['price'], 2, '.', ''),
-                    'localized_price'     => View::formatNumber($amount['price']),
+                    'price'               => $amount['price'],
+                    'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($amount['price']),
                     'revenue_model'       => $amount['revenue_model'],
                     'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($amount['revenue_model']),
                     'message'             => __('Contribution amount added.', 'laterpay'),
@@ -784,6 +838,85 @@ class Pricing extends TabAbstract
         );
     }
 
+    /**
+     * Update global donation amounts.
+     *
+     * @param EventInterface $event
+     *
+     * @return void
+     * @throws FormValidation
+     * @throws InvalidIncomingData
+     */
+    protected function updateDonationAmount(EventInterface $event)
+    {
+        $donationAmountForm = new DonationAmount;
+
+        if ( ! $donationAmountForm->isValid(Request::post())) {
+            $event->setResult(
+                array(
+                    'success' => false,
+                    'message' => __('An error occurred. Incorrect data provided.', 'laterpay'),
+                )
+            );
+            throw new FormValidation(get_class($donationAmountForm), $donationAmountForm->getErrors());
+        }
+
+        $id           = $donationAmountForm->getFieldValue('id');
+        $price        = $donationAmountForm->getFieldValue('price');
+        $revenueModel = $donationAmountForm->getFieldValue('revenue_model');
+        $operation    = $donationAmountForm->getFieldValue('operation');
+
+        if ($operation === 'delete' && Donation::deleteAmount($id)) {
+            $event->setResult(
+                array(
+                    'success' => true,
+                    'message' => __('Donation amount deleted.', 'laterpay'),
+                )
+            );
+
+            return;
+        }
+
+        if ($operation === 'update' && Donation::updateAmount($id, $price, $revenueModel)) {
+            $event->setResult(
+                array(
+                    'success'             => true,
+                    'price'               => $price,
+                    'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($price),
+                    'revenue_model'       => $revenueModel,
+                    'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($revenueModel),
+                    'message'             => __('Donation amount saved.', 'laterpay'),
+                )
+            );
+
+            return;
+        }
+
+        if ($operation === 'add') {
+            $amount = Donation::addAmount($price, $revenueModel);
+            $event->setResult(
+                array(
+                    'success'             => true,
+                    'id'                  => $amount['id'],
+                    'price'               => $amount['price'],
+                    'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($amount['price']),
+                    'revenue_model'       => $amount['revenue_model'],
+                    'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($amount['revenue_model']),
+                    'message'             => __('Donation amount added.', 'laterpay'),
+                )
+            );
+
+            return;
+        }
+
+        $event->setResult(
+            array(
+                'success' => false,
+                'message' => __('An error occurred. Please try again.', 'laterpay'),
+            )
+        );
+    }
+    
     /**
      * Set the category price, if a given category does not have a category
      * price yet.
@@ -809,10 +942,10 @@ class Pricing extends TabAbstract
             throw new FormValidation(get_class($priceCategoryForm), $errors['name']);
         }
 
-        $categoryID                = $priceCategoryForm->getFieldValue('category_id');
-        $term                      = get_term_by('id', $categoryID, 'category');
-        $categoryPriceRevenueModel = $priceCategoryForm->getFieldValue('laterpay_category_price_revenue_model');
-        $updatedPostIDs            = null;
+        $categoryID           = $priceCategoryForm->getFieldValue('category_id');
+        $term                 = get_term_by('id', $categoryID, 'category');
+        $categoryRevenueModel = $priceCategoryForm->getFieldValue('laterpay_category_price_revenue_model');
+        $updatedPostIDs       = null;
 
         if (empty($term->term_id)) {
             $event->setResult(
@@ -833,36 +966,36 @@ class Pricing extends TabAbstract
             $categoryPriceModel->setCategoryPrice(
                 $term->term_id,
                 $delocalizedCategoryPrice,
-                $categoryPriceRevenueModel
+                $categoryRevenueModel
             );
             $updatedPostIDs = \LaterPay\Helper\Pricing::applyCategoryPriceToPostsWithGlobalPrice($term->term_id);
         } else {
             $categoryPriceModel->setCategoryPrice(
                 $term->term_id,
                 $delocalizedCategoryPrice,
-                $categoryPriceRevenueModel,
+                $categoryRevenueModel,
                 $tableValueID
             );
         }
 
-        $localized_category_price = View::formatNumber($delocalizedCategoryPrice);
-        $currency                 = $this->config->get('currency.code');
+        $localizedCategoryPrice = \LaterPay\Helper\Pricing::localizePrice($delocalizedCategoryPrice);
+        $currency               = $this->config->get('currency.code');
 
         $event->setResult(
             array(
                 'success'             => true,
                 'category_name'       => $term->name,
                 'price'               => number_format($delocalizedCategoryPrice, 2, '.', ''),
-                'localized_price'     => $localized_category_price,
+                'localized_price'     => $localizedCategoryPrice,
                 'currency'            => $currency,
                 'category_id'         => $categoryID,
-                'revenue_model'       => $categoryPriceRevenueModel,
-                'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($categoryPriceRevenueModel),
+                'revenue_model'       => $categoryRevenueModel,
+                'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($categoryRevenueModel),
                 'updated_post_ids'    => $updatedPostIDs,
                 'message'             => sprintf(
                     __('All posts in category %1$s have a default price of %2$s %3$s now.', 'laterpay'),
                     $term->name,
-                    $localized_category_price,
+                    $localizedCategoryPrice,
                     $currency
                 ),
             )
@@ -1011,7 +1144,7 @@ class Pricing extends TabAbstract
                 // normalize prices and format with 2 digits in form
                 $voucherPrice        = isset($voucherPrices[$idx]) ? $voucherPrices[$idx] : 0;
                 $vouchersData[$code] = array(
-                    'price' => number_format(View::normalize($voucherPrice), 2, '.', ''),
+                    'price' => \LaterPay\Helper\Pricing::localizePrice($voucherPrice, array('normalize' => true)),
                     'title' => isset($voucherTitles[$idx]) ? $voucherTitles[$idx] : '',
                 );
             }
@@ -1022,8 +1155,8 @@ class Pricing extends TabAbstract
 
         $data['category_name']   = get_the_category_by_ID($data['access_category']);
         $htmlData                = $data;
-        $data['price']           = number_format($data['price'], 2, '.', '');
-        $data['localized_price'] = View::formatNumber($data['price']);
+        $data['price']           = \LaterPay\Helper\Pricing::localizePrice($data['price']);
+        $data['localized_price'] = \LaterPay\Helper\Pricing::localizePrice($data['price']);
         $vouchers                = Voucher::getTimePassVouchers($passID);
 
         $event->setResult(
@@ -1113,8 +1246,8 @@ class Pricing extends TabAbstract
 
         $data['category_name']   = get_the_category_by_ID($data['access_category']);
         $htmlData                = $data;
-        $data['price']           = number_format($data['price'], 2, '.', '');
-        $data['localized_price'] = View::formatNumber($data['price']);
+        $data['price']           = \LaterPay\Helper\Pricing::localizePrice($data['price']);
+        $data['localized_price'] = \LaterPay\Helper\Pricing::localizePrice($data['price']);
 
         $event->setResult(
             array(

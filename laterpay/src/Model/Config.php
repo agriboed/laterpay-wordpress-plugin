@@ -2,8 +2,6 @@
 
 namespace LaterPay\Model;
 
-use LaterPay\Model\ConfigInterface;
-
 /**
  * Simple property object.
  *

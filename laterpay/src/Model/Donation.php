@@ -15,88 +15,113 @@ use LaterPay\Core\Exception\InvalidIncomingData;
  */
 class Donation
 {
+    /**
+     * WordPress option name to store donation amounts data.
+     */
+    const OPTIONNAME = 'laterpay_donation_amount';
 
     /**
-     * Method returns previously saved user's amounts (if they exists)
-     * or sets and return default values from the global config
-     *
      * @return array
      */
     public static function getAmounts()
     {
         $return  = array();
         $default = Config::getSettingsSection('donation');
-        $amounts = get_option('laterpay_donation_amounts');
+        $current = get_option(static::OPTIONNAME);
 
-        // if option doesn't exists - update it using default values
-        if (false === $amounts || ! is_array($amounts)) {
-            update_option('laterpay_donation_amounts', $default['amounts']);
-            $amounts = $default['amounts'];
+        // if option doesn't exists then fill it using config values
+        if (false === $current || ! is_array($current)) {
+            update_option(static::OPTIONNAME, $default['amount']);
+            $current = $default['amount'];
         }
 
-        foreach ($amounts as $id => $amount) {
-            $return[$id] = array(
-                'price'         => (float)$amount['price'],
-                'revenue_model' => Pricing::ensureValidRevenueModel(
-                    $amount['revenue_model'],
-                    $amount['price']
-                )
+        // prepare data before return to client
+        foreach ($current as $key => $value) {
+            $return[$key] = array(
+                'id'            => $key,
+                'price'         => $value['price'],
+                'revenue_model' => $value['revenue_model'],
             );
         }
 
         return $return;
     }
 
+
     /**
-     *
      * @param $price
      * @param $revenueModel
-     * @param int $id
      *
-     * @return int
-     * @throws InvalidIncomingData
+     * @return array
      */
-    public static function saveAmount($price, $revenueModel, $id = null)
+    public static function addAmount($price, $revenueModel)
     {
-        $amounts = get_option(static::OPTION_NAME, array());
+        $current     = static::getAmounts();
+        $generatedId = end(array_keys($current)) + 1;
 
-        if ( ! is_float($price) || empty($revenueModel)) {
-            throw new InvalidIncomingData('Contribution amount is invalid');
-        }
-
-        // create a new one amount
-        if (null === $id) {
-            end($amounts);
-            $id = key($amounts) + 1;
-        }
-
-        $amounts[$id] = array(
-            'price'         => $price,
-            'revenue_model' => $revenueModel,
+        $current[$generatedId] = array(
+            'id'            => $generatedId,
+            'price'         => (float)$price,
+            'revenue_model' => Pricing::ensureValidRevenueModel(
+                $revenueModel,
+                $price
+            ),
         );
 
-        update_option(static::OPTION_NAME, $amounts);
+        update_option(static::OPTIONNAME, $current);
 
-        return $id;
+        return $current[$generatedId];
     }
 
     /**
+     * @param int $id
+     * @param float $price
+     * @param string $revenueModel
      *
+     * @return bool
+     *
+     * @throws InvalidIncomingData
+     */
+    public static function updateAmount($id, $price, $revenueModel)
+    {
+        $id      = (int)$id;
+        $current = static::getAmounts();
+
+        if (empty($price) || empty($revenueModel) || ! isset($current[$id])) {
+            throw new InvalidIncomingData('Contribution amount is invalid');
+        }
+
+        $current[$id] = array(
+            'id'            => $id,
+            'price'         => (float)$price,
+            'revenue_model' => $revenueModel,
+        );
+
+        update_option(static::OPTIONNAME, $current);
+
+        return true;
+    }
+
+    /**
      * @param int $id
      *
-     * @return void
+     * @return bool
+     *
      * @throws InvalidIncomingData
      */
     public static function deleteAmount($id)
     {
-        $amounts = get_option('laterpay_donation_amounts', array());
+        $id      = (int)$id;
+        $current = static::getAmounts();
 
-        if (null === $id) {
-            throw new InvalidIncomingData('Donation amount is invalid');
+        if ( ! isset($current[$id])) {
+            throw new InvalidIncomingData('Amount does not exist');
         }
 
-        unset($amounts[(int)$id]);
+        unset($current[$id]);
 
-        update_option('laterpay_donation_amounts', $amounts);
+        update_option(static::OPTIONNAME, $current);
+
+        return true;
     }
 }

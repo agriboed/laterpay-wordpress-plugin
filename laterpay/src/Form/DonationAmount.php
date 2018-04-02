@@ -5,13 +5,13 @@ namespace LaterPay\Form;
 use LaterPay\Helper\Config;
 
 /**
- * LaterPay Contribution Amount form class.
+ * LaterPay Donation Amount form class.
  *
  * Plugin Name: LaterPay
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class ContributionAmount extends FormAbstract
+class DonationAmount extends FormAbstract
 {
 
     /**
@@ -30,7 +30,7 @@ class ContributionAmount extends FormAbstract
                     'is_string',
                     'cmp' => array(
                         array(
-                            'like' => 'contribution_amount',
+                            'like' => 'donation_amount',
                         ),
                     ),
                 ),

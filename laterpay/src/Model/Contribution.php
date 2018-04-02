@@ -16,7 +16,7 @@ use LaterPay\Helper\Pricing;
 class Contribution
 {
     /**
-     * WordPress option name to storing contribution data.
+     * WordPress option name to store contribution amounts data.
      */
     const OPTIONNAME = 'laterpay_contribution_amount';
 

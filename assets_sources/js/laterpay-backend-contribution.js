@@ -124,15 +124,16 @@
          */
         saveAmount(form) {
             let amountShow = form.find(this.$o.amountShow),
-                amountEdit = form.find(this.$o.amountEdit),
                 priceInput = form.find(this.$o.priceInput),
                 priceDisplay = amountShow.find(this.$o.priceDisplay),
                 revenueModelDisplay = amountShow.find(this.$o.revenueModelDisplay);
 
-            console.log(form);
-
             // fix invalid prices
             this.validatePrice(form);
+
+            if (priceInput.val() <= 0) {
+                return;
+            }
 
             $.post(
                 ajaxurl,
@@ -161,7 +162,7 @@
         }
 
         /**
-         * Method closest editing Amount
+         * Method to hide closest editing Amount
          *
          * @param form target form
          */
@@ -307,6 +308,15 @@
          * Allowed creating maximum three forms.
          */
         checkAmountForms() {
+
+            // Disallow to delete the latest form.
+            // Two forms are here because delete button also is present in "Add Amount" template.
+            if ($(this.$o.amountForm).length === 2) {
+                $(this.$o.deleteButton).hide();
+            } else {
+                $(this.$o.deleteButton).fadeIn();
+            }
+
             if ($(this.$o.amountForm).length > 3) {
                 this.$o.addButton.hide();
                 return;
