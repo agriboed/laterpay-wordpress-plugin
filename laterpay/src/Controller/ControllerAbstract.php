@@ -3,7 +3,7 @@
 namespace LaterPay\Controller;
 
 use LaterPay\Model\ConfigInterface;
-use LaterPay\Helper\ViewInterface;
+use LaterPay\Core\ViewInterface;
 use LaterPay\Core\Logger\LoggerInterface;
 use LaterPay\Core\Event\SubscriberInterface;
 

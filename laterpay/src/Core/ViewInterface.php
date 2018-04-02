@@ -1,6 +1,6 @@
 <?php
 
-namespace LaterPay\Helper;
+namespace LaterPay\Core;
 
 /**
  * LaterPay interface.

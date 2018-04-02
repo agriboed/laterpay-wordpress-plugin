@@ -3,7 +3,6 @@
 namespace LaterPay\Core;
 
 use LaterPay\Model\ConfigInterface;
-use LaterPay\Helper\ViewInterface;
 
 /**
  * LaterPay core view.
