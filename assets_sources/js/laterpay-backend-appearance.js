@@ -84,8 +84,8 @@
 
                 // show/hide footer
                 $($o.overlayShowFooter)
-                .click(function(){
-                    processFooter($(this));
+                    .on('click', function() {
+                    switchFooter();
                 });
 
                 // save overlay settings
@@ -312,8 +312,8 @@
                 }
             },
 
-            processFooter = function($trigger) {
-                if ($trigger.is(':checked')) {
+            switchFooter = function() {
+                if ($($o.overlayShowFooter).is(':checked')) {
                     $($o.overlayFooter).show();
                 } else {
                     $($o.overlayFooter).hide();
@@ -347,13 +347,13 @@
                 $('.' + $o.linkHoverColor).val(settings.link_hover_color).change();
                 $('.' + $o.footerBgColor).val(settings.footer_bg_color).change();
 
-                if (true === settings.show_footer) {
-                    $('.' + $o.showFooter).attr('checked', 'checked');
-                }
-                else
-                {
-                    $('.' + $o.showFooter).removeAttr('checked');
-                }
+                let showFooter = $('.' + $o.showFooter);
+
+                ('1' === settings.show_footer) ?
+                    showFooter.attr('checked', 'checked') :
+                    showFooter.removeAttr('checked');
+
+                switchFooter()
             },
 
             initializePage = function() {

@@ -31,7 +31,7 @@ class Appearance
             'button_text_color' => '#FFFFFF',
             'link_main_color'   => '#01A99D',
             'link_hover_color'  => '#01766D',
-            'show_footer'       => true,
+            'show_footer'       => '1',
             'footer_bg_color'   => '#EEEFEF',
         );
 
