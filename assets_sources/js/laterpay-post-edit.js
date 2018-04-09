@@ -57,7 +57,7 @@
                 // (function is only triggered 800ms after the keyup)
                 $o.priceInput
                     .keyup(
-                        debounce(function() {
+                        $().debounce(function() {
                             setPrice($(this).val());
                         }, 800)
                     );
@@ -338,9 +338,9 @@
                                 var price = parseFloat(category.category_price).toFixed(2) + ' ' + lpVars.currency;
 
                                 $o.categoriesList.append(
-                                    $('<li class="lp_price-type-categorized__item">')
+                                    $('<li class="lp_price-type__detailsItem">')
                                         .data('category', category.category_id)
-                                        .append($('<a href="#">')
+                                        .append($('<a href="#" class="lp_price-type__selectCategory">')
                                             .data('price', category.category_price)
                                             .data('revenue-model', category.revenue_model)
                                             .append($('<span>')
@@ -556,21 +556,6 @@
                 }
 
                 return true;
-            },
-
-            // throttle the execution of a function by a given delay
-            debounce = function(fn, delay) {
-                var timer;
-                return function() {
-                    var context = this,
-                        args    = arguments;
-
-                    clearTimeout(timer);
-
-                    timer = setTimeout(function() {
-                        fn.apply(context, args);
-                    }, delay);
-                };
             },
 
             initializePage = function() {

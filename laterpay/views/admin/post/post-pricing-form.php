@@ -39,18 +39,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				<?php esc_html_e( 'Pay Now', 'laterpay' ); ?>
             </label>
-        </div><!--
-	 --><div class="lp_layout__item lp_7/16">
-            <input type="number"
-                   min="0"
-                   step="0.01"
+        </div>
+
+        <div class="lp_layout__item lp_7/16">
+            <input type="text"
                    id="lp_js_postPriceInput"
                    class="lp_input lp_post-price-input lp_ml-"
                    name="post-price"
                    value="<?php echo esc_attr( $_['localized_price'] ); ?>"
 				<?php echo ! $_['has_individual_price'] ? 'disabled' : ''; ?>
-                   placeholder="<?php esc_attr_e( '0.00', 'laterpay' ); ?>"></div><!--
-        --><div class="lp_layout__item lp_3/16">
+                   placeholder="<?php esc_attr_e( '0.00', 'laterpay' ); ?>"></div>
+
+        <div class="lp_layout__item lp_3/16">
             <div class="lp_currency"><?php echo esc_html( $_['currency']['code'] ); ?></div>
         </div>
     </div>
@@ -71,7 +71,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <a href="#"
                id="lp_js_useIndividualPrice"
                class="lp_js_priceTypeButton lp_price-type__link">
-				<?php esc_html_e( 'Individual Price', 'laterpay' ); ?>
+				<?php echo wp_kses_post(__( 'Individual<br>Price', 'laterpay' )); ?>
             </a>
 
         </li>
@@ -83,7 +83,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <a href="#"
                id="lp_js_useCategoryDefaultPrice"
                class="lp_js_priceTypeButton lp_price-type__link">
-				<?php esc_html_e( 'Category Default Price', 'laterpay' ); ?>
+				<?php echo wp_kses_post( __('Category<br>Default Price', 'laterpay' )); ?>
             </a>
 
         </li>
@@ -102,11 +102,11 @@ if ( ! defined( 'ABSPATH' ) ) {
         </li>
     </ul>
 
-    <div id="lp_js_priceTypeDetails" class="lp_price-type__details">
+    <div id="lp_js_priceTypeDetails">
         <div
 			<?php echo ( ! $_['has_individual_dynamic_price'] ) ? 'style="display: none"' : ''; ?>
                 id="lp_js_priceTypeDetailsIndividualPrice"
-                class="lp_js_useIndividualPrice lp_js_priceTypeDetailsSection lp_price-type__details-item">
+                class="lp_js_useIndividualPrice lp_js_priceTypeDetailsSection">
             <input type="hidden" name="start_price">
             <input type="hidden" name="end_price">
             <input type="hidden" name="change_start_price_after_days">
@@ -127,13 +127,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                     id="lp_js_postDefaultCategoryInput"
                     value="<?php echo esc_attr( $_['post_default_category'] ); ?>">
 
-            <ul class="lp_js_priceTypeDetailsCategoryDefaultPriceList lp_price-type-categorized__list">
+            <ul class="lp_js_priceTypeDetailsCategoryDefaultPriceList lp_price-type__detailsList">
 				<?php foreach ( $_['category_prices'] as $category ) : ?>
                     <li data-category="<?php echo esc_attr( $category['category_id'] ); ?>"
-                        class="lp_js_priceTypeDetailsCategoryDefaultPriceItem lp_price-type-categorized__item
+                        class="lp_price-type__detailsItem lp_js_priceTypeDetailsCategoryDefaultPriceItem
 						<?php echo $category['selected'] ? ' lp_is-selectedCategory' : ''; ?>">
 
                         <a href="#"
+                           class="lp_price-type__selectCategory"
                            data-price="<?php echo esc_attr( $category['category_price'] ); ?>"
                            data-revenue-model="<?php echo esc_attr( $category['revenue_model'] ); ?>">
                             <span><?php echo esc_html( $category['category_price'] ); ?><?php echo esc_html( $_['currency']['code'] ); ?></span>

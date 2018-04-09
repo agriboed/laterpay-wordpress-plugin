@@ -3,10 +3,10 @@
 namespace LaterPay\Controller\Admin\Post;
 
 use LaterPay\Controller\ControllerAbstract;
+use LaterPay\Core\Bootstrap;
 use LaterPay\Helper\User;
 use LaterPay\Helper\Config;
 use LaterPay\Helper\Pricing;
-use LaterPay\Helper\View;
 use LaterPay\Model\CategoryPrice;
 use LaterPay\Form\Post;
 use LaterPay\Form\DynamicPricingData;
@@ -15,6 +15,7 @@ use LaterPay\Core\Request;
 use LaterPay\Core\Exception\PostNotFound;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\InvalidIncomingData;
+use LaterPay\Model\Contribution;
 
 /**
  * LaterPay post metabox controller.
@@ -52,11 +53,11 @@ class Metabox extends ControllerAbstract
             ),
             'laterpay_admin_enqueue_styles_post_edit'      => array(
                 array('laterpay_on_admin_view', 200),
-                array('loadAssets'),
+                array('registerAssets'),
             ),
             'laterpay_admin_enqueue_styles_post_new'       => array(
                 array('laterpay_on_admin_view', 200),
-                array('loadAssets'),
+                array('registerAssets'),
             ),
             'wp_ajax_laterpay_reset_post_publication_date' => array(
                 array('laterpay_on_admin_view', 200),
@@ -82,7 +83,7 @@ class Metabox extends ControllerAbstract
      *
      * @return void
      */
-    public function loadAssets()
+    public function registerAssets()
     {
         global $post_type;
 
@@ -90,15 +91,13 @@ class Metabox extends ControllerAbstract
             return;
         }
 
-        wp_register_style(
-            'laterpay-post-edit',
-            $this->config->get('css_url') . 'laterpay-post-edit.css',
+        wp_register_script(
+            'laterpay-backend',
+            $this->config->get('js_url') . 'laterpay-backend.js',
             array(),
-            $this->config->get('version')
+            $this->config->get('version'),
+            true
         );
-
-        wp_enqueue_style('laterpay-post-edit');
-
         wp_register_script(
             'laterpay-d3',
             $this->config->get('js_url') . 'vendor/d3.min.js',
@@ -120,37 +119,12 @@ class Metabox extends ControllerAbstract
             $this->config->get('version'),
             true
         );
-        wp_enqueue_script('laterpay-d3');
-        wp_enqueue_script('laterpay-d3-dynamic-pricing-widget');
-        wp_enqueue_script('laterpay-post-edit');
-
-        // pass localized strings and variables to scripts
-        wp_localize_script(
-            'laterpay-post-edit',
-            'laterpay_post_edit',
-            array(
-                'ajaxUrl'                  => admin_url('admin-ajax.php'),
-                'globalDefaultPrice'       => (float)get_option('laterpay_global_price'),
-                'locale'                   => get_locale(),
-                'i18nTeaserError'          => __(
-                    'Paid posts require some teaser content. Please fill in the Teaser Content field.',
-                    'laterpay'
-                ),
-                'i18nAddDynamicPricing'    => __('Add dynamic pricing', 'laterpay'),
-                'i18nRemoveDynamicPricing' => __('Remove dynamic pricing', 'laterpay'),
-                'l10n_print_after'         => 'jQuery.extend(lpVars, laterpay_post_edit)',
-            )
-        );
-        wp_localize_script(
-            'laterpay-d3-dynamic-pricing-widget',
-            'laterpay_d3_dynamic_pricing_widget',
-            array(
-                'currency'         => $this->config->get('currency.code'),
-                'i18nDefaultPrice' => __('default price', 'laterpay'),
-                'i18nDays'         => __('days', 'laterpay'),
-                'i18nToday'        => __('Today', 'laterpay'),
-                'l10n_print_after' => 'jQuery.extend(lpVars, laterpay_d3_dynamic_pricing_widget)',
-            )
+        wp_register_script(
+            'laterpay-post-edit-contribution',
+            $this->config->get('js_url') . 'laterpay-post-edit-contribution.js',
+            array('laterpay-backend', 'jquery'),
+            $this->config->get('version'),
+            true
         );
     }
 
@@ -163,6 +137,11 @@ class Metabox extends ControllerAbstract
      */
     public function addTeaserMetaBox()
     {
+        // show teaser box only with paid model
+        if ('paid' !== get_option('laterpay_business_model')) {
+            return;
+        }
+
         $postTypes = $this->config->get('content.enabled_post_types');
 
         /**
@@ -190,7 +169,13 @@ class Metabox extends ControllerAbstract
      */
     public function addPricingMetaBox()
     {
-        $postTypes = $this->config->get('content.enabled_post_types');
+        $postTypes     = $this->config->get('content.enabled_post_types');
+        $businessModel = get_option('laterpay_business_model');
+        $callback      = array($this, 'renderPostPricingForm');
+
+        if ($businessModel === 'contribution') {
+            $callback = array($this, 'renderContributionPricingForm');
+        }
 
         /**
          * @var $postTypes array
@@ -200,7 +185,7 @@ class Metabox extends ControllerAbstract
             add_meta_box(
                 'lp_post-pricing',
                 __('Pricing for this Post', 'laterpay'),
-                array($this, 'renderPostPricingForm'),
+                $callback,
                 $type,
                 'side',
                 'high'
@@ -215,7 +200,7 @@ class Metabox extends ControllerAbstract
      *
      * @return void
      */
-    public function renderTeaserContentBox($post)
+    public function renderTeaserContentBox(\WP_Post $post)
     {
         if (! User::can('laterpay_edit_teaser_content', $post)) {
             $this->logger->warning(
@@ -300,7 +285,7 @@ class Metabox extends ControllerAbstract
      *
      * @return void
      */
-    public function renderPostPricingForm($post)
+    public function renderPostPricingForm(\WP_Post $post)
     {
         if (! User::can('laterpay_edit_individual_price', $post)) {
             $this->logger->warning(
@@ -313,6 +298,40 @@ class Metabox extends ControllerAbstract
 
             return;
         }
+
+        wp_enqueue_style('laterpay-admin');
+        wp_enqueue_script('laterpay-d3');
+        wp_enqueue_script('laterpay-d3-dynamic-pricing-widget');
+        wp_enqueue_script('laterpay-post-edit');
+
+        // pass localized strings and variables to scripts
+        wp_localize_script(
+            'laterpay-post-edit',
+            'laterpay_post_edit',
+            array(
+                'ajaxUrl'                  => admin_url('admin-ajax.php'),
+                'globalDefaultPrice'       => (float)get_option('laterpay_global_price'),
+                'locale'                   => get_locale(),
+                'i18nTeaserError'          => __(
+                    'Paid posts require some teaser content. Please fill in the Teaser Content field.',
+                    'laterpay'
+                ),
+                'i18nAddDynamicPricing'    => __('Add dynamic pricing', 'laterpay'),
+                'i18nRemoveDynamicPricing' => __('Remove dynamic pricing', 'laterpay'),
+                'l10n_print_after'         => 'jQuery.extend(lpVars, laterpay_post_edit)',
+            )
+        );
+        wp_localize_script(
+            'laterpay-d3-dynamic-pricing-widget',
+            'laterpay_d3_dynamic_pricing_widget',
+            array(
+                'currency'         => $this->config->get('currency.code'),
+                'i18nDefaultPrice' => __('default price', 'laterpay'),
+                'i18nDays'         => __('days', 'laterpay'),
+                'i18nToday'        => __('Today', 'laterpay'),
+                'l10n_print_after' => 'jQuery.extend(lpVars, laterpay_d3_dynamic_pricing_widget)',
+            )
+        );
 
         $postPrices = get_post_meta($post->ID, 'laterpay_post_prices', true);
 
@@ -375,7 +394,7 @@ class Metabox extends ControllerAbstract
                 $ppuDisabled = true;
             }
 
-            if ($price > $currency['sis_min']) {
+            if ($price < $currency['sis_min']) {
                 $sisDisabled = true;
             }
         } else {
@@ -435,6 +454,118 @@ class Metabox extends ControllerAbstract
     }
 
     /**
+     * @param \WP_Post $post
+     *
+     * @return void
+     */
+    public function renderContributionPricingForm(\WP_Post $post)
+    {
+        wp_enqueue_style('laterpay-admin');
+        wp_enqueue_script('laterpay-post-edit-contribution');
+
+        // get currency settings for current region
+        $currency = Config::getCurrencyConfig();
+        $postID   = (int)$post->ID;
+
+        /**
+         * @var $postModel \LaterPay\Model\Post
+         */
+        $postModel            = Bootstrap::get('\LaterPay\Model\Post');
+        $individualAmountList = $postModel->getPrice($postID);
+
+        foreach ($individualAmountList as $key => $value) {
+            $value['revenue_model_label'] = Pricing::getRevenueLabel($value['revenue_model']);
+            $value['localized_price']     = Pricing::localizePrice($value['price']);
+
+            $individualAmountList[$key] = $value;
+        }
+
+        /**
+         * @var $contributionModel Contribution
+         */
+        $contributionModel = Bootstrap::get('\LaterPay\Model\Contribution');
+        $globalAmountList  = $contributionModel->getAmounts();
+
+        foreach ($globalAmountList as $key => $value) {
+            $value['revenue_model_label'] = Pricing::getRevenueLabel($value['revenue_model']);
+            $value['localized_price']     = Pricing::localizePrice($value['price']);
+
+            $globalAmountList[$key] = $value;
+        }
+
+        $postPriceType = Pricing::getPostPriceType($post->ID);
+
+        $args = array(
+            '_wpnonce'        => wp_create_nonce($this->config->get('plugin_base_name')),
+            'post_id'         => $post->ID,
+            'post_price_type' => $postPriceType,
+            'individual_list' => $individualAmountList,
+            'global_list'     => $globalAmountList,
+            'currency'        => $currency,
+            'locale'          => get_locale(),
+            'type' => $postPriceType === Pricing::TYPE_GLOBAL_CONTRIBUTION ? 'global' : 'individual',
+        );
+
+        $this->render('admin/post/post-contribution-form', array('_' => $args));
+    }
+
+    /**
+     * @param \WP_Post $post
+     *
+     * @return void
+     */
+    public function renderDonationPricingForm(\WP_Post $post)
+    {
+        wp_enqueue_style('laterpay-admin');
+        wp_enqueue_script('laterpay-post-edit-contribution');
+
+        // get currency settings for current region
+        $currency = Config::getCurrencyConfig();
+        $postID   = (int)$post->ID;
+
+        /**
+         * @var $postModel \LaterPay\Model\Post
+         */
+        $postModel            = Bootstrap::get('\LaterPay\Model\Post');
+        $individualAmountList = $postModel->getPrice($postID);
+
+        foreach ($individualAmountList as $key => $value) {
+            $value['revenue_model_label'] = Pricing::getRevenueLabel($value['revenue_model']);
+            $value['localized_price']     = Pricing::localizePrice($value['price']);
+
+            $individualAmountList[$key] = $value;
+        }
+
+        /**
+         * @var $contributionModel Contribution
+         */
+        $contributionModel = Bootstrap::get('\LaterPay\Model\Donation');
+        $globalAmountList  = $contributionModel->getAmounts();
+
+        foreach ($globalAmountList as $key => $value) {
+            $value['revenue_model_label'] = Pricing::getRevenueLabel($value['revenue_model']);
+            $value['localized_price']     = Pricing::localizePrice($value['price']);
+
+            $globalAmountList[$key] = $value;
+        }
+
+        $postPriceType = Pricing::getPostPriceType($post->ID);
+
+        $args = array(
+            '_wpnonce'        => wp_create_nonce($this->config->get('plugin_base_name')),
+            'post_id'         => $post->ID,
+            'post_price_type' => $postPriceType,
+            'individual_list' => $individualAmountList,
+            'global_list'     => $globalAmountList,
+            'currency'        => $currency,
+            'locale'          => get_locale(),
+            'type' => $postPriceType === Pricing::TYPE_GLOBAL_CONTRIBUTION ? 'global' : 'individual',
+        );
+
+        $this->render('admin/post/post-contribution-form', array('_' => $args));
+    }
+
+    /**
      * Save LaterPay post data.
      *
      * @wp-hook save_post, edit_attachments
@@ -460,13 +591,7 @@ class Metabox extends ControllerAbstract
             throw new PostNotFound($postID);
         }
 
-        $postForm  = new Post(Request::post());
-        $condition = array(
-            'verify_nonce' => array(
-                'action' => $this->config->get('plugin_base_name'),
-            ),
-        );
-        $postForm->addValidation('laterpay_teaser_content_box_nonce', $condition);
+        $postForm = new Post(Request::post());
 
         if (! $postForm->isValid()) {
             throw new FormValidation(get_class($postForm), $postForm->getErrors());
@@ -475,81 +600,109 @@ class Metabox extends ControllerAbstract
         // no rights to edit laterpay_edit_teaser_content -> do nothing
         if (User::can('laterpay_edit_teaser_content', $postID)) {
             $teaser = $postForm->getFieldValue('laterpay_post_teaser');
-            \LaterPay\Helper\Post::addTeaserToThePost($post, $teaser);
+
+            if (null !== $teaser) {
+                \LaterPay\Helper\Post::addTeaserToThePost($post, $teaser);
+            }
         }
 
         // no rights to edit laterpay_edit_individual_price -> do nothing
-        if (User::can('laterpay_edit_individual_price', $postID)) {
-            // postmeta values array
-            $metaValues = array();
-
-            // apply global default price, if pricing type is not defined
-            $post_price_type    = $postForm->getFieldValue('post_price_type');
-            $type               = $post_price_type ?: Pricing::TYPE_GLOBAL_DEFAULT_PRICE;
-            $metaValues['type'] = $type;
-
-            // apply (static) individual price
-            if ($type === Pricing::TYPE_INDIVIDUAL_PRICE) {
-                $metaValues['price'] = $postForm->getFieldValue('post-price');
-            }
-
-            // apply revenue model
-            if (in_array(
-                $type,
-                array(
-                    Pricing::TYPE_INDIVIDUAL_PRICE,
-                    Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
-                ),
-                true
-            )) {
-                $metaValues['revenue_model'] = $postForm->getFieldValue('post_revenue_model');
-            }
-
-            // apply dynamic individual price
-            if ($type === Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE) {
-                $startPrice = $postForm->getFieldValue('start_price');
-                $endPrice   = $postForm->getFieldValue('end_price');
-
-                if ($startPrice !== null && $endPrice !== null) {
-                    list(
-                        $metaValues['start_price'],
-                        $metaValues['end_price'],
-                        $metaValues['price_range_type']
-                        ) = Pricing::adjustDynamicPricePoints($startPrice, $endPrice);
-                }
-
-                if ($postForm->getFieldValue('change_start_price_after_days')) {
-                    $metaValues['change_start_price_after_days'] =
-                        $postForm->getFieldValue('change_start_price_after_days');
-                }
-
-                if ($postForm->getFieldValue('transitional_period_end_after_days')) {
-                    $metaValues['transitional_period_end_after_days'] =
-                        $postForm->getFieldValue('transitional_period_end_after_days');
-                }
-
-                if ($postForm->getFieldValue('reach_end_price_after_days')) {
-                    $metaValues['reach_end_price_after_days'] =
-                        $postForm->getFieldValue('reach_end_price_after_days');
-                }
-            }
-
-            // apply category default price of given category
-            if ($type === Pricing::TYPE_CATEGORY_DEFAULT_PRICE &&
-                $postForm->getFieldValue('post_default_category')) {
-                $category_id               =
-                    $postForm->getFieldValue('post_default_category');
-                $metaValues['category_id'] = $category_id;
-            }
-
-            $this->setPostMeta(
-                'laterpay_post_prices',
-                $metaValues,
-                $postID
-            );
+        if (! User::can('laterpay_edit_individual_price', $postID)) {
+            return;
         }
+
+        // postmeta values array
+        $metaValues = array();
+
+        // apply global default price, if pricing type is not defined
+        $postPriceType      = $postForm->getFieldValue('post_price_type');
+        $type               = $postPriceType ?: Pricing::TYPE_GLOBAL_DEFAULT_PRICE;
+        $metaValues['type'] = $type;
+
+        // apply (static) individual price
+        if ($type === Pricing::TYPE_INDIVIDUAL_PRICE) {
+            $metaValues['price'] = $postForm->getFieldValue('post-price');
+        }
+
+        // apply revenue model
+        if (in_array(
+            $type,
+            array(
+                Pricing::TYPE_INDIVIDUAL_PRICE,
+                Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
+            ),
+            true
+        )) {
+            $metaValues['revenue_model'] = $postForm->getFieldValue('post_revenue_model');
+        }
+
+        // apply dynamic individual price
+        if ($type === Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE) {
+            $startPrice = $postForm->getFieldValue('start_price');
+            $endPrice   = $postForm->getFieldValue('end_price');
+
+            if ($startPrice !== null && $endPrice !== null) {
+                list(
+                    $metaValues['start_price'],
+                    $metaValues['end_price'],
+                    $metaValues['price_range_type']
+                    ) = Pricing::adjustDynamicPricePoints($startPrice, $endPrice);
+            }
+
+            if ($postForm->getFieldValue('change_start_price_after_days')) {
+                $metaValues['change_start_price_after_days'] =
+                    $postForm->getFieldValue('change_start_price_after_days');
+            }
+
+            if ($postForm->getFieldValue('transitional_period_end_after_days')) {
+                $metaValues['transitional_period_end_after_days'] =
+                    $postForm->getFieldValue('transitional_period_end_after_days');
+            }
+
+            if ($postForm->getFieldValue('reach_end_price_after_days')) {
+                $metaValues['reach_end_price_after_days'] =
+                    $postForm->getFieldValue('reach_end_price_after_days');
+            }
+        }
+
+        // apply category default price of given category
+        if ($type === Pricing::TYPE_CATEGORY_DEFAULT_PRICE &&
+            $postForm->getFieldValue('post_default_category')) {
+            $category_id               =
+                $postForm->getFieldValue('post_default_category');
+            $metaValues['category_id'] = $category_id;
+        }
+
+        if ($type === Pricing::TYPE_INDIVIDUAL_CONTRIBUTION) {
+            $metaValues['prices'] = $postForm->getFieldValue('post_amount');
+        }
+
+        $prices = isset($metaValues['prices']) ? $metaValues['prices'] : array();
+
+        /**
+         * @todo
+         *
+         * @var $postModel \LaterPay\Model\Post
+         */
+        $postModel = Bootstrap::get('\LaterPay\Model\Post');
+        $postModel->updatePrice($postID, $prices, $type);
+
+        $this->setPostMeta(
+            'laterpay_post_prices',
+            $metaValues,
+            $postID
+        );
     }
 
+    /**
+     * Set post meta data.
+     *
+     * @param string $name meta name
+     * @param string|array $value new meta value
+     * @param integer $postID post id
+     *
+     * @return bool|int false failure, post_meta_id on insert / update, or true on success
+     */
     /**
      * Set post meta data.
      *
@@ -657,7 +810,6 @@ class Metabox extends ControllerAbstract
      */
     public function getDynamicPricingData(EventInterface $event)
     {
-
         $dynamicPricingDataForm = new DynamicPricingData();
 
         $event->setResult(

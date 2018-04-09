@@ -56,7 +56,7 @@ abstract class FormAbstract
         // convert to string
         'to_string'  => 'strval',
         // delocalize
-        'delocalize' => array('LaterPay\Helper\View', 'normalize'),
+        'delocalize' => array('LaterPay\Helper\Pricing', 'normalizePrice'),
         // convert to float
         'to_float'   => 'floatval',
         // replace part of value with other
@@ -119,6 +119,9 @@ abstract class FormAbstract
         $data['validators'] = isset($options['validators']) ? $options['validators'] : array();
         // filters ( sanitize)
         $data['filters'] = isset($options['filters']) ? $options['filters'] : array();
+        // filter fields recursively
+        $data['recursively_filters'] = isset($options['recursively_filters']) ?
+            $options['recursively_filters'] : array();
         // default value
         $data['value'] = isset($options['default_value']) ? $options['default_value'] : null;
         // do not apply filters to null value
@@ -260,6 +263,7 @@ abstract class FormAbstract
     public function isValid(array $data = array())
     {
         $this->errors = array();
+
         // If data passed set data to the form
         if (! empty($data)) {
             $this->setData($data);
@@ -274,23 +278,24 @@ abstract class FormAbstract
                 /**
                  * @var array $validators
                  */
-                foreach ($validators as $validator_key => $validator_value) {
-                    $validator_option = is_int($validator_key) ? $validator_value : $validator_key;
-                    $validator_params = is_int($validator_key) ? null : $validator_value;
+                foreach ($validators as $validatorKey => $validatorValue) {
+                    $validatorOption = is_int($validatorKey) ? $validatorValue : $validatorKey;
+                    $validatorParams = is_int($validatorKey) ? null : $validatorValue;
 
                     // continue loop if field can be null and has null value
                     if ($this->checkIfFieldCanBeNull($name) && $this->getFieldValue($name) === null) {
                         continue;
                     }
 
-                    $is_valid = $this->validateValue($field['value'], $validator_option, $validator_params);
-                    if (! $is_valid) {
+                    $isValid = $this->validateValue($field['value'], $validatorOption, $validatorParams);
+
+                    if (! $isValid) {
                         // data not valid
                         $this->errors[] = array(
                             'name'      => $name,
                             'value'     => $field['value'],
-                            'validator' => $validator_option,
-                            'options'   => $validator_params,
+                            'validator' => $validatorOption,
+                            'options'   => $validatorParams,
                         );
                     }
                 }
@@ -300,6 +305,9 @@ abstract class FormAbstract
         return empty($this->errors);
     }
 
+    /**
+     * @return array
+     */
     public function getErrors()
     {
         $aux          = $this->errors;
@@ -318,28 +326,82 @@ abstract class FormAbstract
         $fields = $this->getFields();
 
         // get all form filters
-        if (is_array($fields)) {
-            foreach ($fields as $name => $field) {
-                $filters = $field['filters'];
-                /**
-                 * @var array $filters
-                 */
-                foreach ($filters as $filter_key => $filter_value) {
-                    $filter_option = is_int($filter_key) ? $filter_value : $filter_key;
-                    $filter_params = is_int($filter_key) ? null : $filter_value;
+        if (! is_array($fields)) {
+            return;
+        }
 
-                    // continue loop if field can be null and has null value
-                    if ($this->checkIfFieldCanBeNull($name) && $this->getFieldValue($name) === null) {
-                        continue;
-                    }
+        foreach ($fields as $name => $field) {
+            $filters = $field['filters'];
 
-                    $this->setFieldValue(
-                        $name,
-                        $this->sanitizeValue($this->getFieldValue($name), $filter_option, $filter_params)
-                    );
+            /**
+             * @var array $filters
+             */
+            foreach ($filters as $filter_key => $filter_value) {
+                $filter_option = is_int($filter_key) ? $filter_value : $filter_key;
+                $filter_params = is_int($filter_key) ? null : $filter_value;
+
+                // continue loop if field can be null and has null value
+                if ($this->checkIfFieldCanBeNull($name) && $this->getFieldValue($name) === null) {
+                    continue;
                 }
+
+                $this->setFieldValue(
+                    $name,
+                    $this->sanitizeValue($this->getFieldValue($name), $filter_option, $filter_params)
+                );
+            }
+
+            $this->sanitizeArrayValues($name, $field);
+        }
+    }
+
+    /**
+     * @param array $array
+     * @param array $filters
+     *
+     * @return array
+     */
+    protected function sanitizeRecursively(array $array, array $filters)
+    {
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                return $this->sanitizeRecursively($value, $filters);
+            }
+
+            if (! isset($filters[$key])) {
+                continue;
+            }
+
+            foreach ($filters[$key] as $filter_key => $filter_value) {
+                $filter_option = is_int($filter_key) ? $filter_value : $filter_key;
+                $filter_params = is_int($filter_key) ? null : $filter_value;
+                $array[$key]   = $this->sanitizeValue($value, $filter_option, $filter_params);
             }
         }
+
+        return $array;
+    }
+
+    /**
+     * @param $name
+     * @param $field
+     */
+    protected function sanitizeArrayValues($name, $field)
+    {
+        $filters = $field['recursively_filters'];
+
+        if (empty($filters) || ! is_array($field['value'])) {
+            return;
+        }
+
+        foreach ($field['value'] as $key => $value) {
+            $field['value'][$key] = $this->sanitizeRecursively($value, $filters);
+        }
+
+        $this->setFieldValue(
+            $name,
+            $field['value']
+        );
     }
 
     /**
@@ -411,11 +473,11 @@ abstract class FormAbstract
                 if ($validatorParams && is_array($validatorParams)) {
                     // OR realization, all validators inside validators set used like AND
                     // if at least one set correct then validation passed
-                    foreach ($validatorParams as $validators_set) {
+                    foreach ($validatorParams as $validatorsSet) {
                         /**
-                         * @var array $validators_set
+                         * @var array $validatorsSet
                          */
-                        foreach ($validators_set as $operator => $param) {
+                        foreach ($validatorsSet as $operator => $param) {
                             $isValid = $this->compareValues($operator, $value, $param);
                             // if comparison not valid break the loop and go to the next validation set
                             if (! $isValid) {

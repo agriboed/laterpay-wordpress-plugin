@@ -48,9 +48,9 @@ if ( ! defined('ABSPATH')) {
 
                             <div class="lp_price-panel__buttons">
                                 <a href="#"
-                                   class="lp_edit-link--bold lp_rounded--right lp_js_delete" data-icon="g"></a>
-                                <a href="#"
                                    class="lp_edit-link--bold lp_js_edit" data-icon="d"></a>
+                                <a href="#"
+                                   class="lp_edit-link--bold lp_rounded--right lp_js_delete" data-icon="g"></a>
                             </div>
                         </div>
 
@@ -66,12 +66,10 @@ if ( ! defined('ABSPATH')) {
                                         <?php esc_html_e('Price', 'laterpay'); ?>
                                     </th>
                                     <td>
-                                        <input type="number"
-                                               min="0.01"
-                                               step="0.01"
+                                        <input type="text"
                                                class="lp_js_priceInput lp_input lp_number-input"
                                                name="price"
-                                               value="<?php echo esc_attr($amount['price']); ?>"
+                                               value="<?php echo esc_attr($amount['localized_price']); ?>"
                                                placeholder="<?php echo esc_attr($_['price_placeholder']); ?>">
                                         <span class="lp_js_currency lp_currency">
                                             <?php echo esc_html($_['currency']['code']); ?>
@@ -129,7 +127,7 @@ if ( ! defined('ABSPATH')) {
                     <input type="hidden" name="form" value="donation_amount">
                     <input type="hidden" name="action" value="laterpay_pricing">
                     <input type="hidden" name="id" value="">
-                    <input type="hidden" name="operation" value="add">
+                    <input type="hidden" name="operation" value="create">
                     <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($_['_wpnonce']); ?>">
 
                     <div class="lp_js_amountShow lp_greybox lp_price-panel">
@@ -146,10 +144,10 @@ if ( ! defined('ABSPATH')) {
 						</span>
 
                         <div class="lp_price-panel__buttons">
-                            <a href="#" class="lp_edit-link--bold lp_rounded--right lp_js_delete"
-                               data-icon="g"></a>
                             <a href="#" class="lp_edit-link--bold lp_js_edit"
                                data-icon="d"></a>
+                            <a href="#" class="lp_edit-link--bold lp_rounded--right lp_js_delete"
+                               data-icon="g"></a>
                         </div>
                     </div>
 
@@ -165,9 +163,7 @@ if ( ! defined('ABSPATH')) {
                                     <?php esc_html_e('Price', 'laterpay'); ?>
                                 </th>
                                 <td>
-                                    <input type="number"
-                                           min="0.01"
-                                           step="0.01"
+                                    <input type="text"
                                            class="lp_js_priceInput lp_input lp_number-input"
                                            name="price"
                                            value=""

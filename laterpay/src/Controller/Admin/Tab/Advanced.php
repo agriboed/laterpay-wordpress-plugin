@@ -166,37 +166,53 @@ class Advanced extends ControllerAbstract
 
         $advancedForm = new \LaterPay\Form\Advanced;
 
-        if ( ! $advancedForm->isValid(Request::post())) {
+        if (! $advancedForm->isValid(Request::post())) {
             throw new FormValidation(
                 get_class($advancedForm),
                 $advancedForm->getErrors()
             );
         }
 
-        update_option('laterpay_main_color',
-            $advancedForm->getFieldValue('main_color'));
-        update_option('laterpay_hover_color',
-            $advancedForm->getFieldValue('hover_color'));
-        update_option('laterpay_debugger_enabled',
-            $advancedForm->getFieldValue('debugger_enabled'));
-        update_option('laterpay_debugger_addresses',
-            $advancedForm->getFieldValue('debugger_addresses'));
-        update_option('laterpay_caching_compatibility',
-            $advancedForm->getFieldValue('caching_compatibility'));
-        update_option('laterpay_enabled_post_types',
-            $advancedForm->getFieldValue('enabled_post_types'));
+        update_option(
+            'laterpay_main_color',
+            $advancedForm->getFieldValue('main_color')
+        );
+        update_option(
+            'laterpay_hover_color',
+            $advancedForm->getFieldValue('hover_color')
+        );
+        update_option(
+            'laterpay_debugger_enabled',
+            $advancedForm->getFieldValue('debugger_enabled')
+        );
+        update_option(
+            'laterpay_debugger_addresses',
+            $advancedForm->getFieldValue('debugger_addresses')
+        );
+        update_option(
+            'laterpay_caching_compatibility',
+            $advancedForm->getFieldValue('caching_compatibility')
+        );
+        update_option(
+            'laterpay_enabled_post_types',
+            $advancedForm->getFieldValue('enabled_post_types')
+        );
         update_option(
             'laterpay_show_time_passes_widget_on_free_posts',
             $advancedForm->getFieldValue('show_time_passes_widget_on_free_posts')
         );
-        update_option('laterpay_require_login',
-            $advancedForm->getFieldValue('require_login'));
+        update_option(
+            'laterpay_require_login',
+            $advancedForm->getFieldValue('require_login')
+        );
         update_option(
             'laterpay_maximum_redemptions_per_gift_code',
             $advancedForm->getFieldValue('maximum_redemptions_per_gift_code')
         );
-        update_option('laterpay_teaser_content_word_count',
-            $advancedForm->getFieldValue('teaser_content_word_count'));
+        update_option(
+            'laterpay_teaser_content_word_count',
+            $advancedForm->getFieldValue('teaser_content_word_count')
+        );
         update_option(
             'laterpay_preview_excerpt_percentage_of_content',
             $advancedForm->getFieldValue('preview_excerpt_percentage_of_content')
@@ -213,14 +229,22 @@ class Advanced extends ControllerAbstract
             'laterpay_unlimited_access',
             $this->validateUnlimitedAccess($advancedForm->getFieldValue('unlimited_access'))
         );
-        update_option('laterpay_api_enabled_on_homepage',
-            $advancedForm->getFieldValue('api_enabled_on_homepage'));
-        update_option('laterpay_api_fallback_behavior',
-            $advancedForm->getFieldValue('api_fallback_behavior'));
-        update_option('laterpay_pro_merchant',
-            $advancedForm->getFieldValue('pro_merchant'));
-        update_option('laterpay_business_model',
-            $advancedForm->getFieldValue('business_model'));
+        update_option(
+            'laterpay_api_enabled_on_homepage',
+            $advancedForm->getFieldValue('api_enabled_on_homepage')
+        );
+        update_option(
+            'laterpay_api_fallback_behavior',
+            $advancedForm->getFieldValue('api_fallback_behavior')
+        );
+        update_option(
+            'laterpay_pro_merchant',
+            $advancedForm->getFieldValue('pro_merchant')
+        );
+        update_option(
+            'laterpay_business_model',
+            $advancedForm->getFieldValue('business_model')
+        );
 
         $event->setResult(
             array(
@@ -347,7 +371,7 @@ class Advanced extends ControllerAbstract
                 // check, if selected categories cover entire blog
                 $covered = 1;
                 foreach ($categories as $category) {
-                    if ( ! in_array((string)$category->term_id, $data, true)) {
+                    if (! in_array((string)$category->term_id, $data, true)) {
                         $covered = 0;
                         break;
                     }

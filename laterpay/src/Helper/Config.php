@@ -142,7 +142,8 @@ class Config
         // get region settings
         $region = get_option('laterpay_region', 'eu');
 
-        return isset(static::$regionalSettings[$region][$section]) ? static::$regionalSettings[$region][$section] : null;
+        return isset(static::$regionalSettings[$region][$section]) ?
+            static::$regionalSettings[$region][$section] : null;
     }
 
     /**

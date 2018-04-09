@@ -4,7 +4,6 @@ namespace LaterPay\Controller\Admin\Post;
 
 use LaterPay\Controller\ControllerAbstract;
 use LaterPay\Core\Event\EventInterface;
-use LaterPay\Helper\View;
 use LaterPay\Helper\Pricing;
 
 /**
@@ -79,7 +78,7 @@ class Column extends ControllerAbstract
 
         switch ($columnName) {
             case 'post_price':
-                $price           = (float)Pricing::getPostPrice($postID);
+                $price           = Pricing::getPostPrice($postID);
                 $localized_price = Pricing::localizePrice($price);
                 $currency        = $this->config->get('currency.code');
 
@@ -118,6 +117,10 @@ class Column extends ControllerAbstract
 
                         case Pricing::TYPE_GLOBAL_DEFAULT_PRICE:
                             $postPriceType = __('global default price', 'laterpay');
+                            break;
+
+                        case Pricing::TYPE_GLOBAL_CONTRIBUTION:
+                            $postPriceType = __('global contribution amount', 'laterpay');
                             break;
 
                         default:

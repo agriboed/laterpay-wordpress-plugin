@@ -52,20 +52,6 @@ class Post extends FormAbstract
         );
 
         $this->setField(
-            'laterpay_teaser_content_box_nonce',
-            array(
-                'validators' => array(
-                    'is_string',
-                    'cmp' => array(
-                        array(
-                            'ne' => null,
-                        ),
-                    ),
-                ),
-            )
-        );
-
-        $this->setField(
             'post-price',
             array(
                 'validators'  => array(
@@ -89,6 +75,25 @@ class Post extends FormAbstract
                     ),
                     'to_float',
                 ),
+                'can_be_null' => true,
+            )
+        );
+
+        $this->setField(
+            'post_amount',
+            array(
+                'recursively_filters'    => array(
+                    'price' => array(
+                        'delocalize',
+                        'format_num' => array(
+                            'decimals'      => 2,
+                            'dec_sep'       => '.',
+                            'thousands_sep' => '',
+                        ),
+                        'to_float',
+                    )
+                ),
+
                 'can_be_null' => true,
             )
         );
@@ -153,6 +158,10 @@ class Post extends FormAbstract
                         Pricing::TYPE_INDIVIDUAL_DYNAMIC_PRICE,
                         Pricing::TYPE_CATEGORY_DEFAULT_PRICE,
                         Pricing::TYPE_GLOBAL_DEFAULT_PRICE,
+                        Pricing::TYPE_GLOBAL_CONTRIBUTION,
+                        Pricing::TYPE_INDIVIDUAL_CONTRIBUTION,
+                        Pricing::TYPE_GLOBAL_DONATION,
+                        Pricing::TYPE_INDIVIDUAL_DONATION
                     ),
                 ),
                 'filters'     => array(
@@ -172,6 +181,7 @@ class Post extends FormAbstract
                 'filters'    => array(
                     'to_string',
                 ),
+                'can_be_null' => true,
             )
         );
 

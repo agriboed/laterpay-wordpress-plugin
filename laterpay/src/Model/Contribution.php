@@ -4,10 +4,9 @@ namespace LaterPay\Model;
 
 use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Helper\Config;
-use LaterPay\Helper\Pricing;
 
 /**
- * LaterPay contribution amount model.
+ * LaterPay Contribution Model.
  *
  * Plugin Name: LaterPay
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
@@ -16,61 +15,70 @@ use LaterPay\Helper\Pricing;
 class Contribution
 {
     /**
-     * WordPress option name to store contribution amounts data.
+     * WordPress option name where data will be stored.
      */
-    const OPTIONNAME = 'laterpay_contribution_amount';
+    const OPTION = 'laterpay_contribution';
 
     /**
-     * @return array
+     * List of current amounts including id, price and revenue model.
+     *
+     * @var array
      */
-    public static function getAmounts()
+    protected $amounts;
+
+    /**
+     * Donation Model constructor.
+     */
+    public function __construct()
     {
-        $return  = array();
-        $default = Config::getSettingsSection('contribution');
-        $current = get_option(static::OPTIONNAME);
-
-        // if option doesn't exists then fill it using config values
-        if (false === $current || ! is_array($current)) {
-            update_option(static::OPTIONNAME, $default['amount']);
-            $current = $default['amount'];
-        }
-
-        // prepare data before return to client
-        foreach ($current as $key => $value) {
-            $return[$key] = array(
-                'id'            => $key,
-                'price'         => $value['price'],
-                'revenue_model' => $value['revenue_model'],
-            );
-        }
-
-        return $return;
+        $this->amounts = get_option(static::OPTION);
+        $this->checkIncorrectAmounts();
     }
 
+    /**
+     * Returns list of current global amounts
+     *
+     * @return array
+     */
+    public function getAmounts()
+    {
+        return $this->amounts;
+    }
 
     /**
+     * Create amount and generate id for it.
+     * As result will be returned array with amount.
+     *
      * @param $price
      * @param $revenueModel
      *
      * @return array
      */
-    public static function addAmount($price, $revenueModel)
+    public function createAmount($price, $revenueModel)
     {
-        $current     = static::getAmounts();
-        $generatedId = end(array_keys($current)) + 1;
+        $generatedId = $this->generateId();
 
-        $current[$generatedId] = array(
+        $this->amounts[$generatedId] = array(
             'id'            => $generatedId,
-            'price'         => (float)$price,
-            'revenue_model' => Pricing::ensureValidRevenueModel(
-                $revenueModel,
-                $price
-            ),
+            'price'         => $price,
+            'revenue_model' => $revenueModel,
         );
 
-        update_option(static::OPTIONNAME, $current);
+        $this->flush();
 
-        return $current[$generatedId];
+        return $this->amounts[$generatedId];
+    }
+
+    /**
+     * Generate unique ID using last in index in data array.
+     *
+     * @return int
+     */
+    protected function generateId()
+    {
+        $keys = array_keys($this->amounts);
+
+        return end($keys) + 1;
     }
 
     /**
@@ -82,24 +90,19 @@ class Contribution
      *
      * @throws InvalidIncomingData
      */
-    public static function updateAmount($id, $price, $revenueModel)
+    public function updateAmount($id, $price, $revenueModel)
     {
-        $id      = (int)$id;
-        $current = static::getAmounts();
-
-        if (empty($price) || empty($revenueModel) || ! isset($current[$id])) {
+        if (empty($price) || empty($revenueModel) || ! isset($this->amounts[$id])) {
             throw new InvalidIncomingData('Contribution amount is invalid');
         }
 
-        $current[$id] = array(
+        $this->amounts[$id] = array(
             'id'            => $id,
-            'price'         => (float)$price,
+            'price'         => $price,
             'revenue_model' => $revenueModel,
         );
 
-        update_option(static::OPTIONNAME, $current);
-
-        return true;
+        return $this->flush();
     }
 
     /**
@@ -109,19 +112,52 @@ class Contribution
      *
      * @throws InvalidIncomingData
      */
-    public static function deleteAmount($id)
+    public function deleteAmountById($id)
     {
-        $id      = (int)$id;
-        $current = static::getAmounts();
-
-        if ( ! isset($current[$id])) {
-            throw new InvalidIncomingData('Amount doesn\'t exist');
+        if (! isset($this->amounts[$id])) {
+            throw new InvalidIncomingData('Amount does not exist');
         }
 
-        unset($current[$id]);
+        unset($this->amounts[$id]);
 
-        update_option(static::OPTIONNAME, $current);
+        return $this->flush();
+    }
 
-        return true;
+    /**
+     * Check that data exists in database or fill using default config values.
+     *
+     * @return self
+     */
+    protected function checkIncorrectAmounts()
+    {
+        if (is_array($this->amounts) && ! empty($this->amounts)) {
+            return $this;
+        }
+
+        $contributionConfig = Config::getSettingsSection('contribution');
+        $amount             = $contributionConfig['amount'];
+
+        /**
+         * @var $amount array
+         */
+        foreach ($amount as $key => $value) {
+            $this->amounts[] = array(
+                'id'            => $key,
+                'price'         => $value['price'],
+                'revenue_model' => $value['revenue_model']
+            );
+        }
+
+        return $this;
+    }
+
+    /**
+     * Flush current data's state to the database.
+     *
+     * @return bool
+     */
+    protected function flush()
+    {
+        return update_option(static::OPTION, $this->amounts);
     }
 }

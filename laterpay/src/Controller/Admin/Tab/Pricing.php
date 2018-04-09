@@ -360,7 +360,7 @@ class Pricing extends ControllerAbstract
                 $category_price_model = new CategoryPrice();
                 $args                 = array();
 
-                if ( ! empty($term)) {
+                if (! empty($term)) {
                     $args['name__like'] = sanitize_text_field($term);
                 }
 
@@ -380,7 +380,7 @@ class Pricing extends ControllerAbstract
                     'hide_empty' => false,
                 );
 
-                if ( ! empty($term)) {
+                if (! empty($term)) {
                     $args['name__like'] = sanitize_text_field($term);
                 }
 
@@ -752,7 +752,7 @@ class Pricing extends ControllerAbstract
     {
         $globalPriceForm = new GlobalPrice();
 
-        if ( ! $globalPriceForm->isValid(Request::post())) {
+        if (! $globalPriceForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success'       => false,
@@ -806,7 +806,7 @@ class Pricing extends ControllerAbstract
     {
         $contributionAmountForm = new ContributionAmount;
 
-        if ( ! $contributionAmountForm->isValid(Request::post())) {
+        if (! $contributionAmountForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -870,7 +870,7 @@ class Pricing extends ControllerAbstract
     {
         $donationAmountForm = new DonationAmount;
 
-        if ( ! $donationAmountForm->isValid(Request::post())) {
+        if (! $donationAmountForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -935,7 +935,7 @@ class Pricing extends ControllerAbstract
     {
         $priceCategoryForm = new PriceCategory();
 
-        if ( ! $priceCategoryForm->isValid(Request::post())) {
+        if (! $priceCategoryForm->isValid(Request::post())) {
             $errors = $priceCategoryForm->getErrors();
             $event->setResult(
                 array(
@@ -1026,7 +1026,7 @@ class Pricing extends ControllerAbstract
             )
         );
 
-        if ( ! $priceCategoryForm->isValid(Request::post())) {
+        if (! $priceCategoryForm->isValid(Request::post())) {
             throw new FormValidation(
                 get_class($priceCategoryForm),
                 $priceCategoryForm->getErrors()
@@ -1039,7 +1039,7 @@ class Pricing extends ControllerAbstract
         $categoryPriceModel = new CategoryPrice();
         $success            = $categoryPriceModel->deletePriceByCategoryID($categoryID);
 
-        if ( ! $success) {
+        if (! $success) {
             return;
         }
 
@@ -1048,7 +1048,7 @@ class Pricing extends ControllerAbstract
         foreach ($postIDs as $postID) {
             // check, if the post has LaterPay pricing data
             $postPrice = get_post_meta($postID, 'laterpay_post_prices', true);
-            if ( ! is_array($postPrice)) {
+            if (! is_array($postPrice)) {
                 continue;
             }
 
@@ -1111,7 +1111,7 @@ class Pricing extends ControllerAbstract
             )
         );
 
-        if ( ! $timePassForm->isValid()) {
+        if (! $timePassForm->isValid()) {
             throw new FormValidation(get_class($timePassForm), $timePassForm->getErrors());
         }
 
@@ -1122,7 +1122,7 @@ class Pricing extends ControllerAbstract
         );
 
         // check and set revenue model
-        if ( ! isset($data['revenue_model'])) {
+        if (! isset($data['revenue_model'])) {
             $data['revenue_model'] = 'ppu';
         }
 
@@ -1236,7 +1236,7 @@ class Pricing extends ControllerAbstract
             )
         );
 
-        if ( ! $subscriptionForm->isValid()) {
+        if (! $subscriptionForm->isValid()) {
             throw new FormValidation(
                 get_class($subscriptionForm),
                 $subscriptionForm->getErrors()
@@ -1309,7 +1309,7 @@ class Pricing extends ControllerAbstract
         $timePassesArray = array(0 => TimePass::getDefaultOptions());
 
         foreach ($timePassesList as $timePass) {
-            if ( ! empty($timePass['access_category'])) {
+            if (! empty($timePass['access_category'])) {
                 $timePass['category_name'] = get_the_category_by_ID($timePass['access_category']);
             }
             $timePassesArray[$timePass['pass_id']] = $timePass;
@@ -1330,7 +1330,7 @@ class Pricing extends ControllerAbstract
         $subscriptionsArray = array(0 => Subscription::getDefaultOptions());
 
         foreach ($subscriptionsList as $subscription) {
-            if ( ! empty($subscription['access_category'])) {
+            if (! empty($subscription['access_category'])) {
                 $subscription['category_name'] = get_the_category_by_ID($subscription['access_category']);
             }
             $subscriptionsArray[$subscription['id']] = $subscription;

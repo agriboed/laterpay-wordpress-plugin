@@ -57,7 +57,7 @@ class ContributionAmount extends FormAbstract
                 'validators' => array(
                     'is_string',
                     'in_array' => array(
-                        'add',
+                        'create',
                         'update',
                         'delete'
                     ),
@@ -80,7 +80,12 @@ class ContributionAmount extends FormAbstract
         );
 
         $this->setField(
-            'id'
+            'id',
+            array(
+                'filters' => array(
+                    'to_int'
+                ),
+            )
         );
 
         $this->setField(
