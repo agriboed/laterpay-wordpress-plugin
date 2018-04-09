@@ -1,7 +1,11 @@
 <?php
 
-namespace LaterPay\Controller\Admin\Tabs;
+namespace LaterPay\Controller\Admin\Tab;
 
+use LaterPay\Controller\Admin\Common;
+use LaterPay\Controller\ControllerAbstract;
+use LaterPay\Core\Bootstrap;
+use LaterPay\Core\Hooks;
 use LaterPay\Core\Request;
 use LaterPay\Core\Event\EventInterface;
 use LaterPay\Core\Exception\FormValidation;
@@ -9,7 +13,6 @@ use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Form\ContributionAmount;
 use LaterPay\Form\DonationAmount;
 use LaterPay\Helper\TimePass;
-use LaterPay\Helper\View;
 use LaterPay\Helper\Config;
 use LaterPay\Helper\Voucher;
 use LaterPay\Helper\Subscription;
@@ -17,8 +20,6 @@ use LaterPay\Model\CategoryPrice;
 use LaterPay\Form\Pass;
 use LaterPay\Form\GlobalPrice;
 use LaterPay\Form\PriceCategory;
-use LaterPay\Model\Contribution;
-use LaterPay\Model\Donation;
 
 /**
  * LaterPay pricing tab controller.
@@ -27,7 +28,7 @@ use LaterPay\Model\Donation;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Pricing extends TabAbstract
+class Pricing extends ControllerAbstract
 {
     /**
      * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -72,7 +73,7 @@ class Pricing extends TabAbstract
      *
      * @return array
      */
-    public static function info()
+    public static function tabInfo()
     {
         return array(
             'key'   => 'pricing',
@@ -84,10 +85,32 @@ class Pricing extends TabAbstract
     }
 
     /**
+     * Method adds tab in WordPress main panel and register help for this tab.
+     *
+     * @wp-hook admin_menu
+     * @return  void
+     */
+    public function addSubmenuPage()
+    {
+        $tab  = static::tabInfo();
+        $page = add_submenu_page(
+            Common::getPluginPage(),
+            $tab['title'] . ' | ' . __('LaterPay Plugin Settings', 'laterpay'),
+            $tab['title'],
+            $tab['cap'],
+            $tab['slug'],
+            array($this, 'renderTab')
+        );
+
+        Hooks::addAction('load-' . $page, 'laterpay_load_' . $page);
+        Bootstrap::getDispatcher()->addListener('laterpay_load_' . $page, array($this, 'helpTab'));
+    }
+
+    /**
      * Register JS and CSS in the WordPress.
      *
      * @wp-hook admin_enqueue_scripts
-     * @return void
+     * @return  void
      */
     public function registerAssets()
     {
@@ -113,9 +136,9 @@ class Pricing extends TabAbstract
         );
 
         wp_register_script(
-            'laterpay-backend-contribution',
-            $this->config->get('js_url') . 'laterpay-backend-contribution.js',
-            array('jquery', 'laterpay-backend', 'laterpay-zendesk'),
+            'laterpay-admin-contribution',
+            $this->config->get('js_url') . 'laterpay-admin-contribution.js',
+            array('jquery', 'laterpay-backend', 'jquery-ui-dialog', 'laterpay-zendesk'),
             $this->config->get('version'),
             true
         );
@@ -129,7 +152,6 @@ class Pricing extends TabAbstract
     protected function loadAssets()
     {
         wp_enqueue_style('laterpay-select2');
-        wp_enqueue_style('laterpay-backend');
 
         // translations
         $i18n = array(
@@ -190,18 +212,20 @@ class Pricing extends TabAbstract
             )
         );
 
-        wp_localize_script(
-            'laterpay-backend-contribution',
-            'lpVars',
-            array(
-                'locale'           => get_locale(),
-                'i18n'             => $i18n,
-                'currency'         => wp_json_encode(Config::getCurrencyConfig()),
-                'l10n_print_after' => 'lpVars.currency = JSON.parse(lpVars.currency);',
-            )
-        );
-
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    protected function renderHeader()
+    {
+        /**
+         * @var $commonController \LaterPay\Controller\Admin\Common
+         */
+        $commonController = Bootstrap::get('\LaterPay\Controller\Admin\Common');
+
+        return $commonController->renderHeader();
     }
 
     /**
@@ -240,6 +264,141 @@ class Pricing extends TabAbstract
         $this
             ->loadAssets()
             ->render('admin/tabs/pricing', array('_' => $args));
+    }
+
+    /**
+     * Process Ajax requests from pricing tab.
+     *
+     * @param EventInterface $event
+     *
+     * @throws \LaterPay\Core\Exception\InvalidIncomingData
+     * @throws \LaterPay\Core\Exception\FormValidation
+     *
+     * @return void
+     */
+    public function processAjaxRequests(EventInterface $event)
+    {
+        $event->setResult(
+            array(
+                'success' => false,
+                'message' => __('An error occurred when trying to save your settings. Please try again.', 'laterpay'),
+            )
+        );
+
+        $form = Request::post('form');
+
+        if (null === $form) {
+            // invalid request
+            throw new InvalidIncomingData('form');
+        }
+
+        // save changes in submitted form
+        switch (sanitize_text_field($form)) {
+            case 'global_price_form':
+                $this->updateGlobalDefaultPrice($event);
+                break;
+
+            case 'contribution_amount':
+                $this->updateContributionAmount($event);
+                break;
+
+            case 'donation_amount':
+                $this->updateDonationAmount($event);
+                break;
+
+            case 'price_category_form':
+                $this->setCategoryDefaultPrice($event);
+                break;
+
+            case 'price_category_form_delete':
+                $this->deleteCategoryDefaultPrice($event);
+                break;
+
+            case 'laterpay_get_category_prices':
+                $categoryIds = Request::post('category_ids');
+
+                if (null === $categoryIds || ! is_array($categoryIds)) {
+                    $categoryIds = array();
+                }
+                $categories = array_map('sanitize_text_field', $categoryIds);
+                $event->setResult(
+                    array(
+                        'success' => true,
+                        'prices'  => $this->getCategoryPrices($categories),
+                    )
+                );
+                break;
+
+            case 'time_pass_form_save':
+                $this->timePassSave($event);
+                break;
+
+            case 'time_pass_delete':
+                $this->timePassDelete($event);
+                break;
+
+            case 'subscription_form_save':
+                $this->subscriptionFormSave($event);
+                break;
+
+            case 'subscription_delete':
+                $this->subscriptionDelete($event);
+                break;
+
+            case 'generate_voucher_code':
+                $this->generateVoucherCode($event);
+                break;
+
+            case 'laterpay_get_categories_with_price':
+                $term = Request::post('term');
+
+                if (null === $term) {
+                    throw new InvalidIncomingData('term');
+                }
+
+                // return categories that match a given search term
+                $category_price_model = new CategoryPrice();
+                $args                 = array();
+
+                if ( ! empty($term)) {
+                    $args['name__like'] = sanitize_text_field($term);
+                }
+
+                $event->setResult(
+                    array(
+                        'success'    => true,
+                        'categories' => $category_price_model->getCategoriesWithoutPriceByTerm($args),
+                    )
+                );
+                break;
+
+            case 'laterpay_get_categories':
+                $term = Request::post('term');
+
+                // return categories
+                $args = array(
+                    'hide_empty' => false,
+                );
+
+                if ( ! empty($term)) {
+                    $args['name__like'] = sanitize_text_field($term);
+                }
+
+                $event->setResult(
+                    array(
+                        'success'    => true,
+                        'categories' => get_categories($args),
+                    )
+                );
+                break;
+
+            case 'change_purchase_mode_form':
+                $this->changePurchaseMode($event);
+                break;
+
+            default:
+                break;
+        }
     }
 
     /**
@@ -284,12 +443,17 @@ class Pricing extends TabAbstract
      */
     protected function renderContributionAmount(array $args = array())
     {
-        wp_enqueue_script('laterpay-backend-contribution');
+        wp_enqueue_script('laterpay-admin-contribution');
 
-        $amounts  = Contribution::getAmounts();
-        $currency = Config::getCurrencyConfig();
+        /**
+         * @var $contributionModel \LaterPay\Model\Contribution
+         */
+        $contributionModel = Bootstrap::get('\LaterPay\Model\Contribution');
+        $currency          = Config::getCurrencyConfig();
+        $amounts           = array();
 
-        foreach ($amounts as $key => $value) {
+        // prepare list
+        foreach ($contributionModel->getAmounts() as $value) {
             $value['localized_price']     = \LaterPay\Helper\Pricing::localizePrice($value['price']);
             $value['ppu_checked']         = $value['revenue_model'] === 'ppu'
                                             || ( ! $value['revenue_model'] && $value['price'] < $currency['ppu_max']);
@@ -299,12 +463,13 @@ class Pricing extends TabAbstract
             $value['sis_disabled']        = $value['price'] < $currency['sis_min'];
             $value['revenue_model_label'] = \LaterPay\Helper\Pricing::getRevenueLabel($value['revenue_model']);
 
-            $amounts[$key] = $value;
+            $amounts[] = $value;
         }
 
         $defaults = array(
             'header'            => $this->renderHeader(),
             '_wpnonce'          => wp_create_nonce('laterpay_form'),
+            'locale'            => get_locale(),
             'currency'          => $currency,
             'amounts'           => $amounts,
             'price_placeholder' => \LaterPay\Helper\Pricing::localizePrice(0),
@@ -326,12 +491,16 @@ class Pricing extends TabAbstract
      */
     protected function renderDonationAmount(array $args = array())
     {
-        wp_enqueue_script('laterpay-backend-contribution');
+        wp_enqueue_script('laterpay-admin-contribution');
 
-        $amounts  = Donation::getAmounts();
-        $currency = Config::getCurrencyConfig();
+        /**
+         * @var $donationModel \LaterPay\Model\Donation
+         */
+        $donationModel = Bootstrap::get('\LaterPay\Model\Donation');
+        $currency      = Config::getCurrencyConfig();
+        $amounts       = array();
 
-        foreach ($amounts as $key => $value) {
+        foreach ($donationModel->getAmounts() as $value) {
             $value['localized_price']     = \LaterPay\Helper\Pricing::localizePrice($value['price']);
             $value['ppu_checked']         = $value['revenue_model'] === 'ppu'
                                             || ( ! $value['revenue_model'] && $value['price'] < $currency['ppu_max']);
@@ -341,7 +510,7 @@ class Pricing extends TabAbstract
             $value['sis_disabled']        = $value['price'] < $currency['sis_min'];
             $value['revenue_model_label'] = \LaterPay\Helper\Pricing::getRevenueLabel($value['revenue_model']);
 
-            $amounts[$key] = $value;
+            $amounts[] = $value;
         }
 
         $defaults = array(
@@ -390,7 +559,7 @@ class Pricing extends TabAbstract
             'currency'          => $currency,
             'categories'        => $categories,
             'price_placeholder' => \LaterPay\Helper\Pricing::localizePrice(0),
-            'price_default'     => number_format($price, 2, '.', ''),
+            'price_default'     => \LaterPay\Helper\Pricing::localizePrice($price),
             'ppu_checked'       => $revenueModel === 'ppu' || ( ! $revenueModel && $price < $currency['ppu_max']),
             'ppu_disabled'      => $price > $currency['ppu_max'],
             'sis_checked'       => $revenueModel === 'sis',
@@ -568,141 +737,6 @@ class Pricing extends TabAbstract
     }
 
     /**
-     * Process Ajax requests from pricing tab.
-     *
-     * @param EventInterface $event
-     *
-     * @throws \LaterPay\Core\Exception\InvalidIncomingData
-     * @throws \LaterPay\Core\Exception\FormValidation
-     *
-     * @return void
-     */
-    public function processAjaxRequests(EventInterface $event)
-    {
-        $event->setResult(
-            array(
-                'success' => false,
-                'message' => __('An error occurred when trying to save your settings. Please try again.', 'laterpay'),
-            )
-        );
-
-        $form = Request::post('form');
-
-        if (null === $form) {
-            // invalid request
-            throw new InvalidIncomingData('form');
-        }
-
-        // save changes in submitted form
-        switch (sanitize_text_field($form)) {
-            case 'global_price_form':
-                $this->updateGlobalDefaultPrice($event);
-                break;
-
-            case 'contribution_amount':
-                $this->updateContributionAmount($event);
-                break;
-
-            case 'donation_amount':
-                $this->updateDonationAmount($event);
-                break;
-                
-            case 'price_category_form':
-                $this->setCategoryDefaultPrice($event);
-                break;
-
-            case 'price_category_form_delete':
-                $this->deleteCategoryDefaultPrice($event);
-                break;
-
-            case 'laterpay_get_category_prices':
-                $categoryIds = Request::post('category_ids');
-
-                if (null === $categoryIds || ! is_array($categoryIds)) {
-                    $categoryIds = array();
-                }
-                $categories = array_map('sanitize_text_field', $categoryIds);
-                $event->setResult(
-                    array(
-                        'success' => true,
-                        'prices'  => $this->getCategoryPrices($categories),
-                    )
-                );
-                break;
-
-            case 'time_pass_form_save':
-                $this->timePassSave($event);
-                break;
-
-            case 'time_pass_delete':
-                $this->timePassDelete($event);
-                break;
-
-            case 'subscription_form_save':
-                $this->subscriptionFormSave($event);
-                break;
-
-            case 'subscription_delete':
-                $this->subscriptionDelete($event);
-                break;
-
-            case 'generate_voucher_code':
-                $this->generateVoucherCode($event);
-                break;
-
-            case 'laterpay_get_categories_with_price':
-                $term = Request::post('term');
-
-                if (null === $term) {
-                    throw new InvalidIncomingData('term');
-                }
-
-                // return categories that match a given search term
-                $category_price_model = new CategoryPrice();
-                $args                 = array();
-
-                if ( ! empty($term)) {
-                    $args['name__like'] = sanitize_text_field($term);
-                }
-
-                $event->setResult(
-                    array(
-                        'success'    => true,
-                        'categories' => $category_price_model->getCategoriesWithoutPriceByTerm($args),
-                    )
-                );
-                break;
-
-            case 'laterpay_get_categories':
-                $term = Request::post('term');
-
-                // return categories
-                $args = array(
-                    'hide_empty' => false,
-                );
-
-                if ( ! empty($term)) {
-                    $args['name__like'] = sanitize_text_field($term);
-                }
-
-                $event->setResult(
-                    array(
-                        'success'    => true,
-                        'categories' => get_categories($args),
-                    )
-                );
-                break;
-
-            case 'change_purchase_mode_form':
-                $this->changePurchaseMode($event);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    /**
      * Update the global price.
      * The global price is applied to every posts by default, if
      * - it is > 0 and
@@ -787,55 +821,40 @@ class Pricing extends TabAbstract
         $revenueModel = $contributionAmountForm->getFieldValue('revenue_model');
         $operation    = $contributionAmountForm->getFieldValue('operation');
 
-        if ($operation === 'delete' && Contribution::deleteAmount($id)) {
-            $event->setResult(
-                array(
-                    'success' => true,
-                    'message' => __('Contribution amount deleted.', 'laterpay'),
-                )
-            );
+        /**
+         * @var $contributionModel Contribution
+         */
+        $contributionModel = Bootstrap::get('\LaterPay\Model\Contribution');
 
-            return;
-        }
-
-        if ($operation === 'update' && Contribution::updateAmount($id, $price, $revenueModel)) {
-            $event->setResult(
-                array(
-                    'success'             => true,
-                    'price'               => $price,
-                    'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($price),
-                    'revenue_model'       => $revenueModel,
-                    'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($revenueModel),
-                    'message'             => __('Contribution amount saved.', 'laterpay'),
-                )
-            );
-
-            return;
-        }
-
-        if ($operation === 'add') {
-            $amount = Contribution::addAmount($price, $revenueModel);
-            $event->setResult(
-                array(
-                    'success'             => true,
-                    'id'                  => $amount['id'],
-                    'price'               => $amount['price'],
-                    'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($amount['price']),
-                    'revenue_model'       => $amount['revenue_model'],
-                    'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($amount['revenue_model']),
-                    'message'             => __('Contribution amount added.', 'laterpay'),
-                )
-            );
-
-            return;
-        }
-
-        $event->setResult(
-            array(
-                'success' => false,
-                'message' => __('An error occurred. Please try again.', 'laterpay'),
-            )
+        $result = array(
+            'success'             => true,
+            'id'                  => $id,
+            'price'               => $price,
+            'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($price),
+            'revenue_model'       => $revenueModel,
+            'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($revenueModel),
         );
+
+        switch ($operation) {
+            case 'create':
+                $amount            = $contributionModel->createAmount($price, $revenueModel);
+                $result['id']      = $amount['id'];
+                $result['message'] = __('Contribution amount created.', 'laterpay');
+                break;
+            case 'update':
+                $contributionModel->updateAmount($id, $price, $revenueModel);
+                $result['message'] = __('Contribution amount saved.', 'laterpay');
+                break;
+            case 'delete':
+                $contributionModel->deleteAmountById($id);
+                $result['message'] = __('Contribution amount deleted.', 'laterpay');
+                break;
+            default:
+                $result['success'] = false;
+                break;
+        }
+
+        $event->setResult($result);
     }
 
     /**
@@ -866,57 +885,42 @@ class Pricing extends TabAbstract
         $revenueModel = $donationAmountForm->getFieldValue('revenue_model');
         $operation    = $donationAmountForm->getFieldValue('operation');
 
-        if ($operation === 'delete' && Donation::deleteAmount($id)) {
-            $event->setResult(
-                array(
-                    'success' => true,
-                    'message' => __('Donation amount deleted.', 'laterpay'),
-                )
-            );
+        /**
+         * @var $donationModel Donation
+         */
+        $donationModel = Bootstrap::get('\LaterPay\Model\Donation');
 
-            return;
-        }
-
-        if ($operation === 'update' && Donation::updateAmount($id, $price, $revenueModel)) {
-            $event->setResult(
-                array(
-                    'success'             => true,
-                    'price'               => $price,
-                    'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($price),
-                    'revenue_model'       => $revenueModel,
-                    'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($revenueModel),
-                    'message'             => __('Donation amount saved.', 'laterpay'),
-                )
-            );
-
-            return;
-        }
-
-        if ($operation === 'add') {
-            $amount = Donation::addAmount($price, $revenueModel);
-            $event->setResult(
-                array(
-                    'success'             => true,
-                    'id'                  => $amount['id'],
-                    'price'               => $amount['price'],
-                    'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($amount['price']),
-                    'revenue_model'       => $amount['revenue_model'],
-                    'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($amount['revenue_model']),
-                    'message'             => __('Donation amount added.', 'laterpay'),
-                )
-            );
-
-            return;
-        }
-
-        $event->setResult(
-            array(
-                'success' => false,
-                'message' => __('An error occurred. Please try again.', 'laterpay'),
-            )
+        $result = array(
+            'success'             => true,
+            'id'                  => $id,
+            'price'               => $price,
+            'localized_price'     => \LaterPay\Helper\Pricing::localizePrice($price),
+            'revenue_model'       => $revenueModel,
+            'revenue_model_label' => \LaterPay\Helper\Pricing::getRevenueLabel($revenueModel),
         );
+
+        switch ($operation) {
+            case 'create':
+                $amount            = $donationModel->createAmount($price, $revenueModel);
+                $result['id']      = $amount['id'];
+                $result['message'] = __('Donation amount created.', 'laterpay');
+                break;
+            case 'update':
+                $donationModel->updateAmount($id, $price, $revenueModel);
+                $result['message'] = __('Donation amount saved.', 'laterpay');
+                break;
+            case 'delete':
+                $donationModel->deleteAmountById($id);
+                $result['message'] = __('Donation amount deleted.', 'laterpay');
+                break;
+            default:
+                $result['success'] = false;
+                break;
+        }
+
+        $event->setResult($result);
     }
-    
+
     /**
      * Set the category price, if a given category does not have a category
      * price yet.
@@ -1144,7 +1148,7 @@ class Pricing extends TabAbstract
                 // normalize prices and format with 2 digits in form
                 $voucherPrice        = isset($voucherPrices[$idx]) ? $voucherPrices[$idx] : 0;
                 $vouchersData[$code] = array(
-                    'price' => \LaterPay\Helper\Pricing::localizePrice($voucherPrice, array('normalize' => true)),
+                    'price' => \LaterPay\Helper\Pricing::normalizePrice($voucherPrice),
                     'title' => isset($voucherTitles[$idx]) ? $voucherTitles[$idx] : '',
                 );
             }
@@ -1360,7 +1364,8 @@ class Pricing extends TabAbstract
             throw new InvalidIncomingData('price');
         }
 
-        $price = sanitize_text_field($price);
+        // if current localization is non default we should normalize price before use it
+        $price = \LaterPay\Helper\Pricing::normalizePrice(sanitize_text_field($price));
 
         if (0 !== $price && ! ($price >= $currency['ppu_min'] && $price <= $currency['sis_max'])) {
             return;
@@ -1422,6 +1427,7 @@ class Pricing extends TabAbstract
      *
      * @param EventInterface $event
      *
+     * @wp-hook delete_term_taxonomy
      * @return void
      */
     public function updatePostPricesAfterCategoryDelete(EventInterface $event)
@@ -1446,7 +1452,7 @@ class Pricing extends TabAbstract
      *
      * @return void
      */
-    public function help()
+    public function helpTab()
     {
         $screen = get_current_screen();
 

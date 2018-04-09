@@ -605,20 +605,20 @@ class Post extends ControllerAbstract
         $this->logger->info(__METHOD__);
 
         wp_register_style(
-            'laterpay-post-view',
-            $this->config->get('css_url') . 'laterpay-post-view.css',
+            'laterpay-front',
+            $this->config->get('css_url') . 'laterpay-front.css',
             array(),
             $this->config->get('version')
         );
 
-        // always enqueue 'laterpay-post-view' to ensure that LaterPay shortcodes have styling
-        wp_enqueue_style('laterpay-post-view');
+        // always enqueue 'laterpay-front' to ensure that LaterPay shortcodes have styling
+        wp_enqueue_style('laterpay-front');
 
         // apply colors config
-        View::applyColors('laterpay-post-view');
+        View::applyColors('laterpay-front');
 
         // apply purchase overlay config
-        Appearance::addOverlayStyles('laterpay-post-view');
+        Appearance::addOverlayStyles('laterpay-front');
     }
 
     /**

@@ -1,10 +1,14 @@
 <?php
 
-namespace LaterPay\Controller\Admin\Tabs;
+namespace LaterPay\Controller\Admin\Tab;
 
+use LaterPay\Controller\Admin\Common;
+use LaterPay\Controller\ControllerAbstract;
+use LaterPay\Core\Bootstrap;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\InvalidIncomingData;
 use LaterPay\Core\Event\EventInterface;
+use LaterPay\Core\Hooks;
 use LaterPay\Core\Request;
 use LaterPay\Helper\Config;
 use LaterPay\Form\ApiKey;
@@ -20,7 +24,7 @@ use LaterPay\Form\MerchantId;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Account extends TabAbstract
+class Account extends ControllerAbstract
 {
     /**
      * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -54,7 +58,7 @@ class Account extends TabAbstract
      *
      * @return array
      */
-    public static function info()
+    public static function tabInfo()
     {
         return array(
             'key'   => 'account',
@@ -66,10 +70,32 @@ class Account extends TabAbstract
     }
 
     /**
+     * Method adds tab in WordPress main panel and register help for this tab.
+     *
+     * @wp-hook admin_menu
+     * @return  void
+     */
+    public function addSubmenuPage()
+    {
+        $tab  = static::tabInfo();
+        $page = add_submenu_page(
+            Common::getPluginPage(),
+            $tab['title'] . ' | ' . __('LaterPay Plugin Settings', 'laterpay'),
+            $tab['title'],
+            $tab['cap'],
+            $tab['slug'],
+            array($this, 'renderTab')
+        );
+
+        Hooks::addAction('load-' . $page, 'laterpay_load_' . $page);
+        Bootstrap::getDispatcher()->addListener('laterpay_load_' . $page, array($this, 'helpTab'));
+    }
+
+    /**
      * Register JS and CSS in the WordPress.
      *
      * @wp-hook admin_enqueue_scripts
-     * @return void
+     * @return  void
      */
     public function registerAssets()
     {
@@ -89,7 +115,6 @@ class Account extends TabAbstract
      */
     protected function loadAssets()
     {
-        wp_enqueue_style('laterpay-backend');
         wp_enqueue_script('laterpay-backend-account');
 
         // pass localized strings and variables to script
@@ -116,12 +141,15 @@ class Account extends TabAbstract
      * Method pass data to the template and renders it in admin area.
      *
      * @return void
-     * @throws \LaterPay\Core\Exception
      */
     public function renderTab()
     {
-        $liveMerchantId = get_option('laterpay_live_merchant_id');
-        $liveAPIKey     = get_option('laterpay_live_api_key');
+        /**
+         * @var $commonController \LaterPay\Controller\Admin\Common
+         */
+        $commonController = Bootstrap::get('\LaterPay\Controller\Admin\Common');
+        $liveMerchantId   = get_option('laterpay_live_merchant_id');
+        $liveAPIKey       = get_option('laterpay_live_api_key');
 
         $urlEU = 'https://web.laterpay.net/dialog/entry/?redirect_to=/merchant/add#/signup';
         $urlUS = 'https://web.uselaterpay.com/dialog/entry/?redirect_to=/merchant/add#/signup';
@@ -136,7 +164,7 @@ class Account extends TabAbstract
             'credentials_url_us'             => $urlUS,
             'plugin_is_in_live_mode'         => $this->config->get('is_in_live_mode'),
             'plugin_is_in_visible_test_mode' => get_option('laterpay_is_in_visible_test_mode'),
-            'header'                         => $this->renderHeader(),
+            'header'                         => $commonController->renderHeader(),
             'has_live_credentials'           => ! empty($liveMerchantId) && ! empty($liveAPIKey),
             '_wpnonce'                       => wp_create_nonce('laterpay_form'),
         );
@@ -250,7 +278,7 @@ class Account extends TabAbstract
             return;
         }
 
-        if ( ! $merchantIDForm->isValid(Request::post())) {
+        if (! $merchantIDForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -314,7 +342,7 @@ class Account extends TabAbstract
             return;
         }
 
-        if ( ! $apiKeyForm->isValid(Request::post())) {
+        if (! $apiKeyForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -354,7 +382,7 @@ class Account extends TabAbstract
     {
         $pluginModeForm = new PluginMode();
 
-        if ( ! $pluginModeForm->isValid(Request::post())) {
+        if (! $pluginModeForm->isValid(Request::post())) {
             array(
                 'success' => false,
                 'message' => __('Error occurred. Incorrect data provided.', 'laterpay'),
@@ -433,7 +461,7 @@ class Account extends TabAbstract
     {
         $regionForm = new Region();
 
-        if ( ! $regionForm->isValid(Request::post())) {
+        if (! $regionForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -445,7 +473,7 @@ class Account extends TabAbstract
 
         $result = update_option('laterpay_region', $regionForm->getFieldValue('laterpay_region'));
 
-        if ( ! $result) {
+        if (! $result) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -483,7 +511,7 @@ class Account extends TabAbstract
     {
         $pluginTestModeForm = new TestMode();
 
-        if ( ! $pluginTestModeForm->isValid(Request::post())) {
+        if (! $pluginTestModeForm->isValid(Request::post())) {
             $event->setResult(
                 array(
                     'success' => false,
@@ -534,7 +562,7 @@ class Account extends TabAbstract
     /**
      * @return void
      */
-    public function help()
+    public function helpTab()
     {
         $screen = get_current_screen();
 

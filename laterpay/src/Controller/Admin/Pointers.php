@@ -46,7 +46,7 @@ class Pointers extends ControllerAbstract
      * Register JS and CSS in the WordPress.
      *
      * @wp-hook admin_enqueue_scripts
-     * @return void
+     * @return  void
      */
     public function registerAssets()
     {
@@ -65,7 +65,7 @@ class Pointers extends ControllerAbstract
      * Hint at the newly installed plugin using WordPress pointers.
      *
      * @wp-hook admin_footer_scripts
-     * @return void
+     * @return  void
      */
     public function footerScripts()
     {

@@ -106,13 +106,6 @@ class WordPress extends HandlerAbstract
      */
     public function loadAssets()
     {
-        wp_register_style(
-            'laterpay-debugger',
-            $this->config->get('css_url') . 'laterpay-debugger.css',
-            array(),
-            $this->config->version
-        );
-
         wp_register_script(
             'laterpay-debugger',
             $this->config->get('js_url') . 'laterpay-debugger.js',
@@ -121,7 +114,6 @@ class WordPress extends HandlerAbstract
         );
 
         if ($this->config->get('debug_mode')) {
-            wp_enqueue_style('laterpay-debugger');
             wp_enqueue_script('laterpay-debugger');
         }
     }

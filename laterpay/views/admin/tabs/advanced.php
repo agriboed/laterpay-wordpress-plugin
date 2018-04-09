@@ -7,13 +7,82 @@ if ( ! defined('ABSPATH')) {
 
     <?php echo $_['header']; ?>
 
-    <div class="lp_pagewrap">
+    <div class="lp_pagewrap" id="lp_js_advancedForm">
         <div class="lp_clearfix">
-            <form id="lp_js_advancedForm">
-
+            <form>
                 <input type="hidden" name="form" value="advanced">
                 <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($_['nonce']); ?>">
                 <input type="hidden" name="action" value="laterpay_advanced">
+
+                <fieldset class="lp_fieldset">
+                    <legend class="lp_legend">
+                        <?php esc_html_e('LaterPay Pro Merchant', 'laterpay'); ?>
+                    </legend>
+
+                    <p class="lp_bold">
+                        <?php esc_html_e('Please choose, if you have a LaterPay Pro merchant account.',
+                            'laterpay'); ?>
+                    </p>
+
+                    <table class="lp_table--form">
+                        <tr>
+                            <td style="width: 10%">
+                                <label class="lp_toggle__label">
+                                    <input type="checkbox"
+                                           id="lp_js_proMerchant"
+                                           class="lp_toggle__input"
+                                           name="pro_merchant"
+                                        <?php echo $_['pro_merchant'] ? 'checked' : ''; ?>
+                                           value="1">
+                                    <span class="lp_toggle__text" data-on="" data-off=""></span>
+                                    <span class="lp_toggle__handle"></span>
+                                </label>
+                            </td>
+                            <td>
+                                <?php esc_html_e('I have a LaterPay Pro merchant account.', 'laterpay'); ?>
+                            </td>
+                        </tr>
+                    </table>
+                </fieldset>
+
+                <fieldset class="lp_fieldset"
+                          style="<?php echo $_['show_business_model'] ? 'display:block' : 'display:none'; ?>">
+                    <legend class="lp_legend">
+                        <?php esc_html_e('Business Model', 'laterpay'); ?>
+                    </legend>
+
+                    <p class="lp_bold">
+                        <?php esc_html_e('Please choose, if you have a LaterPay Pro merchant account.',
+                            'laterpay'); ?>
+                    </p>
+
+                    <table class="lp_table--form">
+                        <tr>
+                            <td style="width: 30%">
+                                <select name="business_model"
+                                        class="lp_input lp_input--minimum"
+                                        id="lp_js_businessModel">
+                                    <option <?php echo $_['business_model'] === 'paid' ? 'selected' : ''; ?>
+                                            value="paid">
+                                        <?php esc_attr_e('Paid-for content', 'laterpay'); ?>
+                                    </option>
+                                    <option <?php echo $_['business_model'] === 'contribution' ? 'selected' : ''; ?>
+                                            value="contribution">
+                                        <?php esc_attr_e('Accept Contributions', 'laterpay'); ?>
+                                    </option>
+                                    <option <?php echo $_['business_model'] === 'donation' ? 'selected' : ''; ?>
+                                            value="donation">
+                                        <?php esc_attr_e('Accept Donations', 'laterpay'); ?>
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <?php esc_html_e('You can only offer one type of business model on your website',
+                                    'laterpay'); ?>
+                            </td>
+                        </tr>
+                    </table>
+                </fieldset>
 
                 <fieldset class="lp_fieldset">
                     <legend class="lp_legend">
@@ -21,7 +90,8 @@ if ( ! defined('ABSPATH')) {
                     </legend>
 
                     <p class="lp_bold">
-                        <?php esc_html_e('You can customize the colors of clickable LaterPay elements.', 'laterpay'); ?>
+                        <?php esc_html_e('You can customize the colors of clickable LaterPay elements.',
+                            'laterpay'); ?>
                     </p>
 
                     <table class="lp_table--form">
@@ -34,8 +104,8 @@ if ( ! defined('ABSPATH')) {
                                        name="main_color" value="<?php echo esc_attr($_['main_color']); ?>">
                             </td>
                             <td>
-                                <?php
-                                esc_html_e('Main color for clickable elements. (Default: #01a99d)', 'laterpay');
+                                <?php esc_html_e('Main color for clickable elements. (Default: #01a99d)',
+                                    'laterpay');
                                 ?>
                             </td>
                         </tr>
@@ -48,69 +118,7 @@ if ( ! defined('ABSPATH')) {
                                        name="hover_color" value="<?php echo esc_attr($_['hover_color']); ?>">
                             </td>
                             <td>
-                                <?php
-                                esc_html_e('Hover color for clickable elements. (Default: #01766e)', 'laterpay');
-                                ?>
-                            </td>
-                        </tr>
-                    </table>
-                </fieldset>
-
-                <fieldset class="lp_fieldset">
-                    <legend class="lp_legend">
-                        <?php esc_html_e('Debugger Pane', 'laterpay'); ?>
-                    </legend>
-
-                    <p class="lp_bold">
-                        <?php
-                        echo wp_kses_post(
-                            __(
-                                'The LaterPay debugger pane contains a lot of helpful plugin- and system-related information
-               for debugging the LaterPay plugin and fixing configuration problems.<br>
-               When activated, the debugger pane is rendered at the bottom of the screen.<br>
-               It is visible both for users from address list<br>
-               On a production installation you should switch it off again as soon as you don\'t need it anymore.',
-                                'laterpay'
-                            )
-                        );
-                        ?>
-                    </p>
-
-                    <table class="lp_table--form">
-                        <tr>
-                            <td style="width: 30%">
-                                <label class="lp_toggle__label">
-                                    <input
-                                            type="checkbox"
-                                            class="lp_toggle__input"
-                                            name="debugger_enabled"
-                                        <?php echo $_['debugger_enabled'] ? 'checked' : ''; ?>
-                                            value="1">
-
-                                    <span class="lp_toggle__text" data-on="" data-off=""></span>
-                                    <span class="lp_toggle__handle"></span>
-                                </label>
-                            </td>
-                            <td>
-                                <?php
-                                esc_html_e('I want to view the LaterPay debugger pane', 'laterpay');
-                                ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <input type="text"
-                                       class="lp_input lp_input--minimum"
-                                       id="debugger_addresses"
-                                       name="debugger_addresses"
-                                       value="<?php echo esc_attr($_['debugger_addresses']); ?>">
-                                <label for="debugger_addresses"
-                                       placeholder="<?php esc_attr_e('LaterPay Debugger Address', 'laterpay'); ?>">
-                                </label>
-                            </td>
-                            <td>
-                                <?php
-                                esc_html_e('List of allowed addresses to view debug(Ex.: 127.0.0.1,192.168.1.1)',
+                                <?php esc_html_e('Hover color for clickable elements. (Default: #01766e)',
                                     'laterpay');
                                 ?>
                             </td>
@@ -124,16 +132,13 @@ if ( ! defined('ABSPATH')) {
                     </legend>
 
                     <p class="lp_bold">
-                        <?php
-                        echo wp_kses_post(
-                            __(
-                                'You MUST enable caching compatiblity mode, if you are using a caching solution that caches
-                entire HTML pages.<br>
-                In caching compatibility mode the plugin works like this:<br>
-                It renders paid posts only with the teaser content. This allows to cache them as static files without
-                risking to leak the paid content.<br>
-                When someone visits the page, it makes an Ajax request to determine, if the visitor has already bought
-                the post and replaces the teaser with the full content, if required.', 'laterpay'
+                        <?php echo wp_kses_post(__('You MUST enable caching compatiblity mode, if you are using a 
+caching solution that caches entire HTML pages.<br>
+In caching compatibility mode the plugin works like this:<br>
+It renders paid posts only with the teaser content. This allows to cache them as static files without 
+risking to leak the paid content.<br>
+When someone visits the page, it makes an Ajax request to determine, if the visitor has already bought
+the post and replaces the teaser with the full content, if required.', 'laterpay'
                             )
                         );
                         ?>
@@ -155,8 +160,8 @@ if ( ! defined('ABSPATH')) {
                                 </label>
                             </td>
                             <td>
-                                <?php
-                                esc_html_e('I am using a caching plugin (e.g. WP Super Cache or Cachify)', 'laterpay');
+                                <?php esc_html_e('I am using a caching plugin (e.g. WP Super Cache or Cachify)',
+                                    'laterpay');
                                 ?>
                             </td>
                         </tr>
@@ -169,8 +174,8 @@ if ( ! defined('ABSPATH')) {
                     </legend>
 
                     <p class="lp_bold">
-                        <?php esc_html_e('Please choose, which standard and custom post types should be sellable with LaterPay.',
-                            'laterpay'); ?>
+                        <?php esc_html_e('Please choose, which standard and custom post types should be
+                         sellable with LaterPay.', 'laterpay'); ?>
                     </p>
 
                     <table class="lp_table--form">
@@ -200,7 +205,8 @@ if ( ! defined('ABSPATH')) {
                     </legend>
 
                     <p class="lp_bold">
-                        <?php esc_html_e('Please choose, if you want to show the time passes widget on free posts, or only on paid posts.',
+                        <?php esc_html_e('Please choose, if you want to show the time passes widget on free posts,
+                         or only on paid posts.',
                             'laterpay'); ?>
                     </p>
 
@@ -249,8 +255,8 @@ if ( ! defined('ABSPATH')) {
                                 </label>
                             </td>
                             <td>
-                                <?php esc_html_e('Require the user to log in to LaterPay before a "Pay Later" purchase.',
-                                    'laterpay'); ?>
+                                <?php esc_html_e('Require the user to log in to LaterPay before a "Pay Later" 
+                                purchase.', 'laterpay'); ?>
                             </td>
                         </tr>
                     </table>
@@ -262,8 +268,8 @@ if ( ! defined('ABSPATH')) {
                     </legend>
 
                     <p class="lp_bold">
-                        <?php esc_html_e('Specify, how many times a gift code can be redeemed for the associated time pass.',
-                            'laterpay'); ?>
+                        <?php esc_html_e('Specify, how many times a gift code can be redeemed for the 
+                        associated time pass.', 'laterpay'); ?>
                     </p>
 
                     <table class="lp_table--form">
@@ -291,17 +297,11 @@ if ( ! defined('ABSPATH')) {
                     </legend>
 
                     <p class="lp_bold">
-                        <?php
-                        echo wp_kses_post(
-                            __(
-                                'The LaterPay WordPress plugin automatically generates teaser content for every paid post
-                without teaser content.<br>
-                While technically possible, setting this parameter to zero is HIGHLY DISCOURAGED.<br>
-                If you really, really want to have NO teaser content for a post, enter one space
-                into the teaser content editor for that post.', 'laterpay'
-                            )
-                        );
-                        ?>
+                        <?php echo wp_kses_post(__('The LaterPay WordPress plugin automatically generates teaser 
+content for every paid post without teaser content.<br>
+While technically possible, setting this parameter to zero is HIGHLY DISCOURAGED.<br>
+If you really, really want to have NO teaser content for a post, enter one space into the teaser content editor 
+for that post.', 'laterpay')); ?>
                     </p>
 
                     <table class="lp_table--form">
@@ -316,7 +316,8 @@ if ( ! defined('ABSPATH')) {
                                        name="teaser_content_word_count"
                                        value="<?php echo esc_attr($_['teaser_content_word_count']); ?>">
                                 <label for="teaser_content_word_count"
-                                       placeholder="<?php esc_attr_e('Teaser Content Word Count	', 'laterpay'); ?>">
+                                       placeholder="<?php esc_attr_e('Teaser Content Word Count	',
+                                           'laterpay'); ?>">
                                 </label>
                             </td>
                             <td>
@@ -332,17 +333,10 @@ if ( ! defined('ABSPATH')) {
                         <?php esc_html_e('Content Preview under Overlay', 'laterpay'); ?>
                     </legend>
 
-                    <p class="lp_bold">
-                        <?php
-                        echo wp_kses_post(
-                            __(
-                                'In the appearance tab, you can choose to preview your paid posts with the teaser content plus
-                an excerpt of the full content, covered by a semi-transparent overlay.<br>
-                The following three parameters give you fine-grained control over the length of this excerpt.<br>
-                These settings do not affect the teaser content in any way.', 'laterpay'
-                            )
-                        );
-                        ?>
+                    <p class="lp_bold"><?php echo wp_kses_post(__('In the appearance tab, you can choose to preview
+ your paid posts with the teaser content plus an excerpt of the full content, covered by a semi-transparent overlay.<br>
+The following three parameters give you fine-grained control over the length of this excerpt.<br>
+These settings do not affect the teaser content in any way.', 'laterpay')); ?>
                     </p>
 
                     <table class="lp_table--form">
@@ -357,12 +351,12 @@ if ( ! defined('ABSPATH')) {
                                        name="preview_excerpt_percentage_of_content"
                                        value="<?php echo esc_attr($_['preview_excerpt_percentage_of_content']); ?>">
                                 <label for="preview_excerpt_percentage_of_content"
-                                       placeholder="<?php esc_attr_e('Teaser Content Word Count', 'laterpay'); ?>">
+                                       placeholder="<?php esc_attr_e('Teaser Content Word Count',
+                                           'laterpay'); ?>">
                                 </label>
                             </td>
-                            <td>
-                                <?php esc_html_e('Percentage of content to be extracted; 20 means "extract 20% of the total number of words of the post".',
-                                    'laterpay'); ?>
+                            <td><?php esc_html_e('Percentage of content to be extracted; 20 means "extract 20%
+                                 of the total number of words of the post".', 'laterpay'); ?>
                             </td>
 
                         </tr>
@@ -376,12 +370,12 @@ if ( ! defined('ABSPATH')) {
                                        name="preview_excerpt_word_count_min"
                                        value="<?php echo esc_attr($_['preview_excerpt_word_count_min']); ?>">
                                 <label for="preview_excerpt_word_count_min"
-                                       placeholder="<?php esc_attr_e('Minimum Number of Words', 'laterpay'); ?>">
+                                       placeholder="<?php esc_attr_e('Minimum Number of Words',
+                                           'laterpay'); ?>">
                                 </label>
                             </td>
-                            <td>
-                                <?php esc_html_e('Applied if number of words as percentage of the total number of words is less than this value.',
-                                    'laterpay'); ?>
+                            <td><?php esc_html_e('Applied if number of words as percentage of the total number
+                             of words is less than this value.', 'laterpay'); ?>
                             </td>
                         </tr>
                         <tr>
@@ -394,12 +388,12 @@ if ( ! defined('ABSPATH')) {
                                        name="preview_excerpt_word_count_max"
                                        value="<?php echo esc_attr($_['preview_excerpt_word_count_max']); ?>">
                                 <label for="preview_excerpt_word_count_max"
-                                       placeholder="<?php esc_attr_e('Maximum Number of Words', 'laterpay'); ?>">
+                                       placeholder="<?php esc_attr_e('Maximum Number of Words',
+                                           'laterpay'); ?>">
                                 </label>
                             </td>
-                            <td>
-                                <?php esc_html_e('Applied if number of words as percentage of the total number of words exceeds this value.',
-                                    'laterpay'); ?>
+                            <td><?php esc_html_e('Applied if number of words as percentage of the total number 
+                            of words exceeds this value.', 'laterpay'); ?>
                             </td>
                         </tr>
                     </table>
@@ -411,16 +405,10 @@ if ( ! defined('ABSPATH')) {
                     </legend>
 
                     <p class="lp_bold">
-                        <?php
-                        echo wp_kses_post(
-                            __(
-                                'You can give logged-in users unlimited access to specific categories depending on their user
-                role.<br>
-                This feature can be useful e.g. for giving free access to existing subscribers.<br>
-                We recommend the plugin \'User Role Editor\' for adding custom roles to WordPress.', 'laterpay'
-                            )
-                        );
-                        ?>
+                        <?php echo wp_kses_post(__('You can give logged-in users unlimited access to specific 
+categories depending on their user role.<br>
+This feature can be useful e.g. for giving free access to existing subscribers.<br>
+We recommend the plugin \'User Role Editor\' for adding custom roles to WordPress.', 'laterpay')); ?>
                     </p>
 
                     <table class="lp_table--form wp-list-table widefat striped">
@@ -489,8 +477,8 @@ if ( ! defined('ABSPATH')) {
                         <?php esc_html_e('LaterPay API Settings', 'laterpay'); ?>
                     </legend>
 
-                    <p class="lp_bold">
-                        <?php echo wp_kses_post(__('Define fallback behavior in case LaterPay API is not responding and option to disallow plugin to contact LaterPay API on homepage',
+                    <p class="lp_bold"><?php echo wp_kses_post(__('Define fallback behavior in case LaterPay API
+                     is not responding and option to disallow plugin to contact LaterPay API on homepage',
                             'laterpay')); ?>
                     </p>
 
@@ -524,76 +512,60 @@ if ( ! defined('ABSPATH')) {
 
                 <fieldset class="lp_fieldset">
                     <legend class="lp_legend">
-                        <?php esc_html_e('LaterPay Pro Merchant', 'laterpay'); ?>
+                        <?php esc_html_e('Debugger Pane', 'laterpay'); ?>
                     </legend>
 
                     <p class="lp_bold">
-                        <?php esc_html_e('Please choose, if you have a LaterPay Pro merchant account.', 'laterpay'); ?>
-                    </p>
-
-                    <table class="lp_table--form">
-                        <tr>
-                            <td style="width: 10%">
-                                <label class="lp_toggle__label">
-                                    <input type="checkbox"
-                                           id="lp_js_proMerchant"
-                                           class="lp_toggle__input"
-                                           data-confirm="<?php esc_attr_e('Only choose this option, if you have a LaterPay Pro merchant account. Otherwise, selling content with LaterPay might not work anymore.If you have questions about LaterPay Pro, please contact sales@laterpay.net. Are you sure that you want to choose this option?',
-                                               'laterpay'); ?>"
-                                           name="pro_merchant"
-                                        <?php echo $_['pro_merchant'] ? 'checked' : ''; ?>
-                                           value="1">
-                                    <span class="lp_toggle__text" data-on="" data-off=""></span>
-                                    <span class="lp_toggle__handle"></span>
-                                </label>
-                            </td>
-                            <td>
-                                <?php esc_html_e('I have a LaterPay Pro merchant account.', 'laterpay'); ?>
-                            </td>
-                        </tr>
-                    </table>
-                </fieldset>
-
-                <fieldset class="lp_fieldset"
-                          style="<?php echo $_['show_business_model'] ? 'display:block' : 'display:none'; ?>">
-                    <legend class="lp_legend">
-                        <?php esc_html_e('Business Model', 'laterpay'); ?>
-                    </legend>
-
-                    <p class="lp_bold">
-                        <?php esc_html_e('Please choose, if you have a LaterPay Pro merchant account.', 'laterpay'); ?>
+                        <?php echo wp_kses_post(__('The LaterPay debugger pane contains a lot of helpful plugin-
+ and system-related information
+ for debugging the LaterPay plugin and fixing configuration problems.<br>
+ When activated, the debugger pane is rendered at the bottom of the screen.<br>
+ It is visible both for users from address list<br>
+ On a production installation you should switch it off again as soon as you don\'t need it anymore.',
+                                'laterpay'
+                            )
+                        );
+                        ?>
                     </p>
 
                     <table class="lp_table--form">
                         <tr>
                             <td style="width: 30%">
-                                <select name="business_model"
-                                        class="lp_input lp_input--minimum"
-                                        id="lp_js_businessModel">
-                                    <option
-                                        <?php echo $_['business_model'] === 'paid' ? 'selected' : ''; ?>
-                                            value="paid">
-                                        <?php esc_attr_e('Paid-for content', 'laterpay'); ?>
-                                    </option>
-                                    <option
-                                        <?php echo $_['business_model'] === 'contribution' ? 'selected' : ''; ?>
-                                            data-confirm="<?php esc_attr_e('Only chose this option if you wish to receive contributions through your website but do not want to sell content through LaterPay. If you are unsure of which business model is best for your website please contact sales@laterpay.net 
-Are you sure you want this option?', 'laterpay'); ?>"
-                                            value="contribution">
-                                        <?php esc_attr_e('Accept Contributions', 'laterpay'); ?>
-                                    </option>
-                                    <option
-                                        <?php echo $_['business_model'] === 'donation' ? 'selected' : ''; ?>
-                                            data-confirm="<?php esc_attr_e('Only chose this option if you are a registered 501(c)(3)charity and wish to receive donations through your website. If you are unsure of which business model is best for your website please contact sales@laterpay.net
-Are you sure you want this option?', 'laterpay'); ?>"
-                                            value="donation">
-                                        <?php esc_attr_e('Accept Donations', 'laterpay'); ?>
-                                    </option>
-                                </select>
+                                <label class="lp_toggle__label">
+                                    <input
+                                            type="checkbox"
+                                            class="lp_toggle__input"
+                                            name="debugger_enabled"
+                                        <?php echo $_['debugger_enabled'] ? 'checked' : ''; ?>
+                                            value="1">
+
+                                    <span class="lp_toggle__text" data-on="" data-off=""></span>
+                                    <span class="lp_toggle__handle"></span>
+                                </label>
                             </td>
                             <td>
-                                <?php esc_html_e('You can only offer one type of business model on your website',
-                                    'laterpay'); ?>
+                                <?php
+                                esc_html_e('I want to view the LaterPay debugger pane', 'laterpay');
+                                ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text"
+                                       class="lp_input lp_input--minimum"
+                                       id="debugger_addresses"
+                                       name="debugger_addresses"
+                                       value="<?php echo esc_attr($_['debugger_addresses']); ?>">
+                                <label for="debugger_addresses"
+                                       placeholder="<?php esc_attr_e('LaterPay Debugger Address',
+                                           'laterpay'); ?>">
+                                </label>
+                            </td>
+                            <td>
+                                <?php esc_html_e('List of allowed addresses to 
+                                view debug(Ex.: 127.0.0.1,192.168.1.1)',
+                                    'laterpay');
+                                ?>
                             </td>
                         </tr>
                     </table>
@@ -611,3 +583,36 @@ Are you sure you want this option?', 'laterpay'); ?>"
         </div>
     </div>
 </div>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            new LaterPayAdminAdvanced({
+                container: '#lp_js_advancedForm',
+                i18n: {
+                    confirmTitle: '<?php esc_attr_e('Please confirm', 'laterpay');?>',
+                    confirm: '<?php esc_attr_e('Confirm', 'laterpay');?>',
+                    cancel: '<?php esc_attr_e('Cancel', 'laterpay');?>',
+                    proMerchantMessage: <?php echo wp_json_encode(__('<p>Only choose this option, 
+                    if you have a LaterPay Pro merchant account. 
+                    Otherwise, selling content with LaterPay might not work anymore. 
+                    If you have questions about LaterPay Pro, <a href="mailto:sales@laterpay.net">sales@laterpay.net</a>
+                    </p>
+                    <p>Are you sure you want this option?</p>',
+                        'laterpay')); ?>,
+                    contributionMessage: <?php echo wp_json_encode(__('<p>Only chose this option if you wish to 
+                    receive contributions through your website but do not want to sell content through LaterPay. 
+                    If you are unsure of which business model is best for your website please contact 
+                    <a href="mailto:sales@laterpay.net">sales@laterpay.net</a></p>
+                    
+                    <p> Are you sure you want this option?</p>', 'laterpay')); ?>,
+                    donationMessage: <?php  echo wp_json_encode(__('<p>Only chose this option if you are a registered 
+                    501(c)(3)charity and wish to receive donations through your website.
+                     If you are unsure of which business model is best for your website please contact 
+                     <a href="mailto:sales@laterpay.net">sales@laterpay.net</a></p>
+                 
+                    <p>Are you sure you want this option?</p>', 'laterpay')); ?>,
+                }
+            });
+        });
+    })(jQuery);
+</script>

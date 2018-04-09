@@ -1,9 +1,13 @@
 <?php
 
-namespace LaterPay\Controller\Admin\Tabs;
+namespace LaterPay\Controller\Admin\Tab;
 
+use LaterPay\Controller\Admin\Common;
+use LaterPay\Controller\ControllerAbstract;
+use LaterPay\Core\Bootstrap;
 use LaterPay\Core\Exception\FormValidation;
 use LaterPay\Core\Exception\InvalidIncomingData;
+use LaterPay\Core\Hooks;
 use LaterPay\Core\Request;
 use LaterPay\Core\Event\EventInterface;
 use LaterPay\Form\HideFreePosts;
@@ -18,7 +22,7 @@ use LaterPay\Form\PurchaseButtonPosition;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Appearance extends TabAbstract
+class Appearance extends ControllerAbstract
 {
     /**
      * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -53,7 +57,7 @@ class Appearance extends TabAbstract
      *
      * @return array
      */
-    public static function info()
+    public static function tabInfo()
     {
         return array(
             'key'   => 'appearance',
@@ -62,6 +66,28 @@ class Appearance extends TabAbstract
             'title' => __('Appearance', 'laterpay'),
             'cap'   => 'activate_plugins',
         );
+    }
+
+    /**
+     * Method adds tab in WordPress main panel and register help for this tab.
+     *
+     * @wp-hook admin_menu
+     * @return void
+     */
+    public function addSubmenuPage()
+    {
+        $tab  = static::tabInfo();
+        $page = add_submenu_page(
+            Common::getPluginPage(),
+            $tab['title'] . ' | ' . __('LaterPay Plugin Settings', 'laterpay'),
+            $tab['title'],
+            $tab['cap'],
+            $tab['slug'],
+            array($this, 'renderTab')
+        );
+
+        Hooks::addAction('load-' . $page, 'laterpay_load_' . $page);
+        Bootstrap::getDispatcher()->addListener('laterpay_load_' . $page, array($this, 'helpTab'));
     }
 
     /**
@@ -110,13 +136,15 @@ class Appearance extends TabAbstract
      * Method pass data to the template and renders it in admin area.
      *
      * @return void
-     * @throws \LaterPay\Core\Exception
      */
     public function renderTab()
     {
-
-        $teaserMode     = absint(get_option('laterpay_teaser_mode', '2'));
-        $overlayOptions = \LaterPay\Helper\Appearance::getCurrentOptions();
+        /**
+         * @var $commonController \LaterPay\Controller\Admin\Common
+         */
+        $commonController = Bootstrap::get('\LaterPay\Controller\Admin\Common');
+        $teaserMode       = absint(get_option('laterpay_teaser_mode', '2'));
+        $overlayOptions   = \LaterPay\Helper\Appearance::getCurrentOptions();
 
         $args = array(
             '_wpnonce'                            => wp_create_nonce('laterpay_form'),
@@ -129,7 +157,7 @@ class Appearance extends TabAbstract
             'hide_free_posts'                     => get_option('laterpay_hide_free_posts'),
             'overlay'                             => $overlayOptions,
             'overlay_show_footer'                 => $overlayOptions['show_footer'] === '1',
-            'header'                              => $this->renderHeader(),
+            'header'                              => $commonController->renderHeader(),
             'overlay_content'                     => $this->renderOverlay(),
         );
 
@@ -230,7 +258,7 @@ class Appearance extends TabAbstract
                 update_option('laterpay_overlay_link_main_color', Request::post('link_main_color'));
                 update_option('laterpay_overlay_link_hover_color', Request::post('link_hover_color'));
                 update_option('laterpay_overlay_show_footer', (int)Request::post('show_footer'));
-                update_option('laterpay_overlay_footer_bg_color', Request::post('footer_background_color'));
+                update_option('laterpay_overlay_footer_bg_color', Request::post('overlaySettings'));
 
                 $event->setResult(
                     array(
@@ -379,7 +407,7 @@ class Appearance extends TabAbstract
      *
      * @return string
      */
-    public function renderOverlay()
+    protected function renderOverlay()
     {
         $additional = array(
             'currency' => $this->config->get('currency.code'),
@@ -395,7 +423,7 @@ class Appearance extends TabAbstract
      *
      * @return void
      */
-    public function help()
+    public function helpTab()
     {
         $screen = get_current_screen();
 

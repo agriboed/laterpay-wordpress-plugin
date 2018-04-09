@@ -19,7 +19,7 @@ interface ControllerInterface
      * ControllerInterface constructor.
      *
      * @param ConfigInterface $config
-     * @param ViewInterface $view
+     * @param ViewInterface   $view
      * @param LoggerInterface $logger
      */
     public function __construct(ConfigInterface $config, ViewInterface $view, LoggerInterface $logger);

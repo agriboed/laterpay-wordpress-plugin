@@ -52,10 +52,10 @@ select.lp_input {
 
 // special inputs ------------------------------------------------------------------------------------------------------
 // number inputs
-input[type=number].lp_number-input {
+input[type=text].lp_number-input {
   padding: 0.25em 0.35em;
   text-align: right;
-  width: 6em;
+  width: 4em;
 }
 
 input[type=text].lp_input__title {
@@ -125,14 +125,27 @@ input[type=text].lp_input__title {
 
 // edit links ----------------------------------------------------------------------------------------------------------
 .lp_edit-link {
+  text-decoration: none !important;
   margin-left: $fs;
   padding: $fs--05 0;
+
+  &:active,
+  &:focus {
+    outline: none;
+    box-shadow: none !important;
+  }
 
   &--bold {
     background: darken($background--darker, 2%);
     padding: $fs;
     font-size: $fs--15;
-    float: right;
+    text-decoration: none;
+
+    &:active,
+    &:focus {
+      outline: none;
+      box-shadow: none !important;
+    }
 
     &:hover {
       background: $clickable--highlight;
@@ -173,6 +186,7 @@ input[type=text].lp_input__title {
   color: $clickable;
   width: $fs--6;
   text-transform: capitalize;
+  transition: $transition-delay all;
 
   input[type=radio] {
     display: none;

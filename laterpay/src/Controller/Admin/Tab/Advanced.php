@@ -1,7 +1,10 @@
 <?php
 
-namespace LaterPay\Controller\Admin\Tabs;
+namespace LaterPay\Controller\Admin\Tab;
 
+use LaterPay\Controller\Admin\Common;
+use LaterPay\Controller\ControllerAbstract;
+use LaterPay\Core\Bootstrap;
 use LaterPay\Core\Event\EventInterface;
 use LaterPay\Core\Request;
 use LaterPay\Core\Exception\FormValidation;
@@ -13,7 +16,7 @@ use LaterPay\Core\Exception\FormValidation;
  * Plugin URI: https://github.com/laterpay/laterpay-wordpress-plugin
  * Author URI: https://laterpay.net/
  */
-class Advanced extends TabAbstract
+class Advanced extends ControllerAbstract
 {
     /**
      * @see \LaterPay\Core\Event\SubscriberInterface::getSubscribedEvents()
@@ -47,7 +50,7 @@ class Advanced extends TabAbstract
      *
      * @return array
      */
-    public static function info()
+    public static function tabInfo()
     {
         return array(
             'key'   => 'advanced',
@@ -55,6 +58,25 @@ class Advanced extends TabAbstract
             'url'   => admin_url('admin.php?page=laterpay-advanced-tab'),
             'title' => __('Advanced', 'laterpay'),
             'cap'   => 'activate_plugins',
+        );
+    }
+
+    /**
+     * Method adds tab in WordPress main panel and register help for this tab.
+     *
+     * @wp-hook admin_menu
+     * @return void
+     */
+    public function addSubmenuPage()
+    {
+        $tab = static::tabInfo();
+        add_submenu_page(
+            Common::getPluginPage(),
+            $tab['title'] . ' | ' . __('LaterPay Plugin Settings', 'laterpay'),
+            $tab['title'],
+            $tab['cap'],
+            $tab['slug'],
+            array($this, 'renderTab')
         );
     }
 
@@ -67,9 +89,9 @@ class Advanced extends TabAbstract
     public function registerAssets()
     {
         wp_register_script(
-            'laterpay-backend-advanced',
-            $this->config->get('js_url') . 'laterpay-backend-advanced.js',
-            array('jquery', 'laterpay-backend', 'laterpay-zendesk'),
+            'laterpay-admin-advanced',
+            $this->config->get('js_url') . 'laterpay-admin-advanced.js',
+            array('jquery', 'laterpay-backend', 'laterpay-zendesk', 'jquery-ui-dialog'),
             $this->config->get('version'),
             true
         );
@@ -82,7 +104,7 @@ class Advanced extends TabAbstract
      */
     protected function loadAssets()
     {
-        wp_enqueue_script('laterpay-backend-advanced');
+        wp_enqueue_script('laterpay-admin-advanced');
 
         return $this;
     }
@@ -90,13 +112,18 @@ class Advanced extends TabAbstract
     /**
      * Method pass data to the template and renders it in admin area.
      *
-     * @throws \LaterPay\Core\Exception
+     * @return void
      */
     public function renderTab()
     {
+        /**
+         * @var $commonController \LaterPay\Controller\Admin\Common
+         */
+        $commonController = Bootstrap::get('\LaterPay\Controller\Admin\Common');
+
         $args = array(
             'nonce'                                 => wp_create_nonce('laterpay'),
-            'header'                                => $this->renderHeader(),
+            'header'                                => $commonController->renderHeader(),
             'main_color'                            => get_option('laterpay_main_color'),
             'hover_color'                           => get_option('laterpay_hover_color'),
             'debugger_enabled'                      => get_option('laterpay_debugger_enabled'),
@@ -139,29 +166,37 @@ class Advanced extends TabAbstract
 
         $advancedForm = new \LaterPay\Form\Advanced;
 
-        if (! $advancedForm->isValid(Request::post())) {
+        if ( ! $advancedForm->isValid(Request::post())) {
             throw new FormValidation(
                 get_class($advancedForm),
                 $advancedForm->getErrors()
             );
         }
 
-        update_option('laterpay_main_color', $advancedForm->getFieldValue('main_color'));
-        update_option('laterpay_hover_color', $advancedForm->getFieldValue('hover_color'));
-        update_option('laterpay_debugger_enabled', $advancedForm->getFieldValue('debugger_enabled'));
-        update_option('laterpay_debugger_addresses', $advancedForm->getFieldValue('debugger_addresses'));
-        update_option('laterpay_caching_compatibility', $advancedForm->getFieldValue('caching_compatibility'));
-        update_option('laterpay_enabled_post_types', $advancedForm->getFieldValue('enabled_post_types'));
+        update_option('laterpay_main_color',
+            $advancedForm->getFieldValue('main_color'));
+        update_option('laterpay_hover_color',
+            $advancedForm->getFieldValue('hover_color'));
+        update_option('laterpay_debugger_enabled',
+            $advancedForm->getFieldValue('debugger_enabled'));
+        update_option('laterpay_debugger_addresses',
+            $advancedForm->getFieldValue('debugger_addresses'));
+        update_option('laterpay_caching_compatibility',
+            $advancedForm->getFieldValue('caching_compatibility'));
+        update_option('laterpay_enabled_post_types',
+            $advancedForm->getFieldValue('enabled_post_types'));
         update_option(
             'laterpay_show_time_passes_widget_on_free_posts',
             $advancedForm->getFieldValue('show_time_passes_widget_on_free_posts')
         );
-        update_option('laterpay_require_login', $advancedForm->getFieldValue('require_login'));
+        update_option('laterpay_require_login',
+            $advancedForm->getFieldValue('require_login'));
         update_option(
             'laterpay_maximum_redemptions_per_gift_code',
             $advancedForm->getFieldValue('maximum_redemptions_per_gift_code')
         );
-        update_option('laterpay_teaser_content_word_count', $advancedForm->getFieldValue('teaser_content_word_count'));
+        update_option('laterpay_teaser_content_word_count',
+            $advancedForm->getFieldValue('teaser_content_word_count'));
         update_option(
             'laterpay_preview_excerpt_percentage_of_content',
             $advancedForm->getFieldValue('preview_excerpt_percentage_of_content')
@@ -178,10 +213,14 @@ class Advanced extends TabAbstract
             'laterpay_unlimited_access',
             $this->validateUnlimitedAccess($advancedForm->getFieldValue('unlimited_access'))
         );
-        update_option('laterpay_api_enabled_on_homepage', $advancedForm->getFieldValue('api_enabled_on_homepage'));
-        update_option('laterpay_api_fallback_behavior', $advancedForm->getFieldValue('api_fallback_behavior'));
-        update_option('laterpay_pro_merchant', $advancedForm->getFieldValue('pro_merchant'));
-        update_option('laterpay_business_model', $advancedForm->getFieldValue('business_model'));
+        update_option('laterpay_api_enabled_on_homepage',
+            $advancedForm->getFieldValue('api_enabled_on_homepage'));
+        update_option('laterpay_api_fallback_behavior',
+            $advancedForm->getFieldValue('api_fallback_behavior'));
+        update_option('laterpay_pro_merchant',
+            $advancedForm->getFieldValue('pro_merchant'));
+        update_option('laterpay_business_model',
+            $advancedForm->getFieldValue('business_model'));
 
         $event->setResult(
             array(
@@ -196,7 +235,7 @@ class Advanced extends TabAbstract
      *
      * @return array
      */
-    public function getEnabledPostTypes()
+    protected function getEnabledPostTypes()
     {
         $hidden = array(
             'nav_menu_item',
@@ -230,7 +269,7 @@ class Advanced extends TabAbstract
      *
      * @return array
      */
-    public function getUnlimitedAccess()
+    protected function getUnlimitedAccess()
     {
         global $wp_roles;
 
@@ -291,7 +330,7 @@ class Advanced extends TabAbstract
      *
      * @return array $valid array of valid values
      */
-    public function validateUnlimitedAccess($input)
+    protected function validateUnlimitedAccess($input)
     {
         $valid = array();
         $args  = array(
@@ -308,7 +347,7 @@ class Advanced extends TabAbstract
                 // check, if selected categories cover entire blog
                 $covered = 1;
                 foreach ($categories as $category) {
-                    if (! in_array((string)$category->term_id, $data, true)) {
+                    if ( ! in_array((string)$category->term_id, $data, true)) {
                         $covered = 0;
                         break;
                     }
@@ -330,33 +369,5 @@ class Advanced extends TabAbstract
         }
 
         return $valid;
-    }
-
-    /**
-     * Get LaterPay Business Model options array.
-     *
-     * @return array
-     */
-    public static function getBusinessModels()
-    {
-        return array(
-            array(
-                'value'       => 'paid',
-                'text'        => __( 'Paid-for content', 'laterpay' ),
-                'default'     => true,
-            ),
-            array(
-                'value'       => 'contributions',
-                'text'        => __( 'Accept Contributions', 'laterpay' ),
-                'description' => '',
-                'default'     => false,
-            ),
-            array(
-                'value'       => 'donations',
-                'text'        => __( 'Accept Donations', 'laterpay' ),
-                'description' => '',
-                'default'     => false,
-            ),
-        );
     }
 }

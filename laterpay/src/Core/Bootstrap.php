@@ -5,7 +5,6 @@ namespace LaterPay\Core;
 use LaterPay\Core\Event\Dispatcher;
 use LaterPay\Core\Event\SubscriberInterface;
 use LaterPay\Model\ConfigInterface;
-use LaterPay\Controller\ControllerInterface;
 use LaterPay\Core\Logger\LoggerInterface;
 use LaterPay\Helper\Cache;
 use LaterPay\Controller\Install;
@@ -51,10 +50,10 @@ class Bootstrap
         '\LaterPay\Controller\Admin\Pointers',
         '\LaterPay\Controller\Admin\Post\Metabox',
         '\LaterPay\Controller\Admin\Post\Column',
-        '\LaterPay\Controller\Admin\Tabs\Account',
-        '\LaterPay\Controller\Admin\Tabs\Advanced',
-        '\LaterPay\Controller\Admin\Tabs\Appearance',
-        '\LaterPay\Controller\Admin\Tabs\Pricing',
+        '\LaterPay\Controller\Admin\Tab\Account',
+        '\LaterPay\Controller\Admin\Tab\Advanced',
+        '\LaterPay\Controller\Admin\Tab\Appearance',
+        '\LaterPay\Controller\Admin\Tab\Pricing',
     );
 
     /**
@@ -100,27 +99,42 @@ class Bootstrap
     }
 
     /**
-     * Internal function to create and get controllers.
+     * Internal function to get only one instance of any class in the system.
      *
-     * @param string $class full name of a controller
+     * @param string $className Full name of a class that should be created/returned.
      *
-     * @throws Exception
-     *
-     * @return ControllerInterface $controller instance of the given controller name
+     * @return mixed
      */
-    public static function get($class)
+    public static function get($className)
     {
-        if (! class_exists($class)) {
-            $msg = __('%1$s: <code>%2$s</code> not found', 'laterpay');
-            $msg = sprintf($msg, __METHOD__, $class);
-            throw new Exception($msg);
+        // if object was previously created
+        if (array_key_exists($className, static::$instances)) {
+            return static::$instances[$className];
         }
 
-        if (! array_key_exists($class, static::$instances)) {
-            static::$instances[$class] = new $class(static::$config, new View(static::$config), static::$logger);
+        try {
+            $reflection = new \ReflectionClass($className);
+        } catch (\Exception $e) {
+            static::$logger->error($e->getMessage());
+            return null;
         }
 
-        return static::$instances[$class];
+        // create instance of ControllerInterface
+        if ($reflection->isSubclassOf('\LaterPay\Controller\ControllerInterface')) {
+            static::$instances[$className] = new $className(
+                static::$config,
+                new View(static::$config),
+                static::$logger
+            );
+        } else {
+            static::$instances[$className] = new $className;
+        }
+
+        if ($reflection->isSubclassOf('\LaterPay\Core\Event\SubscriberInterface')) {
+            static::$dispatcher->addSubscriber(static::$instances[$className]);
+        }
+
+        return static::$instances[$className];
     }
 
     /**
@@ -153,7 +167,6 @@ class Bootstrap
      * Internal function to register the admin actions step 2 after the 'plugin_is_working' check.
      *
      * @return void
-     * @throws Exception
      */
     protected function registerAdminControllers()
     {
@@ -162,10 +175,7 @@ class Bootstrap
         }
 
         foreach (static::$adminControllers as $className) {
-            $instance = static::get($className);
-            if ($instance instanceof SubscriberInterface) {
-                static::$dispatcher->addSubscriber($instance);
-            }
+            static::get($className);
         }
     }
 
@@ -173,7 +183,6 @@ class Bootstrap
      * Internal function to register global actions for frontend and backend.
      *
      * @return void
-     * @throws Exception
      */
     protected function registerFrontControllers()
     {
@@ -182,23 +191,18 @@ class Bootstrap
         }
 
         foreach (static::$frontControllers as $className) {
-            $instance = static::get($className);
-            if ($instance instanceof SubscriberInterface) {
-                static::$dispatcher->addSubscriber($instance);
-            }
+            static::get($className);
         }
     }
 
     /**
      * Internal function to register all shortcodes.
      *
-     * @throws Exception
-     *
      * @return void
      */
     protected function registerShortcodes()
     {
-        $shortcodeController = static::get('\LaterPay\Controller\Front\Shortcode');
+        static::get('\LaterPay\Controller\Front\Shortcode');
 
         // add 'free to read' shortcodes
         Hooks::addShortcode('laterpay_premium_download', 'laterpay_shortcode_premium_download');
@@ -207,10 +211,6 @@ class Bootstrap
         Hooks::addShortcode('laterpay_time_passes', 'laterpay_shortcode_time_passes');
         Hooks::addShortcode('laterpay_redeem_voucher', 'laterpay_shortcode_redeem_voucher');
         Hooks::addShortcode('laterpay_account_links', 'laterpay_shortcode_account_links');
-
-        if ($shortcodeController instanceof SubscriberInterface) {
-            static::$dispatcher->addSubscriber($shortcodeController);
-        }
     }
 
     /**
@@ -229,7 +229,6 @@ class Bootstrap
      * Internal function to register all upgrade checks.
      *
      * @return void
-     * @throws Exception
      */
     protected function registerUpgradeChecks()
     {
@@ -245,8 +244,6 @@ class Bootstrap
      * Install callback to create custom database tables.
      *
      * @wp-hook register_activation_hook
-     *
-     * @throws Exception
      *
      * @return void
      */

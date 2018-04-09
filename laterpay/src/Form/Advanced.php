@@ -199,6 +199,7 @@ class Advanced extends FormAbstract
                 'validators' => array(
                     'is_array',
                 ),
+                'can_be_null' => true,
             )
         );
 

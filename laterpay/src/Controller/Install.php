@@ -3,7 +3,6 @@
 namespace LaterPay\Controller;
 
 use LaterPay\Core\Event\Event;
-use LaterPay\Helper\View;
 use LaterPay\Helper\Cache;
 use LaterPay\Helper\Config;
 use LaterPay\Helper\Pricing;
@@ -453,7 +452,7 @@ meet the minimum requirement of %1$s version %2$s or higher. You are running %3$
                     }
 
                     $data[$pass_id][$code] = array(
-                        'price' => Pricing::localizePrice($price, array('normalize' => true)),
+                        'price' => Pricing::normalizePrice($price),
                         'title' => '',
                     );
                 }

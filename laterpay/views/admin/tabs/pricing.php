@@ -26,14 +26,16 @@ if ( ! defined( 'ABSPATH' ) ) {
                     </label>
                 </form>
             </div>
+
 			<?php esc_html_e( 'cannot be purchased individually.', 'laterpay' ); ?>
         </div>
 
 		<div class="lp_js_hideInTimePassOnlyMode lp_layout lp_mb++">
 			<div class="lp_price-section lp_layout__item lp_1/2 lp_pdr">
                 <?php echo $_['global_default_price']; ?>
-			</div><!--
-		 --><div class="lp_price-section lp_layout__item lp_1/2 lp_pdr">
+			</div>
+
+            <div class="lp_price-section lp_layout__item lp_1/2 lp_pdr">
 				<?php echo $_['category_default_price'];?>
             </div>
 		</div>
@@ -42,8 +44,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div id="lp_time-passes" class="lp_time-passes__list lp_layout__item lp_1/2 lp_pdr">
 				<?php echo $_['time_passes'];?>
 
-			</div><!--
-		 --><div id="lp_subscriptions" class="lp_subscriptions__list lp_layout__item lp_1/2 lp_pdr">
+			</div>
+
+            <div id="lp_subscriptions" class="lp_subscriptions__list lp_layout__item lp_1/2 lp_pdr">
                 <?php echo $_['subscriptions'];?>
 			</div>
 		</div>

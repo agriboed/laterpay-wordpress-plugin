@@ -22,27 +22,33 @@ if ( ! defined( 'ABSPATH' ) ) {
 
             <div class="lp_js_categoryDefaultPriceShowElements lp_greybox lp_mb- lp_price-panel">
 				<?php esc_html_e( 'Every post in', 'laterpay' ); ?>
-                <span class="lp_js_categoryDefaultPriceCategoryTitle lp_inline-block">
-									<?php echo esc_html( $category->category_name ); ?>
-								</span>
+
+                <span class="lp_js_categoryDefaultPriceCategoryTitle">
+                    <?php echo esc_html( $category->category_name ); ?>
+                </span>
+
 				<?php esc_html_e( 'costs', 'laterpay' ); ?>
+
                 <span class="lp_js_categoryDefaultPriceDisplay lp_category-price"
                       data-price="<?php echo esc_attr( $category->category_price ); ?>">
-									<?php echo esc_html( $category->category_localized_price ); ?>
-								</span>
-                <span class="lp_js_currency lp_currency">
-									<?php echo esc_html( $_['currency']['code'] ); ?>
-								</span>
+                    <?php echo esc_html( $category->category_localized_price ); ?>
+                </span>
+                <span class="lp_js_currency">
+                    <?php echo esc_html( $_['currency']['code'] ); ?>
+                </span>
+
                 <span class="lp_js_revenueModelLabelDisplay lp_badge"
                       data-revenue="<?php echo esc_attr( $category->revenue_model ); ?>">
-									<?php echo esc_html( $category->revenue_model_label ); ?>
-								</span>
+                    <?php echo esc_html( $category->revenue_model_label ); ?>
+                </span>
+
                 <div class="lp_price-panel__buttons">
+                    <a href="#" class="lp_js_editCategoryDefaultPrice lp_edit-link--bold"
+                       data-icon="d"></a>
+
                     <a href="#"
                        class="lp_js_deleteCategoryDefaultPrice lp_edit-link--bold lp_delete-link lp_rounded--right"
                        data-icon="g"></a>
-                    <a href="#" class="lp_js_editCategoryDefaultPrice lp_edit-link--bold lp_change-link"
-                       data-icon="d"></a>
                 </div>
             </div>
 
@@ -73,9 +79,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<?php esc_html_e( 'Price', 'laterpay' ); ?>
                         </th>
                         <td>
-                            <input type="number"
-                                   min="0.01"
-                                   step="0.01"
+                            <input type="text"
                                    name="price"
                                    class="lp_js_priceInput lp_js_categoryDefaultPriceInput lp_input lp_number-input"
                                    value="<?php echo esc_attr( $category->category_localized_price ); ?>"
@@ -165,15 +169,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<?php esc_html_e( 'costs', 'laterpay' ); ?>
             <span class="lp_js_categoryDefaultPriceDisplay lp_category-price">
 						</span>
-            <span class="lp_js_currency lp_currency">
+            <span class="lp_js_currency">
 			<?php esc_html_e( $_['currency']['code'] ); ?>
 						</span>
             <span class="lp_js_revenueModelLabelDisplay lp_badge">
 						</span>
+
             <div class="lp_price-panel__buttons">
-                <a href="#" class="lp_js_deleteCategoryDefaultPrice lp_edit-link--bold lp_delete-link lp_rounded--right"
+                <a href="#" class="lp_js_editCategoryDefaultPrice lp_edit-link--bold"
+                   data-icon="d"></a>
+
+                <a href="#"
+                   class="lp_js_deleteCategoryDefaultPrice lp_edit-link--bold lp_delete-link lp_rounded--right"
                    data-icon="g"></a>
-                <a href="#" class="lp_js_editCategoryDefaultPrice lp_edit-link--bold lp_change-link" data-icon="d"></a>
             </div>
         </div>
 
@@ -201,9 +209,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<?php esc_html_e( 'Price', 'laterpay' ); ?>
                     </th>
                     <td>
-                        <input type="number"
-                               min="0.01"
-                               step="0.01"
+                        <input type="text"
                                name="price"
                                class="lp_js_priceInput lp_js_categoryDefaultPriceInput lp_input lp_number-input"
                                value="<?php echo esc_attr( $_['price_default'] ); ?>"

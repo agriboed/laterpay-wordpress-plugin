@@ -65,9 +65,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<?php esc_html_e( 'The subscription costs', 'laterpay' ); ?>
                     </td>
                     <td>
-                        <input type="number"
-                               min="0.01"
-                               step="0.01"
+                        <input type="text"
                                class="lp_js_subscriptionPriceInput lp_input lp_number-input"
                                name="price"
                                value="<?php echo esc_attr( $_['localized_price'] ); ?>"

@@ -183,6 +183,7 @@ html body .lp_purchase-overlay {
   }
 
   &__submit {
+    text-decoration: none !important;
     background: $purchase-button-background;
     border-radius: $border-radius !important;
     box-shadow: none !important;

@@ -159,7 +159,7 @@ class Config
          *
          * @var $region string
          */
-        if ( ! isset(static::$regionalSettings[$region])) {
+        if (! isset(static::$regionalSettings[$region])) {
             update_option('laterpay_region', 'eu');
             $region = 'eu';
         }

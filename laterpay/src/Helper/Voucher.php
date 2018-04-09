@@ -184,7 +184,7 @@ class Voucher
                     $data = array(
                         'pass_id' => $passID,
                         'code'    => $voucherCode,
-                        'price'   => Pricing::localizePrice($data['price'], array('normalize' => true)),
+                        'price'   => Pricing::normalizePrice($data['price']),
                         'title'   => $data['title'],
                     );
 

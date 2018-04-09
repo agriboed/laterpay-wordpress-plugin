@@ -2,7 +2,12 @@
 
 namespace LaterPay\Controller\Admin;
 
+use LaterPay\Controller\Admin\Tab\Account;
+use LaterPay\Controller\Admin\Tab\Advanced;
+use LaterPay\Controller\Admin\Tab\Appearance;
+use LaterPay\Controller\Admin\Tab\Pricing;
 use LaterPay\Controller\ControllerAbstract;
+use LaterPay\Core\Request;
 
 /**
  * Plugin Name: LaterPay
@@ -37,6 +42,16 @@ class Common extends ControllerAbstract
     }
 
     /**
+     * Main page of the plugin in admin area.
+     *
+     * @return string
+     */
+    public static function getPluginPage()
+    {
+        return static::$pluginPage;
+    }
+
+    /**
      * Register JS and CSS in the WordPress.
      *
      * @wp-hook admin_enqueue_scripts
@@ -62,22 +77,16 @@ class Common extends ControllerAbstract
             array('laterpay-admin', 'open-sans'),
             $this->config->get('version')
         );
-        wp_register_style(
-            'laterpay-backend',
-            $this->config->get('css_url') . 'laterpay-backend.css',
-            array('laterpay-admin', 'open-sans'),
-            $this->config->get('version')
-        );
         wp_register_script(
-            'laterpay-zendesk',
-            $this->config->get('js_url') . 'vendor/zendesk.min.js',
+            'laterpay-backend',
+            $this->config->get('js_url') . 'laterpay-backend.js',
             array('jquery'),
             $this->config->get('version'),
             true
         );
         wp_register_script(
-            'laterpay-backend',
-            $this->config->get('js_url') . 'laterpay-backend.js',
+            'laterpay-zendesk',
+            $this->config->get('js_url') . 'vendor/zendesk.min.js',
             array('jquery'),
             $this->config->get('version'),
             true
@@ -92,18 +101,7 @@ class Common extends ControllerAbstract
      */
     public function loadAssets()
     {
-        wp_enqueue_style('laterpay-backend');
         wp_enqueue_style('laterpay-admin');
-    }
-
-    /**
-     * Main page of the plugin in admin area.
-     *
-     * @return string
-     */
-    public static function getPluginPage()
-    {
-        return static::$pluginPage;
     }
 
     /**
@@ -123,5 +121,36 @@ class Common extends ControllerAbstract
             'dashicons-laterpay-logo',
             81
         );
+    }
+
+    /**
+     * Method renders header with navigation tabs.
+     *
+     * @return string
+     */
+    public function renderHeader()
+    {
+        $tabs = array(
+            Pricing::tabInfo(),
+            Appearance::tabInfo(),
+            Account::tabInfo(),
+            Advanced::tabInfo(),
+        );
+
+        foreach ($tabs as $key => $tab) {
+            $tabs[$key]['current'] = $tab['slug'] === Request::get('page');
+        }
+
+        $args = array(
+            'live_mode_url'          => add_query_arg(
+                array('page' => 'laterpay-account-tab'),
+                admin_url('admin.php')
+            ),
+            'plugin_is_in_live_mode' => $this->config->get('is_in_live_mode'),
+            'tabs'                   => $tabs,
+            'current_page'           => Request::get('page'),
+        );
+
+        return $this->getTextView('admin/tabs/partials/header', array('_' => $args));
     }
 }
