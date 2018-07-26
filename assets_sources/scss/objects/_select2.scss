@@ -1,0 +1,47 @@
+// select2 selects (vendor component)
+.select2 {
+  &-selection--single {
+    background: #fff;
+    border: 2px solid $border !important;
+    box-shadow: none;
+    height: 32px !important;
+    outline: none;
+  }
+
+  &-dropdown {
+    border: 2px solid $clickable--highlight;
+  }
+
+  &-search--dropdown {
+    padding: 0 !important;
+  }
+
+  &-search__field {
+    border: none !important;
+    background-color: $background--darker !important;
+    box-shadow: none !important;
+    padding: 6px !important;
+    margin: 0 !important;
+
+    &:focus {
+      border-color: $clickable--highlight !important;
+      box-shadow: none;
+    }
+  }
+
+  &-container--open,
+  &-container--focus {
+    .select2-selection--single {
+      border-color: $clickable--highlight !important;
+    }
+  }
+
+  &-results__option {
+    margin-bottom: 0;
+
+    &--highlighted {
+      color: $text !important;
+      background-color: $background--highlight !important;
+    }
+  }
+}

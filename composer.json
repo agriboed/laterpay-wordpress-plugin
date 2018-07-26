@@ -7,23 +7,36 @@
         "vendor-dir": "laterpay/vendor",
         "secure-http": true
     },
+    "autoload": {
+        "psr-4": {
+            "LaterPay\\": "laterpay/src/"
+        }
+    },
     "repositories": [
         {
-            "type": "git",
-            "url": "https://github.com/laterpay/laterpay-client-php.git"
+            "type": "package",
+            "package": {
+                "name": "automattic/vipwpcs",
+                "version": "master",
+                "source": {
+                    "url": "https://github.com/Automattic/VIP-Coding-Standards.git",
+                    "type": "git",
+                    "reference": "master"
+                }
+            }
         }
     ],
     "require": {
-        "laterpay/laterpay-client-php": "dev-develop"
+        "php" : ">=5.3"
     },
     "require-dev": {
-        "wp-coding-standards/wpcs": "dev-develop#9c4de8175ce1f82813f8c9c8f11809ee6c794efc"
+        "automattic/vipwpcs": "dev-master",
+        "wp-coding-standards/wpcs": "0.14.1"
     },
     "scripts": {
         "post-install-cmd": "find laterpay/vendor/ -type d -name \".git\" | xargs rm -rf",
         "post-update-cmd": "find laterpay/vendor/ -type d -name \".git\" | xargs rm -rf",
-        "phpcs": "\"laterpay/vendor/bin/phpcs\" -s -n -p --standard=ruleset.xml --extensions=php --ignore=laterpay/vendor/*,laterpay/cache/*,laterpay/languages/* laterpay",
-        "phpcbf": "\"laterpay/vendor/bin/phpcbf\" --no-patch --standard=ruleset.xml --extensions=php --ignore=laterpay/vendor/*,laterpay/cache/*,laterpay/languages/* laterpay",
-        "wpcs": "\"laterpay/vendor/bin/phpcs\" --config-set installed_paths laterpay/vendor/wp-coding-standards/wpcs"
+        "phpcs": "\"laterpay/vendor/bin/phpcs\" --standard=ruleset.xml",
+        "phpcbf": "\"laterpay/vendor/bin/phpcbf\" --standard=ruleset.xml"
     }
 }

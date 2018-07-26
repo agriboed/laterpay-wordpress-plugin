@@ -1,12 +1,12 @@
 .idea/
 .sublime-gulp.cache
-laterpay/built_assets/
+laterpay/assets/*
 laterpay/sftp-config.json
 nbproject/
 node_modules/
 .gulp
 # composer generated files and folders
-laterpay/vendor
+laterpay/vendor/*
 selenium-tests/*
 svn-working-copy/*
 composer.lock

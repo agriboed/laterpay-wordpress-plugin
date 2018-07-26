@@ -1,0 +1,22 @@
+// similar, but not yet fully identical to inuit css's layout object
+
+.lp_layout {
+  @extend %clearfix;
+  display: flex;
+  flex: 1;
+  box-sizing: border-box;
+
+  &-column {
+    flex-flow: column;
+  }
+
+  &-row-rewerse {
+    flex-direction: row-reverse;
+  }
+}
+
+.lp_layout__item {
+  box-sizing: border-box;
+  display: inline-block;
+  vertical-align: top;
+}

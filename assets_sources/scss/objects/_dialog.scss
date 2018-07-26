@@ -1,0 +1,93 @@
+.ui-dialog {
+  border: 2px solid #33a89d;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, .2);
+
+  a {
+    color: $clickable;
+
+    &:hover,
+    &:active,
+    &:focus {
+      color: $clickable--highlight;
+      outline: none;
+      box-shadow: none !important;
+    }
+  }
+
+  &-titlebar {
+    padding: .6em 1em;
+    font-size: 1.3em;
+    position: relative;
+    border-bottom: 1px solid #33a89d;
+  }
+
+  &-title {
+    font-weight: 700;
+  }
+
+  &-titlebar-close {
+    position: absolute;
+    right: .3em;
+    top: 50%;
+    width: 20px;
+    margin: -10px 0 0 0;
+    padding: 1px;
+    height: 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    &:hover,
+    &:active,
+    &:focus {
+      outline: none;
+    }
+
+    .ui-button-text {
+      display: none;
+    }
+  }
+
+  &-titlebar-close:after {
+    content: 'e';
+    font-family: laterpay-wordpress-icons !important;
+    display: block;
+    width: 20px;
+    height: 20px;
+    color: #33a89d;
+  }
+
+  &-content {
+    padding: .6em 1em;
+  }
+
+  &-buttonset {
+    text-align: right;
+    padding: .4em;
+
+    .ui-button {
+      background: $clickable;
+      color: #fff;
+      border: none;
+      padding: .5em;
+      margin-left: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &:hover,
+      &:active,
+      &:focus {
+        background: $clickable--highlight;
+        outline: none;
+      }
+    }
+  }
+}
+
+.ui-helper-clearfix:before, .ui-helper-clearfix:after {
+  content: "";
+  display: table;
+  border-collapse: collapse;
+}
